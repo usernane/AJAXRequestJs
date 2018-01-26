@@ -16,7 +16,7 @@ AJAX.XMLHttpFactories = [
 ];
 /**
  * A class that can be used to simplfy AJAX requests.
- * @version 0.0.2
+ * @version 0.0.3
  * @author Ibrahim BinAlshikh <ibinshikh@hotmail.com>
  * @constructor
  * @returns {AJAX}
