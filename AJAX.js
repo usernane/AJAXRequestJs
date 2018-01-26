@@ -175,6 +175,7 @@ function AJAX(){
         }
         console.info('Pool name must be one of the following: '+pools);
     }
+    
     /**
      * Sets the value of the property serverResponse. Do not call this function 
      * manually.
@@ -203,8 +204,9 @@ function AJAX(){
             return JSON.parse(this.getServerResponse());
         }
         catch(e){
-            console.warn('Unable to convirt server response to JSON object!');
+            console.warn('responseAsJSON: Unable to convirt server response to JSON object!');
         }
+        return undefined;
     };
     /**
      * Append a function to the pool of functions that will be called in case of 
@@ -223,7 +225,7 @@ function AJAX(){
             return id;
         }
         else{
-            console.warn('Provided parameter is not a function.');
+            console.warn('setOnServerError: Provided parameter is not a function.');
         }
     };
     /**
@@ -241,18 +243,17 @@ function AJAX(){
                     pool_name = 'on'+pool_name+'pool';
                     for(var x = 0 ; x < this[pool_name].length ; x++){
                         if(this[pool_name][x]['id'] === id){
-                            this[pool_name].pop(this[pool_name][x]);
-                            return;
+                            return this[pool_name].pop(this[pool_name][x]);
                         }
                     }
-                    console.warn('No callback was found with ID = '+id);
+                    console.warn('removeCall: No callback was found with ID = '+id+' in the pool \''+pool_name+'\'');
                 }
                 else{
                     noSuchPool(pool_name);
                 }
             }
             else{
-                console.warn('Invalid pool name type. Pool name must be string.');
+                console.warn('removeCall: Invalid pool name type. Pool name must be string.');
             }
         }
         else{
@@ -274,20 +275,22 @@ function AJAX(){
                 if(AJAX.CALLBACK_POOLS.indexOf(pool_name) !== -1){
                     pool_name = 'on'+pool_name+'pool';
                     for(var x = 0 ; x < this[pool_name].length ; x++){
-                        if(this[pool_name][x]['id'] !== id){
+                        //first two IDs are reserved. do not disable.
+                        if(this[pool_name][x]['id'] !== id && this[pool_name][x]['id'] > 1){
                             this[pool_name][x]['call'] = false;
                         }
                         else{
                             this[pool_name][x]['call'] = true;
                         }
                     }
+                    return;
                 }
                 else{
                     noSuchPool(pool_name);
                 }
             }
             else{
-                console.warn('Invalid pool name type. Pool name must be string.');
+                console.warn('disableCallExcept: Invalid pool name type. Pool name must be string.');
             }
         }
         else{
@@ -316,14 +319,14 @@ function AJAX(){
                             return;
                         }
                     }
-                    console.warn('No callback was found with ID = '+id);
+                    console.warn('setCallEnabled: No callback was found with ID = '+id+' in the pool \''+pool_name+'\'');
                 }
                 else{
                     noSuchPool(pool_name);
                 }
             }
             else{
-                console.warn('Invalid pool name type. Pool name must be string.');
+                console.warn('setCallEnabled: Invalid pool name type. Pool name must be string.');
             }
         }
         else{
@@ -350,14 +353,14 @@ function AJAX(){
                             return this[pool_name][x];
                         }
                     }
-                    console.warn('No callback was found with ID = '+id);
+                    console.warn('getCallBack: No callback was found with ID = '+id+' in the pool \''+pool_name+'\'');
                 }
                 else{
                     noSuchPool(pool_name);
                 }
             }
             else{
-                console.warn('Invalid pool name type. Pool name must be string.');
+                console.warn('getCallBack: Invalid pool name type. Pool name must be string.');
             }
         }
         else{
@@ -381,7 +384,7 @@ function AJAX(){
             return id;
         }
         else{
-            console.warn('Provided parameter is not a function.');
+            console.warn('setOnClientError: Provided parameter is not a function.');
         }
     };
     /**
@@ -401,7 +404,7 @@ function AJAX(){
             return id;
         }
         else{
-            console.warn('Provided parameter is not a function.');
+            console.warn('setOnSuccess: Provided parameter is not a function.');
         }
     };
     /**
@@ -419,7 +422,7 @@ function AJAX(){
             }
         }
         else{
-            console.warn('Null, undefined or unsupported method. GET is used.');
+            console.warn('setReqMethod: Null, undefined or unsupported method. GET is used.');
             this.method = 'GET';
         }
     };
@@ -473,50 +476,34 @@ function AJAX(){
             console.info('Ajax Params: '+params);
             console.info('Request Method: '+method);
             console.info('URL: '+url);
-            var xhr = createXhr();
-            if(xhr === false){
-                console.error('Unable to creeate AJAX object! Browser not supported.');
-            }
-            else{
-                var instance = this;
-                var a = function(){
-                    instance.setResponse(xhr.responseText);
-                    instance.removeCall('onservererror',id1);
-                    instance.removeCall('onsuccess',id2);
-                    instance.removeCall('onclienterror',id3);
-                };
-                var id1 = this.setOnSuccess(a);
-                var id2 = this.setOnServerError(a);
-                var id3 = this.setOnClientError(a);
-                xhr.onreadystatechange = this.onreadystatechange;
-                xhr.onload = this.onload;
-                xhr.onprogress = this.onprogress;
-                xhr.onsuccesspool = this.onsuccesspool;
-                xhr.onservererrorpool = this.onservererrorpool;
-                xhr.onclienterrorpool = this.onclienterrorpool;
-                if(method === 'GET' || method === 'DELETE'){
-                    if(params !== undefined && params !== null && params !== ''){
-                        xhr.open(method,url+'?'+params);
-                    }
-                    else{
-                        xhr.open(method,url);
-                    }
-                    xhr.send();
-                    return true;
-                }
-                else if(method === 'POST'){
-                    xhr.open(method,url);
-                    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-                    xhr.send(params);
-                    return true;
+            this.xhr.onreadystatechange = this.onreadystatechange;
+            this.xhr.onload = this.onload;
+            this.xhr.onprogress = this.onprogress;
+            this.xhr.onsuccesspool = this.onsuccesspool;
+            this.xhr.onservererrorpool = this.onservererrorpool;
+            this.xhr.onclienterrorpool = this.onclienterrorpool;
+            if(method === 'GET' || method === 'DELETE'){
+                if(params !== undefined && params !== null && params !== ''){
+                    this.xhr.open(method,url+'?'+params);
                 }
                 else{
-                    console.error('Method not supported: '+method);
+                    this.xhr.open(method,url);
                 }
+                this.xhr.send();
+                return true;
+            }
+            else if(method === 'POST'){
+                this.xhr.open(method,url);
+                this.xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                this.xhr.send(params);
+                return true;
+            }
+            else{
+                console.error('send: Method not supported: '+method);
             }
         }
         else{
-            console.warn('AJAX: AJAX is disabled.');
+            console.warn('send: AJAX is disabled.');
         }
         return false;
     };
@@ -540,4 +527,20 @@ function AJAX(){
             this.enabled = false;
         }
     };
+    
+    //configuration 
+    /**
+     * The XMLHttpRequest object that is used to send AJAX.
+     */
+    this.xhr = createXhr();
+    if(this.xhr === false){
+        console.error('AJAX: Unable to creeate xhr object! Browser does not support it.');
+    }
+    var instance = this;
+    var a = function(){
+        instance.setResponse(instance.xhr.responseText);
+    };
+    this.setOnSuccess(a);
+    this.setOnServerError(a);
+    this.setOnClientError(a);
 }
