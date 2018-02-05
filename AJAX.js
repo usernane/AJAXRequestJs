@@ -16,7 +16,7 @@ AJAX.XMLHttpFactories = [
 ];
 /**
  * A class that can be used to simplfy AJAX requests.
- * @version 0.0.3
+ * @version 0.0.4
  * @author Ibrahim BinAlshikh <ibinshikh@hotmail.com>
  * @constructor
  * @returns {AJAX}
@@ -61,8 +61,8 @@ function AJAX(){
         {
             'id':0,
             'call':true,
-            'func':function(code=''){
-                console.info('AJAX: Success '+code);
+            'func':function(){
+                console.info('AJAX: Success '+this.status);
             }
         }
     ];
@@ -73,8 +73,8 @@ function AJAX(){
         {
             'id':0,
             'call':true,
-            'func':function(code=''){
-                console.info('AJAX: Server Error '+code);
+            'func':function(){
+                console.info('AJAX: Server Error '+this.status);
             }
         }
     ];
@@ -85,8 +85,8 @@ function AJAX(){
         {
             'id':0,
             'call':true,
-            'func':function(code=''){
-                console.info('AJAX: Client Error '+code);
+            'func':function(){
+                console.info('AJAX: Client Error '+this.status);
             }
         }
     ];
@@ -106,16 +106,35 @@ function AJAX(){
         else if(this.readyState === 4 && this.status >= 200 && this.status < 300){
             console.info('AJAX: Ready State = 4 (DONE)');
             for(var i = 0 ; i < this.onsuccesspool.length ; i++){
+                this.onsuccesspool[i].status = this.status;
+                this.onsuccesspool[i].response = this.responseText;
+                this.onsuccesspool[i].xmlResponse = this.responseXML;
+                try{
+                    this.onsuccesspool[i].jsonResponse = JSON.parse(this.responseText);
+                }
+                catch(e){
+                    this.onsuccesspool[i].jsonResponse = null;
+                }
                 if(this.onsuccesspool[i].call === true){
-                    this.onsuccesspool[i].func(this.status);
+                    this.onsuccesspool[i].func();
                 }
             }
         }
         else if(this.readyState === 4 && this.status >= 400 && this.status < 500){
             console.info('AJAX: Ready State = 4 (DONE)');
+            var o = {get response(){}};
             for(var i = 0 ; i < this.onclienterrorpool.length ; i++){
+                this.onclienterrorpool[i].func.status = this.status;
+                this.onclienterrorpool[i].func.response = this.responseText;
+                this.onclienterrorpool[i].func.xmlResponse = this.responseXML;
+                try{
+                    this.onclienterrorpool[i].func.jsonResponse = JSON.parse(this.responseText);
+                }
+                catch(e){
+                    this.onclienterrorpool[i].func.jsonResponse = null;
+                }
                 if(this.onclienterrorpool[i].call === true){
-                    this.onclienterrorpool[i].func(this.status);
+                    this.onclienterrorpool[i].func();
                 }
             }
         }
@@ -125,9 +144,18 @@ function AJAX(){
         }
         else if(this.readyState === 4 && this.status >= 500 && this.status < 600){
             console.info('AJAX: Ready State = 4 (DONE)');
-            for(var i = 0 ; i < this.onsuccesspool ; i++){
-                if(this.onsuccesspool[i].call === true){
-                    this.onsuccesspool[i].func(this.status);
+            for(var i = 0 ; i < this.onservererrorpool.length ; i++){
+                this.onservererrorpool[i].func.status = this.status;
+                this.onservererrorpool[i].func.response = this.responseText;
+                this.onservererrorpool[i].func.xmlResponse = this.responseXML;
+                try{
+                    this.onservererrorpool[i].func.jsonResponse = JSON.parse(this.responseText);
+                }
+                catch(e){
+                    this.onservererrorpool[i].func.jsonResponse = null;
+                }
+                if(this.onservererrorpool[i].call === true){
+                    this.onservererrorpool[i].func();
                 }
             }
         }
