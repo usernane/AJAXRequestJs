@@ -1,10 +1,13 @@
 
 "use strict";
-/**
- * Names of pools of events.
- * @type Array
- */
-AJAX.CALLBACK_POOLS = ['servererror','clienterror','success'];
+Object.defineProperty(AJAX,'CALLBACK_POOLS',{
+    /**
+    * Names of pools of events.
+    * @type Array
+    */
+    value:['servererror','clienterror','success'],
+    writable:false
+});
 /**
  * Array of functions used to create XMLHttpRequest object.
  * @type Array
