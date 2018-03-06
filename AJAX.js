@@ -24,6 +24,25 @@ Object.defineProperties(AJAX,{
             function (){return new ActiveXObject("MSXML2.XMLHTTP.3.0");}
         ],
         writable:false
+    },
+    createXhr:{
+        /**
+        * A factory function used to create XHR object for diffrent browsers.
+        * @returns {Mixed} False in case of failure. Other than that, it will 
+        * return XHR object that can be used to send AJAX.
+        */
+        value:function createXhr(){
+            for(var i = 0 ; i < AJAX.XMLHttpFactories.length ; i++){
+                try{
+                    return AJAX.XMLHttpFactories[i]();
+                }
+                catch(e){
+
+                }
+            }
+            return false;
+        },
+        wriable:false
     }
 });
 Object.defineProperties(AJAX.META,{
@@ -47,7 +66,7 @@ Object.defineProperties(AJAX.META,{
 });
 /**
  * A class that can be used to simplfy AJAX requests.
- * @version 0.0.4
+ * @version 0.0.5
  * @author Ibrahim BinAlshikh <ibinshikh@hotmail.com>
  * @constructor
  * @returns {AJAX}
@@ -145,6 +164,7 @@ function AJAX(){
                         this.onsuccesspool[i].jsonResponse = JSON.parse(this.responseText);
                     }
                     catch(e){
+                        console.warn('Unable to convert response into JSON object.');
                         this.onsuccesspool[i].jsonResponse = null;
                     }
                     if(this.onsuccesspool[i].call === true){
@@ -156,14 +176,15 @@ function AJAX(){
                 console.info('AJAX: Ready State = 4 (DONE)');
                 var o = {get response(){}};
                 for(var i = 0 ; i < this.onclienterrorpool.length ; i++){
-                    this.onclienterrorpool[i].func.status = this.status;
-                    this.onclienterrorpool[i].func.response = this.responseText;
-                    this.onclienterrorpool[i].func.xmlResponse = this.responseXML;
+                    this.onclienterrorpool[i].status = this.status;
+                    this.onclienterrorpool[i].response = this.responseText;
+                    this.onclienterrorpool[i].xmlResponse = this.responseXML;
                     try{
-                        this.onclienterrorpool[i].func.jsonResponse = JSON.parse(this.responseText);
+                        this.onclienterrorpool[i].jsonResponse = JSON.parse(this.responseText);
                     }
                     catch(e){
-                        this.onclienterrorpool[i].func.jsonResponse = null;
+                        console.warn('Unable to convert response into JSON object.');
+                        this.onclienterrorpool[i].jsonResponse = null;
                     }
                     if(this.onclienterrorpool[i].call === true){
                         this.onclienterrorpool[i].func();
@@ -184,6 +205,7 @@ function AJAX(){
                         this.onservererrorpool[i].func.jsonResponse = JSON.parse(this.responseText);
                     }
                     catch(e){
+                        console.warn('Unable to convert response into JSON object.');
                         this.onservererrorpool[i].func.jsonResponse = null;
                     }
                     if(this.onservererrorpool[i].call === true){
@@ -195,24 +217,9 @@ function AJAX(){
                 console.log('Status: '+this.status);
             }
         },
-        'writable':false
+        writable:false,
+        enumerable: false
     });
-    /**
-     * A factory function used to create XHR object for diffrent browsers.
-     * @returns {Mixed} False in case of failure. Other than that, it will 
-     * return XHR object that can be used to send AJAX.
-     */
-    function createXhr(){
-        for(var i = 0 ; i < AJAX.XMLHttpFactories.length ; i++){
-            try{
-                return AJAX.XMLHttpFactories[i]();
-            }
-            catch(e){
-
-            }
-        }
-        return false;
-    };
     /**
      * A utility function used to show warning in the console about the existance 
      * of events pool.
@@ -246,7 +253,8 @@ function AJAX(){
             value:function(){
                 return this.enabled;
             },
-            writable:false
+            writable:false,
+            enumerable: true
         },
         setResponse:{
             /**
@@ -258,7 +266,8 @@ function AJAX(){
             value:function(response){
                 this.serverResponse = response;
             },
-            writable:false
+            writable:false,
+            enumerable: true
         },
         getServerResponse:{
             /**
@@ -269,7 +278,8 @@ function AJAX(){
             value:function(){
                 return this.serverResponse;
             },
-            writable:false
+            writable:false,
+            enumerable: true
         },
         responseAsJSON:{
             /**
@@ -287,7 +297,8 @@ function AJAX(){
                 }
                 return undefined;
             },
-            writable:false
+            writable:false,
+            enumerable: true
         },
         setOnServerError:{
             /**
@@ -311,7 +322,8 @@ function AJAX(){
                 }
                 return undefined;
             },
-            writable:false
+            writable:false,
+            enumerable: true
         },
         removeCall:{
             /**
@@ -346,7 +358,8 @@ function AJAX(){
                     noSuchPool(pool_name);
                 }
             },
-            writable:false
+            writable:false,
+            enumerable: true
         },
         disableCallExcept:{
             /**
@@ -386,7 +399,8 @@ function AJAX(){
                     noSuchPool(pool_name);
                 }
             },
-            writable:false
+            writable:false,
+            enumerable: true
         },
         setCallEnabled:{
             /**
@@ -425,7 +439,8 @@ function AJAX(){
                     noSuchPool(pool_name);
                 }
             },
-            writable:false
+            writable:false,
+            enumerable: true
         },
         getCallBack:{
             /**
@@ -462,7 +477,8 @@ function AJAX(){
                     noSuchPool(pool_name);
                 }
             },
-            writable:false
+            writable:false,
+            enumerable: true
         },
         setOnClientError:{
             /**
@@ -485,7 +501,8 @@ function AJAX(){
                     console.warn('setOnClientError: Provided parameter is not a function.');
                 }
             },
-            writable:false
+            writable:false,
+            enumerable: true
         },
         setOnSuccess:{
             /**
@@ -508,7 +525,8 @@ function AJAX(){
                     console.warn('setOnSuccess: Provided parameter is not a function.');
                 }
             },
-            writable:false
+            writable:false,
+            enumerable: true
         },
         setReqMethod:{
             /**
@@ -530,7 +548,8 @@ function AJAX(){
                     this.method = 'GET';
                 }
             },
-            writable:false
+            writable:false,
+            enumerable: true
         },
         getReqMethod:{
             /**
@@ -540,7 +559,8 @@ function AJAX(){
             value:function(){
                 return this.method;
             },
-            writable:false
+            writable:false,
+            enumerable: true
         },
         setURL:{
             /**
@@ -551,7 +571,8 @@ function AJAX(){
             value:function(url){
                 this.url = url;
             },
-            writable:false
+            writable:false,
+            enumerable: true
         },
         getURL:{
             /**
@@ -561,7 +582,8 @@ function AJAX(){
             value:function(){
                 return this.url;
             },
-            writable:false
+            writable:false,
+            enumerable: true
         },
         setParams:{
             /**
@@ -572,7 +594,8 @@ function AJAX(){
             value:function(params){
                 this.params = params;
             },
-            writable:false
+            writable:false,
+            enumerable: true
         },
         getParams:{
             /**
@@ -582,7 +605,8 @@ function AJAX(){
             value:function(){
                 return this.params;
             },
-            writable:false
+            writable:false,
+            enumerable: true
         },
         send:{
             /**
@@ -616,7 +640,11 @@ function AJAX(){
                     }
                     else if(method === 'POST'){
                         this.xhr.open(method,url);
-                        this.xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                        if(this.params.toString() !== '[object FormData]'){
+                            this.xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                        }
+                        
+                        
                         this.xhr.send(params);
                         return true;
                     }
@@ -629,7 +657,8 @@ function AJAX(){
                 }
                 return false;
             },
-            writable:false
+            writable:false,
+            enumerable: true
         },
         setEnabled:{
             /**
@@ -645,19 +674,22 @@ function AJAX(){
                     this.enabled = false;
                 }
             },
-            writable:false
+            writable:false,
+            enumerable: true
         },
         xhr:{
             /**
             * The XMLHttpRequest object that is used to send AJAX.
             */
-            value:createXhr(),
-            writable:false
+            value:AJAX.createXhr(),
+            writable:false,
+            enumerable: true
         }
     });
     //configuration 
     if(this.xhr === false || this.xhr === undefined || this.xhr === null){
         console.error('AJAX: Unable to creeate xhr object! Browser does not support it.');
+        return;
     }
     var instance = this;
     var a = function(){
