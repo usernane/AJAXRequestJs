@@ -10,7 +10,7 @@ Object.defineProperties(AJAX,{
         * Names of pools of events.
         * @type Array
         */
-        value:['servererror','clienterror','success'],
+        value:['servererror','clienterror','success','connectionlost'],
         writable:false
     },
     'XMLHttpFactories':{
@@ -47,11 +47,11 @@ Object.defineProperties(AJAX,{
 });
 Object.defineProperties(AJAX.META,{
     VERSION:{
-        value:'0.0.5',
+        value:'0.0.6',
         writable:false
     },
     REALSE_DATE:{
-        value:'02/06/2018',
+        value:'04/01/2018',
         writable:false
     },
     CONTRIBUTORS:{
@@ -69,9 +69,19 @@ Object.defineProperties(AJAX.META,{
  * @version 0.0.5
  * @author Ibrahim BinAlshikh <ibinshikh@hotmail.com>
  * @constructor
+ * @param {Object} config AJAX configuration.
  * @returns {AJAX}
  */
-function AJAX(){
+function AJAX(config={
+    method:'get',
+    url:'',
+    'enable-log':false,
+    enabled:true
+}){
+    this['enable-log'] = config['enable-log'];
+    if(this['enable-log'] === true){
+        this.log('AJAX: Logging mode is enabled.');
+    }
     /**
      * Request method.
      */
@@ -104,6 +114,18 @@ function AJAX(){
             console.info('Uploaded: '+percentComplete+'%');
         }
     };
+    /**
+     * A pool of functions to call in case of internet connection lost.
+     */
+    this.onconnectionlostpool = [
+        {
+            'id':0,
+            'call':true,
+            'func':function(){
+                console.info('AJAX: Connection lost.');
+            }
+        }
+    ];
     /**
      * A pool of functions to call in case of successful request.
      */
@@ -154,6 +176,24 @@ function AJAX(){
             else if(this.readyState === 3){
                 console.info('AJAX: Ready State = 3 (LOADING)');
             }
+            else if(this.readyState === 4 && this.status === 0){
+                console.info('AJAX: Ready State = 4 (DONE)');
+                for(var i = 0 ; i < this.onconnectionlostpool.length ; i++){
+                    this.onconnectionlostpool[i].status = this.status;
+                    this.onconnectionlostpool[i].response = this.responseText;
+                    this.onconnectionlostpool[i].xmlResponse = this.responseXML;
+                    try{
+                        this.onconnectionlostpool[i].jsonResponse = JSON.parse(this.responseText);
+                    }
+                    catch(e){
+                        console.warn('Unable to convert response into JSON object.');
+                        this.onconnectionlostpool[i].jsonResponse = null;
+                    }
+                    if(this.onconnectionlostpool[i].call === true){
+                        this.onconnectionlostpool[i].func();
+                    }
+                }
+            }
             else if(this.readyState === 4 && this.status >= 200 && this.status < 300){
                 console.info('AJAX: Ready State = 4 (DONE)');
                 for(var i = 0 ; i < this.onsuccesspool.length ; i++){
@@ -174,7 +214,6 @@ function AJAX(){
             }
             else if(this.readyState === 4 && this.status >= 400 && this.status < 500){
                 console.info('AJAX: Ready State = 4 (DONE)');
-                var o = {get response(){}};
                 for(var i = 0 ; i < this.onclienterrorpool.length ; i++){
                     this.onclienterrorpool[i].status = this.status;
                     this.onclienterrorpool[i].response = this.responseText;
@@ -256,6 +295,22 @@ function AJAX(){
             writable:false,
             enumerable: true
         },
+        log:function(message,type='',force=false){
+            if(this['enable-log'] === true || force === true){
+                if(type==='info'){
+                    console.info(message);
+                }
+                else if(type==='warning'){
+                    console.warn(message);
+                }
+                else if(type==='error'){
+                    console.error(message);
+                }
+                else{
+                    console.log(message);
+                }
+            }
+        },
         setResponse:{
             /**
             * Sets the value of the property serverResponse. Do not call this function 
@@ -293,7 +348,7 @@ function AJAX(){
                     return JSON.parse(this.getServerResponse());
                 }
                 catch(e){
-                    console.warn('responseAsJSON: Unable to convirt server response to JSON object!');
+                    this.log('AJAX.responseAsJSON: Unable to convert server response to JSON object!','warning');
                 }
                 return undefined;
             },
@@ -318,7 +373,7 @@ function AJAX(){
                     return id;
                 }
                 else{
-                    console.warn('setOnServerError: Provided parameter is not a function.');
+                    this.log('AJAX.setOnServerError: Provided parameter is not a function.','warning');
                 }
                 return undefined;
             },
@@ -344,14 +399,14 @@ function AJAX(){
                                     return this[pool_name].pop(this[pool_name][x]);
                                 }
                             }
-                            console.warn('removeCall: No callback was found with ID = '+id+' in the pool \''+pool_name+'\'');
+                            this.log('AJAX.removeCall: No callback was found with ID = '+id+' in the pool \''+pool_name+'\'','error');
                         }
                         else{
                             noSuchPool(pool_name);
                         }
                     }
                     else{
-                        console.warn('removeCall: Invalid pool name type. Pool name must be string.');
+                        this.log('AJAX.removeCall: Invalid pool name type. Pool name must be string.','error');
                     }
                 }
                 else{
@@ -392,7 +447,7 @@ function AJAX(){
                         }
                     }
                     else{
-                        console.warn('disableCallExcept: Invalid pool name type. Pool name must be string.');
+                        this.log('AJAX.disableCallExcept: Invalid pool name type. Pool name must be string.','error');
                     }
                 }
                 else{
@@ -425,14 +480,14 @@ function AJAX(){
                                     return;
                                 }
                             }
-                            console.warn('setCallEnabled: No callback was found with ID = '+id+' in the pool \''+pool_name+'\'');
+                            this.log('AJAX.setCallEnabled: No callback was found with ID = '+id+' in the pool \''+pool_name+'\'','warning');
                         }
                         else{
                             noSuchPool(pool_name);
                         }
                     }
                     else{
-                        console.warn('setCallEnabled: Invalid pool name type. Pool name must be string.');
+                        this.log('AJAX.setCallEnabled: Invalid pool name type. Pool name must be string.','error');
                     }
                 }
                 else{
@@ -463,14 +518,14 @@ function AJAX(){
                                     return this[pool_name][x];
                                 }
                             }
-                            console.warn('getCallBack: No callback was found with ID = '+id+' in the pool \''+pool_name+'\'');
+                            this.log('AJAX.getCallBack: No callback was found with ID = '+id+' in the pool \''+pool_name+'\'','warning');
                         }
                         else{
                             noSuchPool(pool_name);
                         }
                     }
                     else{
-                        console.warn('getCallBack: Invalid pool name type. Pool name must be string.');
+                        this.log('AJAX.getCallBack: Invalid pool name type. Pool name must be string.','error');
                     }
                 }
                 else{
@@ -498,7 +553,7 @@ function AJAX(){
                     return id;
                 }
                 else{
-                    console.warn('setOnClientError: Provided parameter is not a function.');
+                    this.log('AJAX.setOnClientError: Provided parameter is not a function.','error');
                 }
             },
             writable:false,
@@ -522,7 +577,7 @@ function AJAX(){
                     return id;
                 }
                 else{
-                    console.warn('setOnSuccess: Provided parameter is not a function.');
+                    this.log('AJAX.setOnSuccess: Provided parameter is not a function.','error');
                 }
             },
             writable:false,
@@ -544,7 +599,7 @@ function AJAX(){
                     }
                 }
                 else{
-                    console.warn('setReqMethod: Null, undefined or unsupported method. GET is used.');
+                    this.log('AJAX.setReqMethod: Null, undefined or unsupported method. GET is set as default.','warning',true);
                     this.method = 'GET';
                 }
             },
@@ -619,9 +674,9 @@ function AJAX(){
                     var method = this.getReqMethod();
                     var params = this.getParams();
                     var url = this.getURL();
-                    console.info('Ajax Params: '+params);
-                    console.info('Request Method: '+method);
-                    console.info('URL: '+url);
+                    this.log('Ajax Params: '+params,'info');
+                    this.log('Request Method: '+method,'info');
+                    this.log('URL: '+url,'info');
                     this.xhr.onreadystatechange = this.onreadystatechange;
                     this.xhr.onload = this.onload;
                     this.xhr.onprogress = this.onprogress;
@@ -649,11 +704,11 @@ function AJAX(){
                         return true;
                     }
                     else{
-                        console.error('send: Method not supported: '+method);
+                        this.log('AJAX.send: Method not supported: '+method,'info',true);
                     }
                 }
                 else{
-                    console.warn('send: AJAX is disabled.');
+                    this.log('AJAX.send: AJAX is disabled.','info',true);
                 }
                 return false;
             },
@@ -688,7 +743,7 @@ function AJAX(){
     });
     //configuration 
     if(this.xhr === false || this.xhr === undefined || this.xhr === null){
-        console.error('AJAX: Unable to creeate xhr object! Browser does not support it.');
+        this.log('AJAX: Unable to creeate xhr object! Browser does not support it.','error',true);
         return;
     }
     var instance = this;
@@ -698,4 +753,7 @@ function AJAX(){
     this.setOnSuccess(a);
     this.setOnServerError(a);
     this.setOnClientError(a);
+    this.setReqMethod(config.method);
+    this.setURL(config.url);
+    this.setEnabled(config.enabled);
 }
