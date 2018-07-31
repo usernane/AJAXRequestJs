@@ -47,7 +47,7 @@ Object.defineProperties(AJAX,{
 });
 Object.defineProperties(AJAX.META,{
     VERSION:{
-        value:'0.0.7',
+        value:'1.0.1',
         writable:false
     },
     REALSE_DATE:{
@@ -66,7 +66,7 @@ Object.defineProperties(AJAX.META,{
 });
 /**
  * A class that can be used to simplfy AJAX requests.
- * @version 0.0.5
+ * @version 1.0.1
  * @author Ibrahim BinAlshikh <ibinshikh@hotmail.com>
  * @constructor
  * @param {Object} config AJAX configuration.
