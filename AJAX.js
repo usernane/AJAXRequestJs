@@ -47,11 +47,11 @@ Object.defineProperties(AJAX,{
 });
 Object.defineProperties(AJAX.META,{
     VERSION:{
-        value:'1.0.1',
+        value:'1.0.2',
         writable:false
     },
     REALSE_DATE:{
-        value:'04/01/2018',
+        value:'28/03/2020',
         writable:false
     },
     CONTRIBUTORS:{
