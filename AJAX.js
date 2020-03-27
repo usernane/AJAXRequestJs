@@ -10,7 +10,7 @@ Object.defineProperties(AJAX,{
         * Names of pools of events.
         * @type Array
         */
-        value:['servererror','clienterror','success','connectionlost'],
+        value:['servererror','clienterror','success','connectionlost','afterajax'],
         writable:false
     },
     'XMLHttpFactories':{
@@ -69,7 +69,16 @@ Object.defineProperties(AJAX.META,{
  * @version 1.0.1
  * @author Ibrahim BinAlshikh <ibinshikh@hotmail.com>
  * @constructor
- * @param {Object} config AJAX configuration.
+ * @param {Object} config AJAX configuration. The object can have the 
+ * following properties:
+ * <ul>
+ * <li><b>method</b>: Request method such as GET or POST.</li>
+ * <li><b>url</b>: The URL at which AJAX request will be sent 
+ * to.</li>
+ * <li><b>enable-log</b>: Used for development. If set to true, more 
+ * informative messages will appear in the console.</li>
+ * <li><b>enabled</b>: A boolean to enable or disable AJAX.</li>
+ * </ul>
  * @returns {AJAX}
  */
 function AJAX(config={
@@ -122,6 +131,19 @@ function AJAX(config={
             }
         }
     ];
+    /**
+     * A pool of functions to call after ajax has finished with regards of the 
+     * final state.
+     */
+    this.onafterajaxpool = [
+        {
+            'id':0,
+            'call':true,
+            'func':function(){
+                console.info('AJAX: After AJAX '+this.status);
+            }
+        }
+    ]
     /**
      * A pool of functions to call in case of successful request.
      */
@@ -183,6 +205,15 @@ function AJAX(config={
                         this.onconnectionlostpool[i].func();
                     }
                 }
+                for(var i = 0 ; i < this.onafterajaxpool.length ; i++){
+                    this.onafterajaxpool[i].status = this.status;
+                    this.onafterajaxpool[i].response = this.responseText;
+                    this.onafterajaxpool[i].xmlResponse = this.responseXML;
+                    this.onafterajaxpool[i].jsonResponse = null;
+                    if(this.onafterajaxpool[i].call === true){
+                        this.onafterajaxpool[i].func();
+                    }
+                }
             }
             else if(this.readyState === 4 && this.status >= 200 && this.status < 300){
                 this.log('AJAX: Ready State = 4 (DONE)','info');
@@ -203,6 +234,15 @@ function AJAX(config={
                         this.onsuccesspool[i].func();
                     }
                 }
+                for(var i = 0 ; i < this.onafterajaxpool.length ; i++){
+                    this.onafterajaxpool[i].status = this.status;
+                    this.onafterajaxpool[i].response = this.responseText;
+                    this.onafterajaxpool[i].xmlResponse = this.responseXML;
+                    this.onafterajaxpool[i].jsonResponse = jsonResponse;
+                    if(this.onafterajaxpool[i].call === true){
+                        this.onafterajaxpool[i].func();
+                    }
+                }
             }
             else if(this.readyState === 4 && this.status >= 400 && this.status < 500){
                 this.log('AJAX: Ready State = 4 (DONE)','info');
@@ -210,8 +250,8 @@ function AJAX(config={
                     var jsonResponse = JSON.parse(this.responseText);
                 }
                 catch(e){
-                    this.log('Unable to convert response into JSON object.','warning');
-                    this.log('JSON DATA is set to \'null\'.','warning');
+                    this.log('Unable to convert response into JSON object.','warning',true);
+                    this.log('JSON DATA is set to \'null\'.','warning',true);
                     var jsonResponse = null;
                 }
                 for(var i = 0 ; i < this.onclienterrorpool.length ; i++){
@@ -221,6 +261,15 @@ function AJAX(config={
                     this.onclienterrorpool[i].jsonResponse = jsonResponse;
                     if(this.onclienterrorpool[i].call === true){
                         this.onclienterrorpool[i].func();
+                    }
+                }
+                for(var i = 0 ; i < this.onafterajaxpool.length ; i++){
+                    this.onafterajaxpool[i].status = this.status;
+                    this.onafterajaxpool[i].response = this.responseText;
+                    this.onafterajaxpool[i].xmlResponse = this.responseXML;
+                    this.onafterajaxpool[i].jsonResponse = jsonResponse;
+                    if(this.onafterajaxpool[i].call === true){
+                        this.onafterajaxpool[i].func();
                     }
                 }
             }
@@ -245,6 +294,15 @@ function AJAX(config={
                     this.onservererrorpool[i].jsonResponse = jsonResponse;
                     if(this.onservererrorpool[i].call === true){
                         this.onservererrorpool[i].func();
+                    }
+                }
+                for(var i = 0 ; i < this.onafterajaxpool.length ; i++){
+                    this.onafterajaxpool[i].status = this.status;
+                    this.onafterajaxpool[i].response = this.responseText;
+                    this.onafterajaxpool[i].xmlResponse = this.responseXML;
+                    this.onafterajaxpool[i].jsonResponse = jsonResponse;
+                    if(this.onafterajaxpool[i].call === true){
+                        this.onafterajaxpool[i].func();
                     }
                 }
             }
@@ -568,6 +626,30 @@ function AJAX(config={
             writable:false,
             enumerable: true
         },
+        setAfterAjax:{
+            /**
+            * Append a function to the pool of functions that will be called after 
+            * ajax request is finished regardless of the status. 
+            * @param {Boolean} If set to true, the callback will be called. If false, 
+            * it woun't be called.
+            * @param {Function} callback A function to call on client error.
+            * @returns {undefined|Number} Returns an ID for the function. If not added, 
+            * the method will return undefined.
+            */
+            value:function(callback,call=true){
+                if(typeof callback === 'function'){
+                    var id = this.onafterajaxpool[this.onafterajaxpool.length - 1]['id'] + 1; 
+                    this.onafterajaxpool.push({'id':id,'call':call,'func':callback});
+                    this.log('AJAX.setAfterAjax: New callback added [id = '+id+' , call = '+call+'].','info');
+                    return id;
+                }
+                else{
+                    this.log('AJAX.setAfterAjax: Provided parameter is not a function.','error');
+                }
+            },
+            writable:false,
+            enumerable: true
+        },
         setOnSuccess:{
             /**
             * Append a function to the pool of functions that will be called in case of 
@@ -687,7 +769,7 @@ function AJAX(config={
             */
             value:function(params){
                 this.params = params;
-                this.log('AJAX.setParams: Parameters is set to \''+params+'\'.','info');
+                this.log('AJAX.setParams: Parameters updated.','info');
             },
             writable:false,
             enumerable: true
@@ -726,10 +808,23 @@ function AJAX(config={
                     this.xhr.onservererrorpool = this.onservererrorpool;
                     this.xhr.onclienterrorpool = this.onclienterrorpool;
                     this.xhr.onconnectionlostpool = this.onconnectionlostpool;
+                    this.xhr.onafterajaxpool = this.onafterajaxpool;
                     this.xhr['enable-log'] = this['enable-log'];
+                    if(typeof this.params === 'object' && this.params.toString() !== '[object FormData]'){
+                        var localParams = '';
+                        var keys = Object.keys(this.params);
+                        var and = '';
+                        for(var x = 0 ; x < keys.length ; x++){
+                            localParams += and+encodeURIComponent(keys[x])+'='+encodeURIComponent(this.params[keys[x]]);
+                            and = '&';
+                        }
+                    }
+                    else{
+                        var localParams = this.params;
+                    }
                     if(method === 'GET' || method === 'DELETE'){
-                        if(params !== undefined && params !== null && params !== ''){
-                            this.xhr.open(method,url+'?'+params);
+                        if(localParams !== undefined && localParams !== null && localParams !== ''){
+                            this.xhr.open(method,url+'?'+localParams);
                         }
                         else{
                             this.xhr.open(method,url);
@@ -739,11 +834,11 @@ function AJAX(config={
                     }
                     else if(method === 'POST'){
                         this.xhr.open(method,url);
-                        if(this.params.toString() !== '[object FormData]'){
+                        if(localParams.toString() !== '[object FormData]'){
                             this.xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
                             this.log('AJAX.send: Setting header \'Content-Type\' to \'application/x-www-form-urlencoded\'.','info');
                         }
-                        this.xhr.send(params);
+                        this.xhr.send(localParams);
                         return true;
                     }
                     else{
