@@ -105,3 +105,66 @@ ajax.setAfterAjax(function(){
 ajax.send();
 
 ```
+
+## Sending Parameters to Server
+The class does support sending data using `GET`, `POST`, `PUT` or `DELETE` request methods. The data can be a simple string, an object or a `DataForm` object. 
+### As a String
+The following sample code shows how to send parameters to the server as an object. We use `packagist.org` public API in this example.
+``` javascript
+ var ajax = new AJAX({
+    method:'get',
+    url:'https://packagist.org/packages/list.json'
+});
+
+// Adds a custom parameter.
+ajax.setParams('vendor=webfiori');
+
+ajax.setOnSuccess(function(){
+    if(this.jsonResponse){
+        // We must know the format of JSON object to get data.
+        for(var x = 0 ; x < this.jsonResponse.packageNames.length ; x++) {
+            console.log('Package #'+x+' Name: '+this.jsonResponse.packageNames[x]);
+        }
+    }
+    else{
+        console.warn('No JSON data was received.');
+    }
+});
+ajax.send();
+```
+?q=webfiori
+### As an Object
+The following sample code shows how to send parameters to the server as a JavaScript object.
+``` javascript
+ var ajax = new AJAX({
+    method:'get',
+    url:'https://packagist.org/search.json'
+});
+
+// Adds a custom parameter.
+var searchString = 'webfiori';
+var seachObj = {
+    q:searchString
+};
+ajax.setParams(seachObj);
+
+ajax.setOnSuccess(function(){
+    if(this.jsonResponse){
+        console.warn('Printing Search Results:');
+        for(var x = 0 ; x < this.jsonResponse.results.length ; x++) {
+            var searchResult = this.jsonResponse.results[x];
+            console.warn('Result #'+x+' Info:');
+            console.log('Package Name: '+searchResult.name);
+            console.log('Description: '+searchResult.description);
+            console.log('Link: '+searchResult.url);
+            console.log('Total Downloads: '+searchResult.downloads);
+        }
+    }
+    else{
+        console.warn('No JSON data was received.');
+    }
+});
+ajax.send();
+```
+### As a `FormData` Object
+`FormData` is usually used to send data to the server using `POST` or `PUT` to modify something in the database. Also, it can be used to upload files to the database. 
