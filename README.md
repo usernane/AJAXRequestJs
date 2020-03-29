@@ -5,11 +5,11 @@ A JavaScript file that can help in making AJAX requests much simpler task in you
 </p>
 The main aim of the library is to extend XHR feature which is offered by any modren web browser.
 
-# Main features:
+## Main features:
 * Assign callbacks to execute on success, client error, server error or on disconnected.
 * Logging support in console for development.
 
-# Usage Example
+## Usage Example
 In order to use the library, you must first include the JavaScript file in your head tag of your web page:
 ``` html
 <head>
@@ -17,7 +17,7 @@ In order to use the library, you must first include the JavaScript file in your 
 </head>
 ```
 
-## Basic Usage
+### Basic Usage
 The following code sample shows the most basic usage of the library.
 ``` javascript
  var ajax = new AJAX({
@@ -44,7 +44,7 @@ ajax.setOnSuccess(function(){
 ajax.send();
 
 ```
-## More Complex Yet Simple
+### More Complex Yet Simple
 The following code sample shows more complex usage which sets a function to execute for diffrent HTTP codes.
 
 ``` javascript
@@ -108,9 +108,9 @@ ajax.send();
 
 ```
 
-## Sending Parameters to Server
+### Sending Parameters to Server
 The class does support sending data using `GET`, `POST`, `PUT` or `DELETE` request methods. The data can be a simple string, an object or a `DataForm` object. 
-### As a String
+#### As a String
 The following sample code shows how to send parameters to the server as an object. We use `packagist.org` public API in this example.
 ``` javascript
  var ajax = new AJAX({
@@ -135,7 +135,7 @@ ajax.setOnSuccess(function(){
 ajax.send();
 ```
 ?q=webfiori
-### As an Object
+#### As an Object
 The following sample code shows how to send parameters to the server as a JavaScript object.
 ``` javascript
  var ajax = new AJAX({
@@ -168,5 +168,9 @@ ajax.setOnSuccess(function(){
 });
 ajax.send();
 ```
-### As a `FormData` Object
+#### As a `FormData` Object
 `FormData` is usually used to send data to the server using `POST` or `PUT` to modify something in the database. Also, it can be used to upload files to the database. 
+
+## License
+The project is licensed under MIT license.
+
