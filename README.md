@@ -8,6 +8,8 @@ The main aim of the library is to extend XHR feature which is offered by any mod
 ## Main features:
 * Assign callbacks to execute on success, client error, server error or on disconnected.
 * Logging support in console for development.
+* Get server response as a JSON object or a plain text.
+* Enable and disable callbacks as needed since every callback has an ID.
 
 ## Usage Example
 In order to use the library, you must first include the JavaScript file in your head tag of your web page:
