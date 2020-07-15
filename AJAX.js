@@ -650,6 +650,59 @@ function AJAX(config={
             writable:false,
             enumerable: true
         },
+        getCsrfToken: {
+            value:function(){
+                this.log('AJAX.getExtractCsrfToken: Searching for CSRF token value.','info');
+                this.log('AJAX.getExtractCsrfToken: Checking "window.csrfToken"...','info');
+                if (window.csrfToken === undefined || window.csrfToken === null) {
+                    this.log('AJAX.getExtractCsrfToken: It is not set.','warning');
+                    this.log('AJAX.getExtractCsrfToken: Searching for meta tag with name = "csrf-token"...','info');
+                    var csrfEl = document.querySelector('meta[name="csrf-token"]');
+                    if (csrfEl === null) {
+                        this.log('AJAX.getExtractCsrfToken: Element not found.','warning');
+                        this.log('AJAX.getCsrfToken: Searching for input element with name = "csrf-token"...', '');
+                        var csrfEl = document.querySelector('input[name="csrf-token"]');
+                        if (csrfEl === null) {
+                            this.log('AJAX.getExtractCsrfToken: Element not found.','warning');
+                            this.log('AJAX.getCsrfToken: CSRF token not found.', 'warning');
+                            var csrfEl = document.querySelector('input[name="csrf-token"]');
+                        } else {
+                            this.log('AJAX.getExtractCsrfToken: Checking the value of the attribute "value"...','info');
+                            window.csrfToken = csrfEl.getAttribute('value');
+                            if (window.csrfToken) {
+                                this.log('AJAX.getExtractCsrfToken: CSRF token found.','info');
+                            }
+                        }
+                    } else {
+                        this.log('AJAX.getExtractCsrfToken: Checking the value of the attribute "content"...','info');
+                        window.csrfToken = csrfEl.getAttribute('content');
+                        if (window.csrfToken) {
+                            this.log('AJAX.getExtractCsrfToken: CSRF token found.','info');
+                        } else {
+                            this.log('AJAX.getExtractCsrfToken: The attribute "content" has no value.','warning');
+                            this.log('AJAX.getCsrfToken: Searching for input element with name = "csrf-token"...', '');
+                            var csrfEl = document.querySelector('input[name="csrf-token"]');
+                            if (csrfEl === null) {
+                                this.log('AJAX.getExtractCsrfToken: Element not found.','warning');
+                                this.log('AJAX.getCsrfToken: CSRF token not found.', 'warning');
+                                var csrfEl = document.querySelector('input[name="csrf-token"]');
+                            } else {
+                                this.log('AJAX.getExtractCsrfToken: Checking the value of the attribute "value"...','info');
+                                window.csrfToken = csrfEl.getAttribute('value');
+                                if (window.csrfToken) {
+                                    this.log('AJAX.getExtractCsrfToken: CSRF token found.','info');
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    this.log('AJAX.getExtractCsrfToken: CSRF token found.','info');
+                }
+                return window.csrfToken;
+            },
+            writable:false,
+            enumerable: true
+        },
         setOnSuccess:{
             /**
             * Append a function to the pool of functions that will be called in case of 
@@ -796,6 +849,7 @@ function AJAX(config={
                 if(this.isEnabled()){
                     var method = this.getReqMethod();
                     var params = this.getParams();
+                    
                     var url = this.getURL();
                     this.log('AJAX.send: Params: '+params,'info');
                     this.log('AJAX.send: Request Method: '+method,'info');
@@ -829,11 +883,23 @@ function AJAX(config={
                         else{
                             this.xhr.open(method,url);
                         }
+                        if (method === 'DELETE') {
+                            //Add CSRF token.
+                            var csrfTok = this.getCsrfToken();
+                            if (csrfTok) {
+                                this.xhr.setRequestHeader('X-CSRF-TOKEN', csrfTok);
+                            }
+                        }
                         this.xhr.send();
                         return true;
                     }
-                    else if(method === 'POST'){
+                    else if(method === 'POST' || method === 'PUT'){
                         this.xhr.open(method,url);
+                        //Add CSRF token.
+                        var csrfTok = this.getCsrfToken();
+                        if (csrfTok) {
+                            this.xhr.setRequestHeader('X-CSRF-TOKEN', csrfTok);
+                        }
                         if(localParams.toString() !== '[object FormData]'){
                             this.xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
                             this.log('AJAX.send: Setting header \'Content-Type\' to \'application/x-www-form-urlencoded\'.','info');
