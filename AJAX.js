@@ -78,14 +78,30 @@ Object.defineProperties(AJAX.META,{
  * <li><b>enable-log</b>: Used for development. If set to true, more 
  * informative messages will appear in the console.</li>
  * <li><b>enabled</b>: A boolean to enable or disable AJAX.</li>
+ * <li><b>onSuccess</b>: An array that contains one or more callbacks which 
+ * will be executed when server sends the response code 2xx.</li>
+ * <li><b>onClientErr</b>: An array that contains one or more callbacks which 
+ * will be executed when server sends the response code 4xx.</li>
+ * <li><b>onServerErr</b>: An array that contains one or more callbacks which 
+ * will be executed when server sends the response code 5xx.</li>
  * </ul>
+ * <li><b>onDisconnected</b>: An array that contains one or more callbacks which 
+ * will be executed when there is no internet connection.</li>
+ * <li><b>afterAjax</b>: An array that contains one or more callbacks which 
+ * will be executed after AJAX request is finishhed regrardless of status code.</li>
  * @returns {AJAX}
  */
 function AJAX(config={
     method:'get',
     url:'',
     'enable-log':false,
-    enabled:true
+    enabled:true,
+    onSuccess:[],
+    onClientErr:[],
+    onServerErr:[],
+    onDisconnected:[],
+    afterAjax:[],
+    headers:{}
 }){
     /**
      * Any custom headers that will be sent with the request.
@@ -1007,4 +1023,31 @@ function AJAX(config={
     this.setReqMethod(config.method);
     this.setURL(config.url);
     this.setEnabled(config.enabled);
+    
+    //Add callbacks
+    if (Array.isArray(config.onSuccess)) {
+        config.onSuccess.forEach((callback) => {
+            instance.setOnSuccess(callback);
+        });
+    }
+    if (Array.isArray(config.onClientErr)) {
+        config.onClientErr.forEach((callback) => {
+            instance.setOnSuccess(callback);
+        });
+    }
+    if (Array.isArray(config.onServerErr)) {
+        config.onServerErr.forEach((callback) => {
+            instance.setOnSuccess(callback);
+        });
+    }
+    if (Array.isArray(config.onDisconnected)) {
+        config.onDisconnected.forEach((callback) => {
+            instance.setOnSuccess(callback);
+        });
+    }
+    if (Array.isArray(config.afterAjax)) {
+        config.afterAjax.forEach((callback) => {
+            instance.setAfterAjax(callback);
+        });
+    }
 }
