@@ -88,6 +88,10 @@ function AJAX(config={
     enabled:true
 }){
     /**
+     * Any custom headers that will be sent with the request.
+     */
+    this.customHeaders = {};
+    /**
      * Request method.
      */
     this.method = 'GET';
@@ -143,7 +147,7 @@ function AJAX(config={
                 console.info('AJAX: After AJAX '+this.status);
             }
         }
-    ]
+    ];
     /**
      * A pool of functions to call in case of successful request.
      */
@@ -699,6 +703,38 @@ function AJAX(config={
                     this.log('AJAX.getExtractCsrfToken: CSRF token found.','info');
                 }
                 return window.csrfToken;
+            },
+            writable:false,
+            enumerable: true
+        },
+        addHeader:{
+            /**
+             * Adds new custom header to the request.
+             * The custom header will be sent once the method 'AJAX.send()' is called.
+             * @param {String} name The name of the header. It must be non-empty string.
+             * @param {String} value The value of the header.
+             * @return {Boolean} If the header is added, the method will return true. 
+             * If not added, the method will return false.
+             */
+            value:function(name, value) {
+                this.log('AJAX.addRequestHeader: Trying to add new header with name "'+name+'" and value "'+value+'".', 'info');
+                if (typeof name === 'string') {
+                    name = name.trim();
+                    if (name.length > 0) {
+                        if (typeof value === 'string') {
+                            this.customHeaders[name] = value;
+                            this.log('AJAX.addRequestHeader: Header added.', 'info');
+                            return true;
+                        } else {
+                            this.log('AJAX.addRequestHeader: Invalid header value is given.', 'warning');
+                        }
+                    } else {
+                        this.log('AJAX.addRequestHeader: Invalid header name is given.', 'warning');
+                    }
+                } else {
+                    this.log('AJAX.addRequestHeader: Invalid header name is given.', 'warning');
+                }
+                return false;
             },
             writable:false,
             enumerable: true
