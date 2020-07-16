@@ -3,17 +3,53 @@
     <head>
         <title>TODO supply a title</title>
         <meta charset="UTF-8">
-        <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/usernane/ajax@1.0.2/AJAX.js">
+        <script type="text/javascript" src="AJAX.js">
             
         </script>
         <script>
             window.onload = function(){
                 window.ajax = new AJAX({
-                    'enable-log':true
+                    'enable-log':true,
+                    url:'http://localhost',
+                    method:'post',
+                    params:{
+                        hello:"World",
+                        boolean:true,
+                        number:1.44,
+                        array:[1,2,3,"Hello,",true]
+                    },
+                    headers:{
+                        'x-test-header':'A test header.'
+                    },
+                    onSuccess:[
+                        function () {
+                            console.log('Success');
+                            console.log(this);
+                        }
+                    ],
+                    onClientErr:[
+                        function () {
+                            console.log('Client Error!');
+                            console.log(this);
+                        }
+                    ],
+                    onServerErr:[
+                        function () {
+                            console.log('Server Error!');
+                            console.log(this);
+                        }
+                    ],
+                    onDisconnected:[
+                        function () {
+                            console.log('No Internet Connection.');
+                            console.log(this);
+                        }
+                    ]
                 });
             };
         </script>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="csrf-token" content="hjgghghfdedrfg45454567">
     </head>
     <body>
         <div>TODO: Test AJAX.js</div>
