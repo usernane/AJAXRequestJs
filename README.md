@@ -1,5 +1,5 @@
-# js-ajax-helper
-A JavaScript file that can help in making AJAX requests much simpler task in your website. 
+# AJAXRequest.js
+A JavaScript class library that can help in making AJAX requests much simpler task in your website. 
 <p align="left">
 <img src="https://img.shields.io/jsdelivr/gh/hm/usernane/ajax?color=light-green">
 </p>
@@ -10,37 +10,41 @@ The main aim of the library is to extend XHR feature which is offered by any mod
 * Logging support in console for development.
 * Get server response as a JSON object or a plain text.
 * Enable and disable callbacks as needed since every callback has an ID.
+* Send custom headers to the server as needed.
+* Ability to extract CSRF token and send it automatically.
 
 ## Usage Example
 In order to use the library, you must first include the JavaScript file in your head tag of your web page:
 ``` html
 <head>
-  <script src="https://cdn.jsdelivr.net/gh/usernane/ajax@1.0.2/AJAX.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/usernane/ajax@1.1.0/AJAXRequest.js"></script>
 </head>
 ```
 
 ### Basic Usage
 The following code sample shows the most basic usage of the library.
 ``` javascript
- var ajax = new AJAX({
+ var ajax = new AJAXRequest({
     method:'get',
     url:'https://api.github.com/repos/usernane/js-ajax-helper',
     
     //enable for development to get more informative messages
     'enable-log':true
+    
+    //
+    //Adds one success call back. We can add more.
+    onSuccess:[function(){
+        //The response might be stored as JSON object
+        if(this.jsonResponse){
+            console.log(this.jsonResponse);
+        } else {
+            //Or, it can be plain
+            console.log(this.response);
+        }
+    }]
 });
 
-//Adds one success call back. We can add more.
-ajax.setOnSuccess(function(){
-    //The response might be stored as JSON object
-    if(this.jsonResponse){
-        console.log(this.jsonResponse);
-    }
-    else{
-        //Or, it can be plain
-        console.log(this.response);
-    }
-});
+
 
 //send the request
 ajax.send();
@@ -50,72 +54,71 @@ ajax.send();
 The following code sample shows more complex usage which sets a function to execute for diffrent HTTP codes.
 
 ``` javascript
- var ajax = new AJAX({
+ var ajax = new AJAXRequest({
     method:'get',
-    url:'https://api.github.com/repos/usernane/js-ajax-helper'
+    url:'https://api.github.com/repos/usernane/js-ajax-helper',
+    
+    //A callbacks for 2xx and 3xx codes
+    onSuccess: [
+        function(){
+            if(this.jsonResponse){
+                //...
+            } else {
+                //...
+            }
+        }],
+        
+    //A callbacks for 4xx codes
+    onClientErr:  [
+        function(){
+            if(this.jsonResponse){
+                //...
+            } else {
+                //...
+            }
+        }],
+    
+    //A callbacks for 5xx codes
+    onServerErr: [
+        function(){
+            if(this.jsonResponse){
+                //...
+            } else {
+                //...
+            }
+        }],
+    
+    //A callbacks in case there was no internet connection with the server
+    onDisconnected:  [
+        function(){
+            if(this.jsonResponse){
+                //...
+            } else {
+                //...
+            }
+        }],
+        
+    //A callback that will be executed regardless of ajax status after it is completed.
+    afterAjax:  [
+        function(){
+            if(this.jsonResponse){
+                //...
+            } else {
+                //...
+            }
+        }],
 });
 
-//A callback for 2xx and 3xx codes
-ajax.setOnSuccess(function(){
-    if(this.jsonResponse){
-        //...
-    }
-    else{
-        //...
-    }
-});
-
-//A callback for 4xx codes
-ajax.setOnClientError(function(){
-    if(this.jsonResponse){
-        //...
-    }
-    else{
-        //...
-    }
-});
-
-//A callback for 5xx codes
-ajax.setOnServerError(function(){
-    if(this.jsonResponse){
-        //...
-    }
-    else{
-        //...
-    }
-});
-
-//A callback in case there was no internet connection with the server
-ajax.setOnDisconnected(function(){
-    if(this.jsonResponse){
-        //...
-    }
-    else{
-        //...
-    }
-});
-
-//A callback that will be executed regardless of ajax status after it is completed.
-ajax.setAfterAjax(function(){
-    if(this.jsonResponse){
-        //...
-    }
-    else{
-        //...
-    }
-});
-
-//send the request
 ajax.send();
 
 ```
 
 ### Sending Parameters to Server
-The class does support sending data using `GET`, `POST`, `PUT` or `DELETE` request methods. The data can be a simple string, an object or a `DataForm` object. 
+The class does support sending data using `GET`, `POST`, `OPTIONS`, `HEAD`, `PUT` or `DELETE` request methods. The data can be a simple string, an object or a `DataForm` object. 
 #### As a String
 The following sample code shows how to send parameters to the server as an object. We use `packagist.org` public API in this example.
 ``` javascript
- var ajax = new AJAX({
+ var ajax = new AJAXRequest({
     method:'get',
     url:'https://packagist.org/packages/list.json'
 });
@@ -136,11 +139,11 @@ ajax.setOnSuccess(function(){
 });
 ajax.send();
 ```
-?q=webfiori
+
 #### As an Object
 The following sample code shows how to send parameters to the server as a JavaScript object.
 ``` javascript
- var ajax = new AJAX({
+ var ajax = new AJAXRequest({
     method:'get',
     url:'https://packagist.org/search.json'
 });
@@ -153,7 +156,7 @@ var seachObj = {
 ajax.setParams(seachObj);
 
 ajax.setOnSuccess(function(){
-    if(this.jsonResponse){
+    if (this.jsonResponse) {
         console.warn('Printing Search Results:');
         for(var x = 0 ; x < this.jsonResponse.results.length ; x++) {
             var searchResult = this.jsonResponse.results[x];
@@ -163,8 +166,7 @@ ajax.setOnSuccess(function(){
             console.log('Link: '+searchResult.url);
             console.log('Total Downloads: '+searchResult.downloads);
         }
-    }
-    else{
+    } else {
         console.warn('No JSON data was received.');
     }
 });
