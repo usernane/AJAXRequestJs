@@ -221,6 +221,7 @@ function AJAX(config={
                     this.onconnectionlostpool[i].response = this.responseText;
                     this.onconnectionlostpool[i].xmlResponse = this.responseXML;
                     this.onconnectionlostpool[i].jsonResponse = null;
+                    this.onconnectionlostpool[i].responseHeaders = getResponseHeadersObj(this);
                     if(this.onconnectionlostpool[i].call === true){
                         this.onconnectionlostpool[i].func();
                     }
@@ -230,6 +231,7 @@ function AJAX(config={
                     this.onafterajaxpool[i].response = this.responseText;
                     this.onafterajaxpool[i].xmlResponse = this.responseXML;
                     this.onafterajaxpool[i].jsonResponse = null;
+                    this.onafterajaxpool[i].responseHeaders = getResponseHeadersObj(this);
                     if(this.onafterajaxpool[i].call === true){
                         this.onafterajaxpool[i].func();
                     }
@@ -250,6 +252,7 @@ function AJAX(config={
                     this.onsuccesspool[i].response = this.responseText;
                     this.onsuccesspool[i].xmlResponse = this.responseXML;
                     this.onsuccesspool[i].jsonResponse = jsonResponse;
+                    this.onsuccesspool[i].responseHeaders = getResponseHeadersObj(this);
                     if(this.onsuccesspool[i].call === true){
                         this.onsuccesspool[i].func();
                     }
@@ -259,6 +262,7 @@ function AJAX(config={
                     this.onafterajaxpool[i].response = this.responseText;
                     this.onafterajaxpool[i].xmlResponse = this.responseXML;
                     this.onafterajaxpool[i].jsonResponse = jsonResponse;
+                    this.onafterajaxpool[i].responseHeaders = getResponseHeadersObj(this);
                     if(this.onafterajaxpool[i].call === true){
                         this.onafterajaxpool[i].func();
                     }
@@ -279,6 +283,7 @@ function AJAX(config={
                     this.onclienterrorpool[i].response = this.responseText;
                     this.onclienterrorpool[i].xmlResponse = this.responseXML;
                     this.onclienterrorpool[i].jsonResponse = jsonResponse;
+                    this.onclienterrorpool[i].responseHeaders = getResponseHeadersObj(this);
                     if(this.onclienterrorpool[i].call === true){
                         this.onclienterrorpool[i].func();
                     }
@@ -288,6 +293,7 @@ function AJAX(config={
                     this.onafterajaxpool[i].response = this.responseText;
                     this.onafterajaxpool[i].xmlResponse = this.responseXML;
                     this.onafterajaxpool[i].jsonResponse = jsonResponse;
+                    this.onafterajaxpool[i].responseHeaders = getResponseHeadersObj(this);
                     if(this.onafterajaxpool[i].call === true){
                         this.onafterajaxpool[i].func();
                     }
@@ -312,6 +318,7 @@ function AJAX(config={
                     this.onservererrorpool[i].response = this.responseText;
                     this.onservererrorpool[i].xmlResponse = this.responseXML;
                     this.onservererrorpool[i].jsonResponse = jsonResponse;
+                    this.onservererrorpool[i].responseHeaders = getResponseHeadersObj(this);
                     if(this.onservererrorpool[i].call === true){
                         this.onservererrorpool[i].func();
                     }
@@ -321,6 +328,7 @@ function AJAX(config={
                     this.onafterajaxpool[i].response = this.responseText;
                     this.onafterajaxpool[i].xmlResponse = this.responseXML;
                     this.onafterajaxpool[i].jsonResponse = jsonResponse;
+                    this.onafterajaxpool[i].responseHeaders = getResponseHeadersObj(this);
                     if(this.onafterajaxpool[i].call === true){
                         this.onafterajaxpool[i].func();
                     }
@@ -333,6 +341,23 @@ function AJAX(config={
         writable:false,
         enumerable: false
     });
+    /**
+     * This function will extract response headers from the response.
+     * @returns {Object} The function will return response headers as an object. 
+     * The keys of the object are headers names and the values are headers values.
+     */
+    function getResponseHeadersObj(xhr) {
+        var retVal = {};
+        var headersArr = xhr.getAllResponseHeaders().split("\r\n");
+        for (var x = 0 ; x < headersArr.length ; x++) {
+            var fullHeader = headersArr[x];
+            var key = fullHeader.substring(0, fullHeader.indexOf(':'));
+            if (key.length > 0) {
+                retVal[key] = fullHeader.substring(fullHeader.indexOf(':') + 1).trim();
+            }
+        }
+        return retVal;
+    }
     /**
      * A utility function used to show warning in the console about the existance 
      * of events pool.
