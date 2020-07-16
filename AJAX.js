@@ -75,8 +75,12 @@ Object.defineProperties(AJAX.META,{
  * <li><b>method</b>: Request method such as GET or POST.</li>
  * <li><b>url</b>: The URL at which AJAX request will be sent 
  * to.</li>
+ * <li><b>params</b>: A parameters which will be sent with the request. 
+ * It can be an object, a FormData or a query string.</li>
  * <li><b>enable-log</b>: Used for development. If set to true, more 
  * informative messages will appear in the console.</li>
+ * <li><b>headers</b>: An object that can hold custom headers that will be 
+ * sent with the request.</li>
  * <li><b>enabled</b>: A boolean to enable or disable AJAX.</li>
  * <li><b>onSuccess</b>: An array that contains one or more callbacks which 
  * will be executed when server sends the response code 2xx.</li>
@@ -84,11 +88,11 @@ Object.defineProperties(AJAX.META,{
  * will be executed when server sends the response code 4xx.</li>
  * <li><b>onServerErr</b>: An array that contains one or more callbacks which 
  * will be executed when server sends the response code 5xx.</li>
- * </ul>
  * <li><b>onDisconnected</b>: An array that contains one or more callbacks which 
  * will be executed when there is no internet connection.</li>
  * <li><b>afterAjax</b>: An array that contains one or more callbacks which 
  * will be executed after AJAX request is finishhed regrardless of status code.</li>
+ * </ul>
  * @returns {AJAX}
  */
 function AJAX(config={
@@ -345,6 +349,8 @@ function AJAX(config={
      * This function will extract response headers from the response.
      * @returns {Object} The function will return response headers as an object. 
      * The keys of the object are headers names and the values are headers values.
+     * @param {Object} xhr The XMLHttpRequest object that the headers will be 
+     * extracted from.
      */
     function getResponseHeadersObj(xhr) {
         var retVal = {};
@@ -697,45 +703,45 @@ function AJAX(config={
         },
         getCsrfToken: {
             value:function(){
-                this.log('AJAX.getExtractCsrfToken: Searching for CSRF token value.','info');
-                this.log('AJAX.getExtractCsrfToken: Checking "window.csrfToken"...','info');
+                this.log('AJAX.getCsrfToken: Searching for CSRF token value.','info');
+                this.log('AJAX.getCsrfToken: Checking "window.csrfToken"...','info');
                 if (window.csrfToken === undefined || window.csrfToken === null) {
-                    this.log('AJAX.getExtractCsrfToken: It is not set.','warning');
-                    this.log('AJAX.getExtractCsrfToken: Searching for meta tag with name = "csrf-token"...','info');
+                    this.log('AJAX.getCsrfToken: It is not set.','warning');
+                    this.log('AJAX.getCsrfToken: Searching for meta tag with name = "csrf-token"...','info');
                     var csrfEl = document.querySelector('meta[name="csrf-token"]');
                     if (csrfEl === null) {
-                        this.log('AJAX.getExtractCsrfToken: Element not found.','warning');
+                        this.log('AJAX.getCsrfToken: Element not found.','warning');
                         this.log('AJAX.getCsrfToken: Searching for input element with name = "csrf-token"...', '');
                         var csrfEl = document.querySelector('input[name="csrf-token"]');
                         if (csrfEl === null) {
-                            this.log('AJAX.getExtractCsrfToken: Element not found.','warning');
+                            this.log('AJAX.getCsrfToken: Element not found.','warning');
                             this.log('AJAX.getCsrfToken: CSRF token not found.', 'warning');
                             var csrfEl = document.querySelector('input[name="csrf-token"]');
                         } else {
-                            this.log('AJAX.getExtractCsrfToken: Checking the value of the attribute "value"...','info');
+                            this.log('AJAX.getCsrfToken: Checking the value of the attribute "value"...','info');
                             window.csrfToken = csrfEl.getAttribute('value');
                             if (window.csrfToken) {
-                                this.log('AJAX.getExtractCsrfToken: CSRF token found.','info');
+                                this.log('AJAX.getCsrfToken: CSRF token found.','info');
                             }
                         }
                     } else {
-                        this.log('AJAX.getExtractCsrfToken: Checking the value of the attribute "content"...','info');
+                        this.log('AJAX.getCsrfToken: Checking the value of the attribute "content"...','info');
                         window.csrfToken = csrfEl.getAttribute('content');
                         if (window.csrfToken) {
-                            this.log('AJAX.getExtractCsrfToken: CSRF token found.','info');
+                            this.log('AJAX.getCsrfToken: CSRF token found.','info');
                         } else {
-                            this.log('AJAX.getExtractCsrfToken: The attribute "content" has no value.','warning');
+                            this.log('AJAX.getCsrfToken: The attribute "content" has no value.','warning');
                             this.log('AJAX.getCsrfToken: Searching for input element with name = "csrf-token"...', '');
                             var csrfEl = document.querySelector('input[name="csrf-token"]');
                             if (csrfEl === null) {
-                                this.log('AJAX.getExtractCsrfToken: Element not found.','warning');
+                                this.log('AJAX.getCsrfToken: Element not found.','warning');
                                 this.log('AJAX.getCsrfToken: CSRF token not found.', 'warning');
                                 var csrfEl = document.querySelector('input[name="csrf-token"]');
                             } else {
-                                this.log('AJAX.getExtractCsrfToken: Checking the value of the attribute "value"...','info');
+                                this.log('AJAX.getCsrfToken: Checking the value of the attribute "value"...','info');
                                 window.csrfToken = csrfEl.getAttribute('value');
                                 if (window.csrfToken) {
-                                    this.log('AJAX.getExtractCsrfToken: CSRF token found.','info');
+                                    this.log('AJAX.getCsrfToken: CSRF token found.','info');
                                 }
                             }
                         }
@@ -758,22 +764,22 @@ function AJAX(config={
              * If not added, the method will return false.
              */
             value:function(name, value) {
-                this.log('AJAX.addRequestHeader: Trying to add new header with name "'+name+'" and value "'+value+'".', 'info');
+                this.log('AJAX.addHeader: Trying to add new header with name "'+name+'" and value "'+value+'".', 'info');
                 if (typeof name === 'string') {
                     name = name.trim();
                     if (name.length > 0) {
                         if (typeof value === 'string') {
                             this.customHeaders[name] = value;
-                            this.log('AJAX.addRequestHeader: Header added.', 'info');
+                            this.log('AJAX.addHeader: Header added.', 'info');
                             return true;
                         } else {
-                            this.log('AJAX.addRequestHeader: Invalid header value is given.', 'warning');
+                            this.log('AJAX.addHeader: Invalid header value is given.', 'warning');
                         }
                     } else {
-                        this.log('AJAX.addRequestHeader: Invalid header name is given.', 'warning');
+                        this.log('AJAX.addHeader: Invalid header name is given.', 'warning');
                     }
                 } else {
-                    this.log('AJAX.addRequestHeader: Invalid header name is given.', 'warning');
+                    this.log('AJAX.addHeader: Invalid header name is given.', 'warning');
                 }
                 return false;
             },
@@ -839,7 +845,7 @@ function AJAX(config={
             value:function(method){
                 if(method !== undefined && method !== null){
                     method = method.toUpperCase();
-                    if(method === 'GET' || method === 'POST' || method === 'DELETE'){
+                    if(method === 'GET' || method === 'POST' || method === 'DELETE' || method === 'PUT' || method === 'HEAD' || method === 'OPTIONS'){
                         this.method = method;
                         this.log('AJAX.setReqMethod: Request method is set to '+method+'.','info');
                     }
@@ -894,7 +900,7 @@ function AJAX(config={
         setParams:{
             /**
             * Sets request payload that will be send with it.
-            * @param {String} params
+            * @param {String|FormData|Object} params
             * @returns {undefined}
             */
             value:function(params){
@@ -941,18 +947,56 @@ function AJAX(config={
                     this.xhr.onconnectionlostpool = this.onconnectionlostpool;
                     this.xhr.onafterajaxpool = this.onafterajaxpool;
                     this.xhr['enable-log'] = this['enable-log'];
+                    this.log('AJAX.send: Checking parameters type...', 'info');
                     if(typeof this.params === 'object' && this.params.toString() !== '[object FormData]'){
-                        var localParams = '';
+                        this.log('AJAX.send: An object is given. Extracting values...', 'info');
+                        if (method === 'PUT' || method === 'POST') {
+                            var localParams = new FormData();
+                        } else {
+                            var localParams = '';
+                        }
                         var keys = Object.keys(this.params);
                         var and = '';
                         for(var x = 0 ; x < keys.length ; x++){
-                            localParams += and+encodeURIComponent(keys[x])+'='+encodeURIComponent(this.params[keys[x]]);
+                            var paramVal = this.params[keys[x]];
+                            
+                            
+                            if (Array.isArray(paramVal)) {
+                                //Turn the array to array-like string
+                                var toAppend = '[';
+                                var comma = '';
+                                for (var y = 0 ; y < paramVal.length ; y++) {
+                                    if (typeof paramVal[y] === 'string') {
+                                        toAppend += comma+'"'+encodeURIComponent(paramVal[y])+'"';
+                                    } else if (typeof paramVal[y] === 'number') {
+                                        toAppend += comma+paramVal[y];
+                                    } else if (typeof paramVal[y] === 'boolean') {
+                                        toAppend += paramVal[y] ? comma+'true' : comma+'false';
+                                    }
+                                    comma = ',';
+                                }
+                                toAppend += ']';
+                                if (typeof localParams === 'object') {
+                                    localParams.append(keys[x], encodeURIComponent(toAppend));
+                                } else {
+                                    localParams += and+encodeURIComponent(keys[x])+'='+encodeURIComponent(toAppend);
+                                }
+                                
+                            } else {
+                                if (typeof localParams === 'object') {
+                                    localParams.append(keys[x], encodeURIComponent(encodeURIComponent(this.params[keys[x]])));
+                                } else {
+                                    localParams += and+encodeURIComponent(keys[x])+'='+encodeURIComponent(this.params[keys[x]]);
+                                }
+                            }
                             and = '&';
                         }
-                    }
-                    else{
+                        this.log('AJAX.send: Extracted. Result = '+localParams, 'info');
+                    } else {
+                        this.log('AJAX.send: Form data or string is given.', 'info');
                         var localParams = this.params;
                     }
+                    
                     if(method === 'GET' || method === 'DELETE'){
                         if(localParams !== undefined && localParams !== null && localParams !== ''){
                             this.xhr.open(method,url+'?'+localParams);
@@ -967,11 +1011,19 @@ function AJAX(config={
                                 this.xhr.setRequestHeader('X-CSRF-TOKEN', csrfTok);
                             }
                         }
+                        var customHeadersKeys = Object.keys(this.customHeaders);
+                        if (customHeadersKeys.length > 0) {
+                            this.log('AJAX.send: Adding custom headers to request..','info');
+                        }
+                        for (var x = 0 ; x < customHeadersKeys.length ; x++) {
+                             this.xhr.setRequestHeader(customHeadersKeys[x], this.customHeaders[customHeadersKeys[x]]);
+                        }
                         this.xhr.send();
                         return true;
                     }
                     else if(method === 'POST' || method === 'PUT'){
                         this.xhr.open(method,url);
+                        
                         //Add CSRF token.
                         var csrfTok = this.getCsrfToken();
                         if (csrfTok) {
@@ -981,11 +1033,19 @@ function AJAX(config={
                             this.xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
                             this.log('AJAX.send: Setting header \'Content-Type\' to \'application/x-www-form-urlencoded\'.','info');
                         }
+                        var customHeadersKeys = Object.keys(this.customHeaders);
+                        if (customHeadersKeys.length > 0) {
+                            this.log('AJAX.send: Adding custom headers to request..','info');
+                        }
+                        for (var x = 0 ; x < customHeadersKeys.length ; x++) {
+                             this.xhr.setRequestHeader(customHeadersKeys[x], this.customHeaders[customHeadersKeys[x]]);
+                        }
                         this.xhr.send(localParams);
                         return true;
                     }
                     else{
-                        this.log('AJAX.send: Method not supported: '+method,'info',true);
+                        this.xhr.open(method,url);
+                        this.xhr.send();
                     }
                 }
                 else{
@@ -1049,6 +1109,17 @@ function AJAX(config={
     this.setURL(config.url);
     this.setEnabled(config.enabled);
     
+    //Set params
+    instance.setParams(config.params);
+    
+    //Add custom headers
+    if (typeof config.headers === 'object') {
+        var keys = Object.keys(config.headers);
+        for (var x = 0 ; x < keys.length ; x++) {
+            instance.addHeader(keys[x], config.headers[keys[x]]);
+        }
+    }
+    
     //Add callbacks
     if (Array.isArray(config.onSuccess)) {
         config.onSuccess.forEach((callback) => {
@@ -1057,17 +1128,17 @@ function AJAX(config={
     }
     if (Array.isArray(config.onClientErr)) {
         config.onClientErr.forEach((callback) => {
-            instance.setOnSuccess(callback);
+            instance.setOnClientError(callback);
         });
     }
     if (Array.isArray(config.onServerErr)) {
         config.onServerErr.forEach((callback) => {
-            instance.setOnSuccess(callback);
+            instance.setOnServerError(callback);
         });
     }
     if (Array.isArray(config.onDisconnected)) {
         config.onDisconnected.forEach((callback) => {
-            instance.setOnSuccess(callback);
+            instance.setOnDisconnected(callback);
         });
     }
     if (Array.isArray(config.afterAjax)) {
