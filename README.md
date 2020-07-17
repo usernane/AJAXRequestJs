@@ -3,16 +3,17 @@ A light weight JavaScript class library that can help in making AJAX requests mu
 <p align="left">
 <img src="https://img.shields.io/jsdelivr/gh/hm/usernane/ajax?color=light-green">
 </p>
+
 ## Table of Content
-* <a>Main Features</a>
-* <a>Installation</a>
-* <a>Basic Usage</a>
-* <a>Properties Accessable in Callbacks</a>
-* <a>Types of Callbacks</a>
-* <a>Sending Parameters to Server</a>
-* <a>Adding Custom Headers</a>
-* <a>CSRF Token</a>
-* <a>License</a>
+* <a href="#main-features">Main Features</a>
+* <a href="#installation">Installation</a>
+* <a href="#basic-usage">Basic Usage</a>
+* <a href="#properties-accessable-in-callbacks">Properties Accessable in Callbacks</a>
+* <a href="#types-of-callbacks">Types of Callbacks</a>
+* <a href="#sending-parameters-to-server">Sending Parameters to Server</a>
+* <a href="#adding-custom-headers">Adding Custom Headers</a>
+* <a href="#csrf-token">CSRF Token</a>
+* <a href="#license">License</a>
 
 ## Main features:
 * Assign multiple callbacks to execute before sending AJAX, on success, client error, server error, on disconnected or after AJAX is completed.
