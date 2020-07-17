@@ -3,13 +3,13 @@
     <head>
         <title>TODO supply a title</title>
         <meta charset="UTF-8">
-        <script type="text/javascript" src="../AJAXRequest.js">
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@1.1.0/AJAXRequest.js">
             
         </script>
         <script>
             window.onload = function(){
                 window.ajax = new AJAXRequest({
-                    'enable-log':true,
+                    verbose:true,
                     url:'http://localhost',
                     method:'post',
                     params:{
