@@ -43,15 +43,17 @@ The following code sample shows the most basic usage of the library.
     verbose:true
     
     //Adds one call back to execute on success. We can add more.
-    onSuccess:[function(){
-        //The response might be stored as JSON object
-        if(this.jsonResponse){
-            console.log(this.jsonResponse);
-        } else {
-            //Or, it can be plain
-            console.log(this.response);
+    onSuccess:[
+        function(){
+            //The response might be stored as JSON object
+            if(this.jsonResponse){
+                console.log(this.jsonResponse);
+            } else {
+                //Or, it can be plain
+                console.log(this.response);
+            }
         }
-    }]
+    ]
 }).send();
 
 ```
@@ -66,7 +68,8 @@ When creating an instance of the class `AJAXRequest`, there are configuration op
     //Request method. If not provided, 'GET' is used.
     method:'get',
     
-    //Parameters which will be send with the request. It can be an object, a `FormData` object or string in the form `key1=value1&key2=value2`.
+    //Parameters which will be send with the request. It can be an object, a 
+    //`FormData` object or string in the form `key1=value1&key2=value2`.
     params:{},
     
     //A boolean which is used to enable or disable AJAX.
@@ -95,7 +98,8 @@ When creating an instance of the class `AJAXRequest`, there are configuration op
     //A set of callbacks. The enabled ones executed when there is no interned connection.
     onDisconnected:[], 
     
-    //A set of callbacks. The enabled ones executed when the request is finished without looking at the status of the response.
+    //A set of callbacks. The enabled ones executed when the request is finished without 
+    //looking at the status of the response.
     afterAjax:[], 
 }
 ```
@@ -115,14 +119,20 @@ function () {
     //Server response as string.
     this.response;
     
-    //If the server sent the response as JSON, this attribute is set to JSON object. If not sent as JSON, it will be set to null.
+    //If the server sent the response as JSON, this attribute is set to JSON object. 
+    //If not sent as JSON, it will be set to null.
     this.jsonResponse;
     
-    //An object that contains response headers. The keys of the object are headers names and the values are headers values.
+    //If the server sent the response as XML, this one will be set to a 
+    //string that represents the received xml tree.
+    this.xmlResponse
+    
+    //An object that contains response headers. The keys of the object are headers 
+    //names and the values are headers values.
     this.responseHeaders;
 }
 ```
-Note that for the callbacks which are set to be executed before the AJAX request is sent to the server only the property `this.AJAXRequest` is available.
+Note that for the callbacks which are set to be executed before the AJAX request is sent to the server only the property `this.AJAXRequest` is available. The other ones will be `undefined`.
 
 
 ## Sending Parameters to Server
@@ -133,28 +143,27 @@ The following sample code shows how to send parameters to the server as an objec
 ``` javascript
  var ajax = new AJAXRequest({
     method:'get',
-    url:'https://packagist.org/packages/list.json'
-});
-
-// Adds a custom parameter.
-ajax.setParams('vendor=webfiori');
-
-ajax.setOnSuccess(function(){
-    if(this.jsonResponse){
-        // We must know the format of JSON object to get data.
-        for(var x = 0 ; x < this.jsonResponse.packageNames.length ; x++) {
-            console.log('Package #'+x+' Name: '+this.jsonResponse.packageNames[x]);
+    url:'https://packagist.org/packages/list.json',
+    parama: {
+        vendor:'webfiori'
+    },
+    onSuccess: [
+        function(){
+            if (this.jsonResponse) {
+                // We must know the format of JSON object to get data.
+                for(var x = 0 ; x < this.jsonResponse.packageNames.length ; x++) {
+                    console.log('Package #'+x+' Name: '+this.jsonResponse.packageNames[x]);
+                }
+            } else {
+              console.warn('No JSON data was received.');
+            }
         }
-    }
-    else{
-        console.warn('No JSON data was received.');
-    }
-});
-ajax.send();
+    ]
+}).send();
 ```
 
 #### As an Object
-The following sample code shows how to send parameters to the server as a JavaScript object.
+The following sample code shows how to send parameters to the server as a JavaScript object. This time, we are using the methods of the class `AJAXRequest` instead of using the configuration object.
 ``` javascript
  var ajax = new AJAXRequest({
     method:'get',
@@ -167,7 +176,6 @@ var seachObj = {
     q:searchString
 };
 ajax.setParams(seachObj);
-
 ajax.setOnSuccess(function(){
     if (this.jsonResponse) {
         console.warn('Printing Search Results:');
@@ -186,8 +194,43 @@ ajax.setOnSuccess(function(){
 ajax.send();
 ```
 #### As a `FormData` Object
-`FormData` is usually used to send data to the server using `POST` or `PUT` to modify something in the database. Also, it can be used to upload files to the server. 
+`FormData` is usually used to send data to the server using `POST` or `PUT` to modify something in the database. Also, it can be used to upload files to the server. Simply, we create the object `FormData`, add the attributes and use the method `AJAXRequest.setParams()`. This time, we collect user input on a callback which is executed before sending the request. Let's assume that we have the following HTML code.
+``` html 
+<div id="search-form">
+  <label for="search-input">Type in Search Term:</label>
+  <input type="text" name="search-term">
+  
+  //Notice how we call the send method.
+  <input type="submit" onclick="window.ajax.send()">
+</div>
+<div id="search-result-display">
+    <!--search results will appear here-->
+</div>
+```
+The following JavasScript code can be used to handel the search action.
 
+``` javascript
+window.ajax = new AJAXRequest({
+    url:'https://example.com/search',
+    beforeAjax:[
+        function () {
+            var searchTerm = document.getElementById('search-term-input').value;
+            var form = new FormData();
+            form.append('search-term',searchTerm);
+            
+            //We set the parameters inside the callback.
+            this.AJAXRequest.setParams(form);
+            
+            document.getElementById('search-result-display').innerHTML = 'Searching for "'+searchTerm+'"....';
+        }
+    ],
+    onSuccess: [
+        function () {
+            document.getElementById('search-result-display').innerHTML = this.response;
+        }
+    ]
+});
+```
 
 ## Adding Custom Headers
 It is possible to add custom headers to the request in two ways. One way is to use the configuration variable `headers` and the second one is to use the method `AJAXRequest.addHeader()`. The following example shows how to add headers using first way.
