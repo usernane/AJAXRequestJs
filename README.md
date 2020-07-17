@@ -234,7 +234,7 @@ ajax.setOnSuccess(function() {
 ### On Client Error
 The on client callback is executed when the server sends a 4xx response code.
 
-```
+``` javascript
 var ajax = new AJAXRequest({
     method:'get',
     url:'https://api.github.com/repos/usernane/AJAXRequestJs',
@@ -262,7 +262,7 @@ ajax.setOnClientError(function() {
 ```
 ### On Server Error
 The on server error callback is executed when the server sends a 5xx response code. 
-```
+``` javascript
 var ajax = new AJAXRequest({
     method:'get',
     url:'https://api.github.com/repos/usernane/AJAXRequestJs',
@@ -372,7 +372,7 @@ ajax.send();
   <label for="search-input">Type in Search Term:</label>
   <input type="text" name="search-term">
   
-  //Notice how we call the send method.
+  //Notice how we call the 'send' method.
   <input type="submit" onclick="window.ajax.send()">
 </div>
 <div id="search-result-display">
