@@ -1,7 +1,13 @@
 # AJAXRequest.js
 A light weight JavaScript class library that can help in making AJAX requests much simpler task in your website. 
 <p align="left">
+ Hits as AJAX.js
 <img src="https://img.shields.io/jsdelivr/gh/hm/usernane/ajax?color=light-green">
+</p>
+
+<p align="left">
+  Hits as AJAXRequest.js (new)
+<img alt="jsDelivr hits (GitHub)" src="https://img.shields.io/jsdelivr/gh/hm/usernane/AJAXRequestJs">
 </p>
 
 ## Table of Content
