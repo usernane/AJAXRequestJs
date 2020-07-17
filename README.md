@@ -1,17 +1,25 @@
 # AJAXRequest.js
-A JavaScript class library that can help in making AJAX requests much simpler task in your website. 
+A light weight JavaScript class library that can help in making AJAX requests much simpler task in your website. 
 <p align="left">
 <img src="https://img.shields.io/jsdelivr/gh/hm/usernane/ajax?color=light-green">
 </p>
-The main aim of the library is to extend XHR feature which is offered by any modren web browser.
+## Table of Content
+* <a>Main Features</a>
+* <a>Installation</a>
+* <a>Basic Usage</a>
+* <a>Properties Accessable in Callbacks</a>
+* <a>Types of Callbacks</a>
+* <a>Sending Parameters to Server</a>
+* <a>Adding Custom Headers</a>
+* <a>CSRF Token</a>
+* <a>License</a>
 
 ## Main features:
-* Assign callbacks to execute on success, client error, server error or on disconnected.
-* Logging support in console for development.
-* Get server response as a JSON object or a plain text.
+* Assign multiple callbacks to execute before sending AJAX, on success, client error, server error, on disconnected or after AJAX is completed.
+* Get server response as a JSON, plain text or XML.
 * Enable and disable callbacks as needed since every callback has an ID.
-* Send custom headers to the server as needed.
-* Ability to extract CSRF token and send it automatically.
+* Adding custom headers to the request.
+* Automatic CSRF token extraction.
 
 ## Installation
 In order to use the library, you must first include the JavaScript file in your head tag of your web page:
@@ -134,9 +142,16 @@ function () {
 ```
 Note that for the callbacks which are set to be executed before the AJAX request is sent to the server only the property `this.AJAXRequest` is available. The other ones will be `undefined`.
 
+## Types of Callbacks
+### Before AJAX
+### After AJAX
+### On Success
+### On Cluent Error
+### On Server Error
+### On Disconnected
 
 ## Sending Parameters to Server
-The class does support sending data using `GET`, `POST`, `OPTIONS`, `HEAD`, `PUT` or `DELETE` request methods. The data can be a simple string, an object or a `DataForm` object. 
+The class does support sending data using `GET`, `POST`, or `DELETE` request methods. The data can be a simple string, an object or a `DataForm` object. 
 
 ### As a String
 The following sample code shows how to send parameters to the server as an object. We use `packagist.org` public API in this example.
@@ -144,9 +159,7 @@ The following sample code shows how to send parameters to the server as an objec
  var ajax = new AJAXRequest({
     method:'get',
     url:'https://packagist.org/packages/list.json',
-    parama: {
-        vendor:'webfiori'
-    },
+    parama:'vendor=webfiori',
     onSuccess: [
         function(){
             if (this.jsonResponse) {
