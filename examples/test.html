@@ -7,46 +7,27 @@
             
         </script>
         <script>
-            window.onload = function(){
-                window.ajax = new AJAXRequest({
-                    verbose:true,
-                    url:'http://localhost',
-                    method:'post',
-                    params:{
-                        hello:"World",
-                        boolean:true,
-                        number:1.44,
-                        array:[1,2,3,"Hello,",true]
-                    },
-                    headers:{
-                        'x-test-header':'A test header.'
-                    },
-                    onSuccess:[
-                        function () {
-                            console.log('Success');
-                            console.log(this);
+            window.ajax = new AJAXRequest({
+                verbose:true,
+                method:'get',
+                url:'https://api.github.com/repos/usernane/AJAXRequestJs',
+                afterAjax:[
+                    function () {
+                        document.getElementById('status-code-display').innerHTML = 'Status Code: '+this.status;
+                        var headersList = document.getElementById('headers-display');
+                        var headersKeys = Object.keys(this.responseHeaders);
+                        headersList.innerHTML = '';
+                        if (headersKeys.length === 0) {
+                            headersList.innerHTML = 'NO Headers received.';
+                        } else {
+                            for (var x = 0 ; x < headersKeys.length ; x++) {
+                                headersList.innerHTML += '<li>'+headersKeys[x]+': '+this.responseHeaders[headersKeys[x]]+'</li>';
+                            }
                         }
-                    ],
-                    onClientErr:[
-                        function () {
-                            console.log('Client Error!');
-                            console.log(this);
-                        }
-                    ],
-                    onServerErr:[
-                        function () {
-                            console.log('Server Error!');
-                            console.log(this);
-                        }
-                    ],
-                    onDisconnected:[
-                        function () {
-                            console.log('No Internet Connection.');
-                            console.log(this);
-                        }
-                    ]
-                });
-            };
+                        document.getElementById('display-area').innerHTML = this.response;
+                    }
+                ]
+            });
         </script>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="csrf-token" content="hjgghghfdedrfg45454567">
@@ -56,6 +37,34 @@
         <div>An object of the class is created and can be accessed 
         as follows:
         <code>window.ajax</code>
+        <p>
+            This page can be used to test the functionality of the library. 
+            Simply, select request method, specify the URL and hit 'Send'. 
+            Note that you might get an error because 
+            of CORS
+        </p>
+        </div>
+        <form id="file-upload-form" onsubmit="return false">
+            <label >Request Method:</label>
+            <select onchange='window.ajax.setReqMethod(this.value)' id='request-method-input'>
+                <option selected value='GET'>Get</option>
+                <option value='POST'>Post</option>
+                <option value='DELETE'>Delete</option>
+                <option value='PUT'>Put</option>
+                <option value='HEAD'>Head</option>
+                <option value='DELETE'>Delete</option>
+            </select><br/>
+            <input style="width: 400px" value='https://api.github.com/repos/usernane/AJAXRequestJs' type='url' id='url' oninput='window.ajax.setURL(this.value)'>
+            <input value="Send" type="submit" onclick="window.ajax.send()">
+        </form>
+        <p id='status-code-display'>Status Code: N/A</p>
+        <p>Response Headers:</p>
+        <ul id='headers-display'>
+            
+        </ul>
+        <p>Response as Plain Text:</p>
+        <div style='display: block; width: 100%' id='display-area'>
+            
         </div>
     </body>
 </html>
