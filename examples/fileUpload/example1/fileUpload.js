@@ -2,7 +2,8 @@ window.ajax = new AJAXRequest({
     verbose:true,
     
     //The script which is used to handle uploads.
-    url:'http://localhost/ajax/examples/upload.php',
+    //Modify this to pint to the actual uploads script.
+    url:'http://example.com/ajax/upload.php',
     
     
     method:'post',
