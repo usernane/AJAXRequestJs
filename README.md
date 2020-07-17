@@ -9,7 +9,13 @@ A light weight JavaScript class library that can help in making AJAX requests mu
 * <a href="#installation">Installation</a>
 * <a href="#basic-usage">Basic Usage</a>
 * <a href="#properties-accessable-in-callbacks">Properties Accessable in Callbacks</a>
-* <a href="#types-of-callbacks">Types of Callbacks</a>
+* <a href="#types-of-callbacks">Types of Callbacks</a> 
+  * <a href="#before-ajax">Before AJAX</a>
+  * <a href="#after-ajax">After AJAX</a>
+  * <a href="#on-success">On Success</a>
+  * <a href="#on-client-error">On Client Error</a>
+  * <a href="#on-server-error">On Server Error</a>
+  * <a href="#on-disconnected">On Disconnected</a>
 * <a href="#sending-parameters-to-server">Sending Parameters to Server</a>
 * <a href="#adding-custom-headers">Adding Custom Headers</a>
 * <a href="#csrf-token">CSRF Token</a>
@@ -144,12 +150,164 @@ function () {
 Note that for the callbacks which are set to be executed before the AJAX request is sent to the server only the property `this.AJAXRequest` is available. The other ones will be `undefined`.
 
 ## Types of Callbacks
+One of the features of the library is the ability to set functions to execute in specific cases. In this section, we explain the available callbacks and how to use them.
 ### Before AJAX
+Usually, before sending AJAX request to the server, checking for user inputs validation happens in this callback. A callback of this type can be set using the method `AJAXRequest.setBeforeAjax()`. Also, it can be part of the configuration that is used to initialize the `AJAXRequest` instance.
+```  javascript
+var ajax = new AJAXRequest({
+    method:'get',
+    url:'https://api.github.com/repos/usernane/AJAXRequestJs',
+    
+    beforeAjax:[
+        function(){
+            // Collect user inputs, validate them, etc...
+            var firstName = document.getElementById('name-input').value.trim();
+            if (firstName.length === 0) {
+                this.AJAXRequest.setEnabled(false);
+                console.log('Missing name.');
+            } else {
+                this.AJAXRequest.setEnabled(true);
+            }
+            this.AJAXRequest.setParams({
+                name:firstName
+            });
+        }
+    ]
+});
+
+ajax.setBeforeAjax(function() {
+    // Do something else
+});
+```
 ### After AJAX
+This type of callback will be executed after AJAX response is received. It will get executed regradless of response code of the server. This acts like the `finally` in a `try-catch` statement. If the developer would like to handle server response in case of error and success, he can use this callback.
+```  javascript
+var ajax = new AJAXRequest({
+    method:'get',
+    url:'https://api.github.com/repos/usernane/AJAXRequestJs',
+    
+    afterAjax:[
+        function(){
+            console.log('Status code: '+this.status);
+            if (this.status < 400) {
+                console.log('No Errors');
+            } else if (this.status >= 400) {
+                console.error('Error')
+            }
+        }
+    ]
+});
+
+ajax.setAfterAjax(function() {
+    // Do something else
+});
+```
+
 ### On Success
-### On Cluent Error
+The on success callback is executed when the server sends a 2xx or 3xx response code.
+```  javascript
+var ajax = new AJAXRequest({
+    method:'get',
+    url:'https://api.github.com/repos/usernane/AJAXRequestJs',
+    
+    onSuccess:[
+        function(){
+            console.log('Status code: '+this.status);
+            if (this.jsonResponse !== null) {
+                console.log('Received server response as JSON.');
+                console.log(this.jsonResponse);
+            } else if (this.xmlResponse !== null) {
+                console.log('Received server response as XML.');
+                console.log(this.xmlResponse);
+            } else {
+                console.log('Received server response as plain text.');
+                console.log(this.response);
+            }
+        }
+    ]
+});
+
+ajax.setOnSuccess(function() {
+    // Do something else
+});
+```
+### On Client Error
+The on client callback is executed when the server sends a 4xx response code.
+
+```
+var ajax = new AJAXRequest({
+    method:'get',
+    url:'https://api.github.com/repos/usernane/AJAXRequestJs',
+    
+    onClientErr:[
+        function(){
+            console.log('Status code: '+this.status);
+            if (this.jsonResponse !== null) {
+                console.log('Received server response as JSON.');
+                console.log(this.jsonResponse);
+            } else if (this.xmlResponse !== null) {
+                console.log('Received server response as XML.');
+                console.log(this.xmlResponse);
+            } else {
+                console.log('Received server response as plain text.');
+                console.log(this.response);
+            }
+        }
+    ]
+});
+
+ajax.setOnClientError(function() {
+    // Do something else
+});
+```
 ### On Server Error
+The on server error callback is executed when the server sends a 5xx response code. 
+```
+var ajax = new AJAXRequest({
+    method:'get',
+    url:'https://api.github.com/repos/usernane/AJAXRequestJs',
+    
+    onServerErr:[
+        function(){
+            console.log('Status code: '+this.status);
+            if (this.jsonResponse !== null) {
+                console.log('Received server response as JSON.');
+                console.log(this.jsonResponse);
+            } else if (this.xmlResponse !== null) {
+                console.log('Received server response as XML.');
+                console.log(this.xmlResponse);
+            } else {
+                console.log('Received server response as plain text.');
+                console.log(this.response);
+            }
+        }
+    ]
+});
+
+ajax.setOnServerError(function() {
+    // Do something else
+});
+```
+
 ### On Disconnected
+The on disconnected callback is executed when the class detects that there is no internet connection is available. 
+``` javascript
+var ajax = new AJAXRequest({
+    method:'get',
+    url:'https://api.github.com/repos/usernane/AJAXRequestJs',
+    
+    onDisconnected:[
+        function(){
+            console.log('Status code: '+this.status);
+            console.error('No internet connection! Make sure that you are connected to the internet.');
+        }
+    ]
+});
+
+ajax.setOnDisconnected(function() {
+    // Do something else
+});
+```
 
 ## Sending Parameters to Server
 The class does support sending data using `GET`, `POST`, or `DELETE` request methods. The data can be a simple string, an object or a `DataForm` object. 
@@ -176,7 +334,7 @@ The following sample code shows how to send parameters to the server as an objec
 }).send();
 ```
 
-#### As an Object
+### As an Object
 The following sample code shows how to send parameters to the server as a JavaScript object. This time, we are using the methods of the class `AJAXRequest` instead of using the configuration object.
 ``` javascript
  var ajax = new AJAXRequest({
@@ -207,7 +365,7 @@ ajax.setOnSuccess(function(){
 });
 ajax.send();
 ```
-#### As a `FormData` Object
+### As a `FormData` Object
 `FormData` is usually used to send data to the server using `POST` or `PUT` to modify something in the database. Also, it can be used to upload files to the server. Simply, we create the object `FormData`, add the attributes and use the method `AJAXRequest.setParams()`. This time, we collect user input on a callback which is executed before sending the request. Let's assume that we have the following HTML code.
 ``` html 
 <div id="search-form">
