@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>TODO supply a title</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@1.1.0/AJAXRequest.js"></script>
+        <script type="text/javascript" src="getRequest.js"></script>
+    </head>
+    <body>
+        <div>TODO write content</div>
+        <p>
+            This example uses <a href="https://packagist.org.org">Packagist APIS</a> to get a 
+            list of all packages for a specific vendor.
+        </p>
+        <form onsubmit="return false">
+            <label for="package-name-input">Vendor Name:</label>
+            <input type="text" value="webfiori" id="package-name-input">
+            <!--Notice how it is simple to send the request-->
+            <input type="submit" onclick="window.ajax.send()">
+        </form>
+        <p>
+            Packages:
+        </p>
+        <ul id="packages-list">
+            <!--This list is used to show server response-->
+        </ul>
+    </body>
+</html>
