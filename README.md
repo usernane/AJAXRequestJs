@@ -17,7 +17,14 @@ The main aim of the library is to extend XHR feature which is offered by any mod
 In order to use the library, you must first include the JavaScript file in your head tag of your web page:
 ``` html
 <head>
-  <script src="https://cdn.jsdelivr.net/gh/usernane/AJAXReaponseJs@1.1.0/AJAXRequest.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@1.1.0/AJAXRequest.js"></script>
+</head>
+```
+It is possible to use the minified version of the libray by including the following JavaScript:
+
+``` html
+<head>
+  <script src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@1.1.0/AJAXRequest.min.js"></script>
 </head>
 ```
 
