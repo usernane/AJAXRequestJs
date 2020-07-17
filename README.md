@@ -52,7 +52,7 @@ The following code sample shows the most basic usage of the library.
     method:'get',
     
     //The URL that will receive the request.
-    url:'https://api.github.com/repos/usernane/js-ajax-helper',
+    url:'https://api.github.com/repos/usernane/AJAXRequestJs',
     
     //enable for development to get more informative messages in the console
     verbose:true
