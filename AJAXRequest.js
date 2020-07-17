@@ -842,8 +842,12 @@ function AJAXRequest(config={
             * @returns {undefined}
             */
             value:function(params){
-                this.params = params;
-                this.log('AJAXRequest.setParams: Parameters updated.','info');
+                if (params !== undefined && params !== null) {
+                    this.params = params;
+                    this.log('AJAXRequest.setParams: Parameters updated.','info');
+                } else {
+                    this.log('AJAXRequest.setParams: Cannot set parameters to null or undefined.','warning');
+                }
             },
             writable:false,
             enumerable: true
