@@ -10,7 +10,7 @@ Object.defineProperties(AJAXRequest,{
         * Names of pools of events.
         * @type Array
         */
-        value:['servererror','clienterror','success','connectionlost','afterajax'],
+        value:['servererror','clienterror','success','connectionlost','afterajax','beforeajax'],
         writable:false
     },
     'XMLHttpFactories':{
@@ -77,11 +77,15 @@ Object.defineProperties(AJAXRequest.META,{
  * to.</li>
  * <li><b>params</b>: A parameters which will be sent with the request. 
  * It can be an object, a FormData or a query string.</li>
- * <li><b>enable-log</b>: Used for development. If set to true, more 
+ * <li><b>verbose</b>:A boolean Used for development. If set to true, more 
  * informative messages will appear in the console.</li>
  * <li><b>headers</b>: An object that can hold custom headers that will be 
  * sent with the request.</li>
  * <li><b>enabled</b>: A boolean to enable or disable AJAX.</li>
+ * <li><b>beforeAjax</b>: An array that contains one or more callbacks which 
+ * will be executed before AJAX request is sent. The callbacks can 
+ * be used to collect user inputs and do final configuration before sending 
+ * the request to the server.</li>
  * <li><b>onSuccess</b>: An array that contains one or more callbacks which 
  * will be executed when server sends the response code 2xx.</li>
  * <li><b>onClientErr</b>: An array that contains one or more callbacks which 
@@ -98,8 +102,9 @@ Object.defineProperties(AJAXRequest.META,{
 function AJAXRequest(config={
     method:'get',
     url:'',
-    'enable-log':false,
+    'verbose':false,
     enabled:true,
+    beforeAjax:[],
     onSuccess:[],
     onClientErr:[],
     onServerErr:[],
@@ -111,6 +116,7 @@ function AJAXRequest(config={
      * Any custom headers that will be sent with the request.
      */
     this.customHeaders = {};
+    this.extras = {};
     /**
      * Request method.
      */
@@ -152,6 +158,18 @@ function AJAXRequest(config={
             'call':true,
             'func':function(){
                 console.info('AJAXRequest: Connection lost. Status: '+this.status);
+            }
+        }
+    ];
+    /**
+     * A pool of functions to call before ajax request is sent.
+     */
+    this.onbeforeajaxpool = [
+        {
+            'id':0,
+            'call':true,
+            'func':function(){
+                console.info('AJAXRequest: Before AJAX callback.');
             }
         }
     ];
@@ -220,88 +238,15 @@ function AJAXRequest(config={
             }
             else if(this.readyState === 4 && this.status === 0){
                 this.log('AJAXRequest: Ready State = 4 (DONE)','info');
-                for(var i = 0 ; i < this.onconnectionlostpool.length ; i++){
-                    this.onconnectionlostpool[i].status = this.status;
-                    this.onconnectionlostpool[i].response = this.responseText;
-                    this.onconnectionlostpool[i].xmlResponse = this.responseXML;
-                    this.onconnectionlostpool[i].jsonResponse = null;
-                    this.onconnectionlostpool[i].responseHeaders = getResponseHeadersObj(this);
-                    if(this.onconnectionlostpool[i].call === true){
-                        this.onconnectionlostpool[i].func();
-                    }
-                }
-                for(var i = 0 ; i < this.onafterajaxpool.length ; i++){
-                    this.onafterajaxpool[i].status = this.status;
-                    this.onafterajaxpool[i].response = this.responseText;
-                    this.onafterajaxpool[i].xmlResponse = this.responseXML;
-                    this.onafterajaxpool[i].jsonResponse = null;
-                    this.onafterajaxpool[i].responseHeaders = getResponseHeadersObj(this);
-                    if(this.onafterajaxpool[i].call === true){
-                        this.onafterajaxpool[i].func();
-                    }
-                }
+                setProbsAfterAjax(this, 'connectionlost');
             }
             else if(this.readyState === 4 && this.status >= 200 && this.status < 300){
                 this.log('AJAXRequest: Ready State = 4 (DONE)','info');
-                try{
-                    var jsonResponse = JSON.parse(this.responseText);
-                }
-                catch(e){
-                    this.log('Unable to convert response into JSON object.','warning');
-                    this.log('JSON DATA is set to \'null\'.','warning');
-                    var jsonResponse = null;
-                }
-                for(var i = 0 ; i < this.onsuccesspool.length ; i++){
-                    this.onsuccesspool[i].status = this.status;
-                    this.onsuccesspool[i].response = this.responseText;
-                    this.onsuccesspool[i].xmlResponse = this.responseXML;
-                    this.onsuccesspool[i].jsonResponse = jsonResponse;
-                    this.onsuccesspool[i].responseHeaders = getResponseHeadersObj(this);
-                    if(this.onsuccesspool[i].call === true){
-                        this.onsuccesspool[i].func();
-                    }
-                }
-                for(var i = 0 ; i < this.onafterajaxpool.length ; i++){
-                    this.onafterajaxpool[i].status = this.status;
-                    this.onafterajaxpool[i].response = this.responseText;
-                    this.onafterajaxpool[i].xmlResponse = this.responseXML;
-                    this.onafterajaxpool[i].jsonResponse = jsonResponse;
-                    this.onafterajaxpool[i].responseHeaders = getResponseHeadersObj(this);
-                    if(this.onafterajaxpool[i].call === true){
-                        this.onafterajaxpool[i].func();
-                    }
-                }
+                setProbsAfterAjax(this, 'success');
             }
             else if(this.readyState === 4 && this.status >= 400 && this.status < 500){
                 this.log('AJAXRequest: Ready State = 4 (DONE)','info');
-                try{
-                    var jsonResponse = JSON.parse(this.responseText);
-                }
-                catch(e){
-                    this.log('Unable to convert response into JSON object.','warning',true);
-                    this.log('JSON DATA is set to \'null\'.','warning',true);
-                    var jsonResponse = null;
-                }
-                for(var i = 0 ; i < this.onclienterrorpool.length ; i++){
-                    this.onclienterrorpool[i].status = this.status;
-                    this.onclienterrorpool[i].response = this.responseText;
-                    this.onclienterrorpool[i].xmlResponse = this.responseXML;
-                    this.onclienterrorpool[i].jsonResponse = jsonResponse;
-                    this.onclienterrorpool[i].responseHeaders = getResponseHeadersObj(this);
-                    if(this.onclienterrorpool[i].call === true){
-                        this.onclienterrorpool[i].func();
-                    }
-                }
-                for(var i = 0 ; i < this.onafterajaxpool.length ; i++){
-                    this.onafterajaxpool[i].status = this.status;
-                    this.onafterajaxpool[i].response = this.responseText;
-                    this.onafterajaxpool[i].xmlResponse = this.responseXML;
-                    this.onafterajaxpool[i].jsonResponse = jsonResponse;
-                    this.onafterajaxpool[i].responseHeaders = getResponseHeadersObj(this);
-                    if(this.onafterajaxpool[i].call === true){
-                        this.onafterajaxpool[i].func();
-                    }
-                }
+                setProbsAfterAjax(this, 'clienterror');
             }
             else if(this.readyState === 4 && this.status >= 300 && this.status < 400){
                 this.log('AJAXRequest: Ready State = 4 (DONE)','info');
@@ -309,34 +254,7 @@ function AJAXRequest(config={
             }
             else if(this.readyState === 4 && this.status >= 500 && this.status < 600){
                 this.log('AJAXRequest: Ready State = 4 (DONE)','info');
-                try{
-                    var jsonResponse = JSON.parse(this.responseText);
-                }
-                catch(e){
-                    this.log('Unable to convert response into JSON object.','warning');
-                    this.log('JSON DATA is set to \'null\'.','warning');
-                    var jsonResponse = null;
-                }
-                for(var i = 0 ; i < this.onservererrorpool.length ; i++){
-                    this.onservererrorpool[i].status = this.status;
-                    this.onservererrorpool[i].response = this.responseText;
-                    this.onservererrorpool[i].xmlResponse = this.responseXML;
-                    this.onservererrorpool[i].jsonResponse = jsonResponse;
-                    this.onservererrorpool[i].responseHeaders = getResponseHeadersObj(this);
-                    if(this.onservererrorpool[i].call === true){
-                        this.onservererrorpool[i].func();
-                    }
-                }
-                for(var i = 0 ; i < this.onafterajaxpool.length ; i++){
-                    this.onafterajaxpool[i].status = this.status;
-                    this.onafterajaxpool[i].response = this.responseText;
-                    this.onafterajaxpool[i].xmlResponse = this.responseXML;
-                    this.onafterajaxpool[i].jsonResponse = jsonResponse;
-                    this.onafterajaxpool[i].responseHeaders = getResponseHeadersObj(this);
-                    if(this.onafterajaxpool[i].call === true){
-                        this.onafterajaxpool[i].func();
-                    }
-                }
+                setProbsAfterAjax(this, 'servererror');
             }
             else if(this.readyState === 4){
                 this.log('Status: '+this.status,'info');
@@ -345,6 +263,38 @@ function AJAXRequest(config={
         writable:false,
         enumerable: false
     });
+    function setProbsAfterAjax(inst, pool_name) {
+        try{
+            var jsonResponse = JSON.parse(inst.responseText);
+        }
+        catch(e){
+            inst.log('Unable to convert response into JSON object.','warning', true);
+            inst.log('"jsonResponse" is set to \'null\'.','warning', true);
+            var jsonResponse = null;
+        }
+        for(var i = 0 ; i < inst['on'+pool_name+'pool'].length ; i++){
+            inst['on'+pool_name+'pool'][i].AJAXRequest = inst;
+            inst['on'+pool_name+'pool'][i].status = inst.status;
+            inst['on'+pool_name+'pool'][i].response = inst.responseText;
+            inst['on'+pool_name+'pool'][i].xmlResponse = inst.responseXML;
+            inst['on'+pool_name+'pool'][i].jsonResponse = jsonResponse;
+            inst['on'+pool_name+'pool'][i].responseHeaders = getResponseHeadersObj(inst);
+            if(inst['on'+pool_name+'pool'][i].call === true){
+                inst['on'+pool_name+'pool'][i].func();
+            }
+        }
+        for(var i = 0 ; i < inst.onafterajaxpool.length ; i++){
+            inst['on'+pool_name+'pool'][i].AJAXRequest = inst;
+            inst.onafterajaxpool[i].status = inst.status;
+            inst.onafterajaxpool[i].response = inst.responseText;
+            inst.onafterajaxpool[i].xmlResponse = inst.responseXML;
+            inst.onafterajaxpool[i].jsonResponse = jsonResponse;
+            inst.onafterajaxpool[i].responseHeaders = getResponseHeadersObj(inst);
+            if(inst.onafterajaxpool[i].call === true){
+                inst.onafterajaxpool[i].func();
+            }
+        }
+    }
     /**
      * This function will extract response headers from the response.
      * @returns {Object} The function will return response headers as an object. 
@@ -410,7 +360,7 @@ function AJAXRequest(config={
              * even if the logging is disabled.
              */
             value:function(message,type='',force=false){
-                if(this['enable-log'] === true || force === true){
+                if(this.verbose === true || force === true){
                     if(type==='info'){
                         console.info(message);
                     }
@@ -487,11 +437,11 @@ function AJAXRequest(config={
                 if(typeof callback === 'function'){
                     var id = this.onservererrorpool[this.onservererrorpool.length - 1]['id'] + 1; 
                     this.onservererrorpool.push({'id':id,'call':call,'func':callback});
-                    this.log('AJAXRequestsetOnServerError: New callback added [id = '+id+' , call = '+call+'].','info');
+                    this.log('AJAXRequest.setOnServerError: New callback added [id = '+id+' , call = '+call+'].','info');
                     return id;
                 }
                 else{
-                    this.log('AJAXRequestsetOnServerError: Provided parameter is not a function.','warning');
+                    this.log('AJAXRequest.setOnServerError: Provided parameter is not a function.','warning');
                 }
                 return undefined;
             },
@@ -517,14 +467,14 @@ function AJAXRequest(config={
                                     return this[pool_name].pop(this[pool_name][x]);
                                 }
                             }
-                            this.log('AJAXRequestremoveCall: No callback was found with ID = '+id+' in the pool \''+pool_name+'\'','error');
+                            this.log('AJAXRequest.removeCall: No callback was found with ID = '+id+' in the pool \''+pool_name+'\'','error');
                         }
                         else{
                             noSuchPool(pool_name);
                         }
                     }
                     else{
-                        this.log('AJAXRequestremoveCall: Invalid pool name type. Pool name must be string.','error');
+                        this.log('AJAXRequest.removeCall: Invalid pool name type. Pool name must be string.','error');
                     }
                 }
                 else{
@@ -547,7 +497,7 @@ function AJAXRequest(config={
                 if(pool_name !== undefined && pool_name !== null){
                     if(typeof pool_name === 'string'){
                         pool_name = pool_name.toLowerCase();
-                        if(AJAXRequestCALLBACK_POOLS.indexOf(pool_name) !== -1){
+                        if(AJAXRequest.CALLBACK_POOLS.indexOf(pool_name) !== -1){
                             pool_name = 'on'+pool_name+'pool';
                             for(var x = 0 ; x < this[pool_name].length ; x++){
                                 //first two IDs are reserved. do not disable.
@@ -565,7 +515,7 @@ function AJAXRequest(config={
                         }
                     }
                     else{
-                        this.log('AJAXRequestdisableCallExcept: Invalid pool name type. Pool name must be string.','error');
+                        this.log('AJAXRequest.disableCallExcept: Invalid pool name type. Pool name must be string.','error');
                     }
                 }
                 else{
@@ -590,7 +540,7 @@ function AJAXRequest(config={
                 if(pool_name !== undefined && pool_name !== null){
                     if(typeof pool_name === 'string'){
                         pool_name = pool_name.toLowerCase();
-                        if(AJAXRequestCALLBACK_POOLS.indexOf(pool_name) !== -1){
+                        if(AJAXRequest.CALLBACK_POOLS.indexOf(pool_name) !== -1){
                             pool_name = 'on'+pool_name+'pool';
                             for(var x = 0 ; x < this[pool_name].length ; x++){
                                 if(this[pool_name][x]['id'] === id){
@@ -598,14 +548,14 @@ function AJAXRequest(config={
                                     return;
                                 }
                             }
-                            this.log('AJAXRequestsetCallEnabled: No callback was found with ID = '+id+' in the pool \''+pool_name+'\'','warning');
+                            this.log('AJAXRequest.setCallEnabled: No callback was found with ID = '+id+' in the pool \''+pool_name+'\'','warning');
                         }
                         else{
                             noSuchPool(pool_name);
                         }
                     }
                     else{
-                        this.log('AJAXRequestsetCallEnabled: Invalid pool name type. Pool name must be string.','error');
+                        this.log('AJAXRequest.setCallEnabled: Invalid pool name type. Pool name must be string.','error');
                     }
                 }
                 else{
@@ -629,21 +579,21 @@ function AJAXRequest(config={
                 if(pool_name !== undefined && pool_name !== null){
                     if(typeof pool_name === 'string'){
                         pool_name = pool_name.toLowerCase();
-                        if(AJAXRequestCALLBACK_POOLS.indexOf(pool_name) !== -1){
+                        if(AJAXRequest.CALLBACK_POOLS.indexOf(pool_name) !== -1){
                             pool_name = 'on'+pool_name+'pool';
                             for(var x = 0 ; x < this[pool_name].length ; x++){
                                 if(this[pool_name][x]['id'] === id){
                                     return this[pool_name][x];
                                 }
                             }
-                            this.log('AJAXRequestgetCallBack: No callback was found with ID = '+id+' in the pool \''+pool_name+'\'','warning');
+                            this.log('AJAXRequest.getCallBack: No callback was found with ID = '+id+' in the pool \''+pool_name+'\'','warning');
                         }
                         else{
                             noSuchPool(pool_name);
                         }
                     }
                     else{
-                        this.log('AJAXRequestgetCallBack: Invalid pool name type. Pool name must be string.','error');
+                        this.log('AJAXRequest.getCallBack: Invalid pool name type. Pool name must be string.','error');
                     }
                 }
                 else{
@@ -667,11 +617,36 @@ function AJAXRequest(config={
                 if(typeof callback === 'function'){
                     var id = this.onclienterrorpool[this.onclienterrorpool.length - 1]['id'] + 1; 
                     this.onclienterrorpool.push({'id':id,'call':call,'func':callback});
-                    this.log('AJAXRequestsetOnClientError: New callback added [id = '+id+' , call = '+call+'].','info');
+                    this.log('AJAXRequest.setOnClientError: New callback added [id = '+id+' , call = '+call+'].','info');
                     return id;
                 }
                 else{
-                    this.log('AJAXRequestsetOnClientError: Provided parameter is not a function.','error');
+                    this.log('AJAXRequest.setOnClientError: Provided parameter is not a function.','error');
+                }
+            },
+            writable:false,
+            enumerable: true
+        },
+        setBeforeAjax:{
+            /**
+            * Append a function to the pool of functions that will be called before 
+            * ajax request is sent to the server. 
+            * @param {Boolean} If set to true, the callback will be called. If false, 
+            * it woun't be called.
+            * @param {Function} callback A function to call before ajax request is 
+            * sent to the server.
+            * @returns {undefined|Number} Returns an ID for the function. If not added, 
+            * the method will return undefined.
+            */
+            value:function(callback,call=true){
+                if(typeof callback === 'function'){
+                    var id = this.onbeforeajaxpool[this.onbeforeajaxpool.length - 1]['id'] + 1; 
+                    this.onbeforeajaxpool.push({'id':id,'call':call,'func':callback});
+                    this.log('AJAXRequest.setBeforeAjax: New callback added [id = '+id+' , call = '+call+'].','info');
+                    return id;
+                }
+                else{
+                    this.log('AJAXRequest.setBeforeAjax: Provided parameter is not a function.','error');
                 }
             },
             writable:false,
@@ -683,7 +658,7 @@ function AJAXRequest(config={
             * ajax request is finished regardless of the status. 
             * @param {Boolean} If set to true, the callback will be called. If false, 
             * it woun't be called.
-            * @param {Function} callback A function to call on client error.
+            * @param {Function} callback A function to call after AJAX request is finished.
             * @returns {undefined|Number} Returns an ID for the function. If not added, 
             * the method will return undefined.
             */
@@ -691,11 +666,11 @@ function AJAXRequest(config={
                 if(typeof callback === 'function'){
                     var id = this.onafterajaxpool[this.onafterajaxpool.length - 1]['id'] + 1; 
                     this.onafterajaxpool.push({'id':id,'call':call,'func':callback});
-                    this.log('AJAXRequestsetAfterAjax: New callback added [id = '+id+' , call = '+call+'].','info');
+                    this.log('AJAXRequest.setAfterAjax: New callback added [id = '+id+' , call = '+call+'].','info');
                     return id;
                 }
                 else{
-                    this.log('AJAXRequestsetAfterAjax: Provided parameter is not a function.','error');
+                    this.log('AJAXRequest.setAfterAjax: Provided parameter is not a function.','error');
                 }
             },
             writable:false,
@@ -703,8 +678,8 @@ function AJAXRequest(config={
         },
         getCsrfToken: {
             value:function(){
-                this.log('AJAXRequestgetCsrfToken: Searching for CSRF token value.','info');
-                this.log('AJAXRequestgetCsrfToken: Checking "window.csrfToken"...','info');
+                this.log('AJAXRequest.getCsrfToken: Searching for CSRF token value.','info');
+                this.log('AJAXRequest.getCsrfToken: Checking "window.csrfToken"...','info');
                 if (window.csrfToken === undefined || window.csrfToken === null) {
                     this.log('AJAXRequest.getCsrfToken: It is not set.','warning');
                     this.log('AJAXRequest.getCsrfToken: Searching for meta tag with name = "csrf-token"...','info');
@@ -928,11 +903,19 @@ function AJAXRequest(config={
             * else, it will return false.
             */
             value:function(){
-                this.log('AJAXRequest.send: Sending AJAX request.','info');
+                this.log('AJAXRequest.send: Executing bofe AJAX callbacks...','info');
+                for(var i = 0 ; i < this.onbeforeajaxpool.length ; i++){
+                    this.onbeforeajaxpool[i].AJAXRequest = this;
+                    if(this.onbeforeajaxpool[i].call === true){
+                        this.onbeforeajaxpool[i].func();
+                    }
+                }
+                this.log('AJAXRequest.send: Finished executing the before AJAX callbacks.','info');
+                this.log('AJAXRequest.send: Checking if AJAX is enabled....','info');
                 if(this.isEnabled()){
+                    this.log('AJAXRequest.send: It is enabled.','info');
                     var method = this.getReqMethod();
                     var params = this.getParams();
-                    
                     var url = this.getURL();
                     this.log('AJAXRequest.send: Params: '+params,'info');
                     this.log('AJAXRequest.send: Request Method: '+method,'info');
@@ -946,7 +929,7 @@ function AJAXRequest(config={
                     this.xhr.onclienterrorpool = this.onclienterrorpool;
                     this.xhr.onconnectionlostpool = this.onconnectionlostpool;
                     this.xhr.onafterajaxpool = this.onafterajaxpool;
-                    this.xhr['enable-log'] = this['enable-log'];
+                    this.xhr.verbose = this.verbose;
                     this.log('AJAXRequest.send: Checking parameters type...', 'info');
                     if(typeof this.params === 'object' && this.params.toString() !== '[object FormData]'){
                         this.log('AJAXRequest.send: An object is given. Extracting values...', 'info');
@@ -1098,9 +1081,9 @@ function AJAXRequest(config={
     var a = function(){
         instance.setResponse(instance.xhr.responseText);
     };
-    this['enable-log'] = config['enable-log'];
-    if(this['enable-log'] === true){
-        this.log('AJAXRequest: Logging mode is enabled.');
+    this.verbose= config.verbose;
+    if(this.verbose === true){
+        this.log('AJAXRequest: Verbose mode is enabled. More messages will be shown in the console.');
     }
     this.setOnSuccess(a);
     this.setOnServerError(a);
@@ -1121,6 +1104,11 @@ function AJAXRequest(config={
     }
     
     //Add callbacks
+    if (Array.isArray(config.beforeAjax)) {
+        config.beforeAjax.forEach((callback) => {
+            instance.setBeforeAjax(callback);
+        });
+    }
     if (Array.isArray(config.onSuccess)) {
         config.onSuccess.forEach((callback) => {
             instance.setOnSuccess(callback);
