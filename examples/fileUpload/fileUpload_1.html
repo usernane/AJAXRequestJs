@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>File upload example.</title>
+        <meta charset="UTF-8">
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@1.1.0/AJAXRequest.js"></script>
+        
+        <!--This javascript file is used to handle the logic of uploading the file-->
+        <script type="text/javascript" src="fileUpload_1.js"></script>
+    </head>
+    <body>
+        <form id="file-upload-form" onsubmit="return false">
+            <input type="file" name="my-file">
+            <input type="submit" onclick="window.ajax.send()">
+        </form>
+    </body>
+</html>
