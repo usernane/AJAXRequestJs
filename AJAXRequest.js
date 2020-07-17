@@ -274,7 +274,7 @@ function AJAXRequest(config={
             }
         }
         for(var i = 0 ; i < inst.onafterajaxpool.length ; i++){
-            inst['on'+pool_name+'pool'][i].AJAXRequest = inst;
+            inst.onafterajaxpool[i].AJAXRequest = inst;
             inst.onafterajaxpool[i].status = inst.status;
             inst.onafterajaxpool[i].response = inst.responseText;
             inst.onafterajaxpool[i].xmlResponse = inst.responseXML;
