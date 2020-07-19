@@ -181,7 +181,9 @@ var ajax = new AJAXRequest({
     ]
 });
 
-ajax.setBeforeAjax(function() {
+// Note that the callback will not override the existing one.
+//It will be added beside the existng one.
+var id = ajax.setBeforeAjax(function() {
     // Do something else
 });
 ```
@@ -204,7 +206,7 @@ var ajax = new AJAXRequest({
     ]
 });
 
-ajax.setAfterAjax(function() {
+var id = ajax.setAfterAjax(function() {
     // Do something else
 });
 ```
@@ -233,7 +235,7 @@ var ajax = new AJAXRequest({
     ]
 });
 
-ajax.setOnSuccess(function() {
+var id = ajax.setOnSuccess(function() {
     // Do something else
 });
 ```
@@ -262,7 +264,7 @@ var ajax = new AJAXRequest({
     ]
 });
 
-ajax.setOnClientError(function() {
+var id = ajax.setOnClientError(function() {
     // Do something else
 });
 ```
@@ -290,7 +292,7 @@ var ajax = new AJAXRequest({
     ]
 });
 
-ajax.setOnServerError(function() {
+var id = ajax.setOnServerError(function() {
     // Do something else
 });
 ```
@@ -310,7 +312,7 @@ var ajax = new AJAXRequest({
     ]
 });
 
-ajax.setOnDisconnected(function() {
+var id = ajax.setOnDisconnected(function() {
     // Do something else
 });
 ```
