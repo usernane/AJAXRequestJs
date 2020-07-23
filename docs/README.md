@@ -27,7 +27,7 @@
   * <a href="#ajaxrequestseturlurl">`AJAXRequest.setURL(url)`</a>
 
 # Constructor
-<a href="">`AJAXRequest([config])`</a>
+## `AJAXRequest([config])`
 Create an instance of the class. 
 ## Parameters:
 ### `config` [Optinal]
@@ -47,7 +47,7 @@ following properties:
   <li><b>onDisconnected</b>: An array that contains one or more callbacks which will be executed when there is no internet connection.</li>
   <li><b>afterAjax</b>: An array that contains one or more callbacks which will be executed after AJAX request is finishhed regrardless of status code.</li>
 </ul>
-Note that for callback arrays, they can be a single callback instead of an array as of version 1.1.1.
+<b>Note that for callback arrays, they can be a single callback instead of an array as of version 1.1.1.</b>
 
 # Constants
 | Name | Description |
