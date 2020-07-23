@@ -1,12 +1,7 @@
 # AJAXRequest.js
-A light weight JavaScript class library that can help in making AJAX requests much simpler task in your website. 
-<p align="left">
- Hits as AJAX.js
-<img src="https://img.shields.io/jsdelivr/gh/hm/usernane/ajax?color=light-green">
-</p>
+A light weight JavaScript class library that can help in making AJAX requests much simpler task. 
 
 <p align="left">
-  Hits as AJAXRequest.js (new)
 <img alt="jsDelivr hits (GitHub)" src="https://img.shields.io/jsdelivr/gh/hm/usernane/AJAXRequestJs">
 </p>
 
@@ -25,6 +20,8 @@ A light weight JavaScript class library that can help in making AJAX requests mu
 * <a href="#sending-parameters-to-server">Sending Parameters to Server</a>
 * <a href="#adding-custom-headers">Adding Custom Headers</a>
 * <a href="#csrf-token">CSRF Token</a>
+* <a href="#api-reference">API Docs</a>
+* <a href="usage-examples">Usage Examples</a>
 * <a href="#license">License</a>
 
 ## Main features:
@@ -38,14 +35,14 @@ A light weight JavaScript class library that can help in making AJAX requests mu
 In order to use the library, you must first include the JavaScript file in your head tag of your web page:
 ``` html
 <head>
-  <script src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@1.1.0/AJAXRequest.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@1.1.1/AJAXRequest.js"></script>
 </head>
 ```
 It is possible to use the minified version of the libray by including the following JavaScript:
 
 ``` html
 <head>
-  <script src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@1.1.0/AJAXRequest.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@1.1.1/AJAXRequest.min.js"></script>
 </head>
 ```
 
@@ -84,20 +81,20 @@ When creating an instance of the class `AJAXRequest`, there are configuration op
 ``` javascript
 {
     //The URL that will receive the request.
-    url:'https://example.com/api',
+    url:string,
     
     //Request method. If not provided, 'GET' is used.
-    method:'get',
+    method:string,
     
     //Parameters which will be send with the request. It can be an object, a 
     //`FormData` object or string in the form `key1=value1&key2=value2`.
-    params:{},
+    params:object|string|FormData,
     
     //A boolean which is used to enable or disable AJAX.
     enabled:true,
     
     //If this one is set to true, more informative messages will appear in the console.
-    verbose:false,
+    verbose:boolean,
     
     //Extra headers to send with the request.
     headers:{},
@@ -105,26 +102,26 @@ When creating an instance of the class `AJAXRequest`, there are configuration op
     //A set of callbacks. The enabled ones will be executed before AJAX request is sent.
     //The developer can use them to collect user inputs or intrupt AJAX request and disable it before 
     //Sending it to server.
-    beforeAjax:[], 
+    beforeAjax:array|function, 
     
     //A set of callbacks. The enabled ones executed when the request is finished with status code 2xx or 3xx.
-    onSuccess:[], 
+    onSuccess:array|function, 
     
     //A set of callbacks. The enabled ones executed when the request is finished with status code 4xx.
-    onClientErr:[], 
+    onClientErr:array|function, 
     
     //A set of callbacks. The enabled ones executed when the request is finished with status code 5xx.
-    onServerErr:[], 
+    onServerErr:array|function, 
     
     //A set of callbacks. The enabled ones executed when there is no interned connection.
-    onDisconnected:[], 
+    onDisconnected:array|function, 
     
     //A set of callbacks. The enabled ones executed when the request is finished without 
     //looking at the status of the response.
-    afterAjax:[], 
+    afterAjax:array|function, 
 }
 ```
-
+Note that starting version 1.1.1 the array of callbacks can be also a single function.
 ## Properties Accessable in Callbacks
 Inside the callback that will be executed, the developer will have access to the properties of AJAX request and its response. The developer can use the keyword `this` to access them. The available properties are as follows:
 
@@ -164,21 +161,19 @@ var ajax = new AJAXRequest({
     method:'get',
     url:'https://api.github.com/repos/usernane/AJAXRequestJs',
     
-    beforeAjax:[
-        function(){
-            // Collect user inputs, validate them, etc...
-            var firstName = document.getElementById('name-input').value.trim();
-            if (firstName.length === 0) {
-                this.AJAXRequest.setEnabled(false);
-                console.log('Missing name.');
-            } else {
-                this.AJAXRequest.setEnabled(true);
-            }
-            this.AJAXRequest.setParams({
-                name:firstName
-            });
-        }
-    ]
+    beforeAjax:function(){
+          // Collect user inputs, validate them, etc...
+          var firstName = document.getElementById('name-input').value.trim();
+          if (firstName.length === 0) {
+              this.AJAXRequest.setEnabled(false);
+              console.log('Missing name.');
+          } else {
+              this.AJAXRequest.setEnabled(true);
+          }
+          this.AJAXRequest.setParams({
+              name:firstName
+          });
+      }
 });
 
 // Note that the callback will not override the existing one.
@@ -194,16 +189,14 @@ var ajax = new AJAXRequest({
     method:'get',
     url:'https://api.github.com/repos/usernane/AJAXRequestJs',
     
-    afterAjax:[
-        function(){
-            console.log('Status code: '+this.status);
-            if (this.status < 400) {
-                console.log('No Errors');
-            } else if (this.status >= 400) {
-                console.error('Error')
-            }
-        }
-    ]
+    afterAjax:function(){
+         console.log('Status code: '+this.status);
+         if (this.status < 400) {
+             console.log('No Errors');
+         } else if (this.status >= 400) {
+             console.error('Error')
+         }
+     }
 });
 
 var id = ajax.setAfterAjax(function() {
@@ -218,21 +211,19 @@ var ajax = new AJAXRequest({
     method:'get',
     url:'https://api.github.com/repos/usernane/AJAXRequestJs',
     
-    onSuccess:[
-        function(){
-            console.log('Status code: '+this.status);
-            if (this.jsonResponse !== null) {
-                console.log('Received server response as JSON.');
-                console.log(this.jsonResponse);
-            } else if (this.xmlResponse !== null) {
-                console.log('Received server response as XML.');
-                console.log(this.xmlResponse);
-            } else {
-                console.log('Received server response as plain text.');
-                console.log(this.response);
-            }
-        }
-    ]
+    onSuccess:function(){
+         console.log('Status code: '+this.status);
+         if (this.jsonResponse !== null) {
+             console.log('Received server response as JSON.');
+             console.log(this.jsonResponse);
+         } else if (this.xmlResponse !== null) {
+             console.log('Received server response as XML.');
+             console.log(this.xmlResponse);
+         } else {
+             console.log('Received server response as plain text.');
+             console.log(this.response);
+         }
+     }
 });
 
 var id = ajax.setOnSuccess(function() {
@@ -247,21 +238,19 @@ var ajax = new AJAXRequest({
     method:'get',
     url:'https://api.github.com/repos/usernane/AJAXRequestJs',
     
-    onClientErr:[
-        function(){
-            console.log('Status code: '+this.status);
-            if (this.jsonResponse !== null) {
-                console.log('Received server response as JSON.');
-                console.log(this.jsonResponse);
-            } else if (this.xmlResponse !== null) {
-                console.log('Received server response as XML.');
-                console.log(this.xmlResponse);
-            } else {
-                console.log('Received server response as plain text.');
-                console.log(this.response);
-            }
-        }
-    ]
+    onClientErr:function(){
+         console.log('Status code: '+this.status);
+         if (this.jsonResponse !== null) {
+             console.log('Received server response as JSON.');
+             console.log(this.jsonResponse);
+         } else if (this.xmlResponse !== null) {
+             console.log('Received server response as XML.');
+             console.log(this.xmlResponse);
+         } else {
+             console.log('Received server response as plain text.');
+             console.log(this.response);
+         }
+     }
 });
 
 var id = ajax.setOnClientError(function() {
@@ -454,6 +443,12 @@ The library can extract CSRF token from the DOM and send it with request headers
 * As an input element with `name="csrf-token` and `value="the_token"`.
 * As a `window.csrfToken` variable. 
 If one of the 3 is met, the token will be sent to the server in the headers. The name of the header will be `X-CSRF-TOKEN`. Note that the token must be created and set by the server. Also, note that it will be only sent with unsafe request methods (`PUT`,`POST` and `DELETE`).
+
+## API Reference
+If you would like to read the API reference of the library, please check <a href="https://github.com/usernane/AJAXRequestJs/blob/master/docs/README.md">here</a>.
+
+## Usag Examples
+If you are looking for example on how to use the library, please check <a href="https://github.com/usernane/AJAXRequestJs/tree/master/examples">here</a>.
 
 ## License
 The project is licensed under MIT license.
