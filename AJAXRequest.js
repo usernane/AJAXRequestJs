@@ -473,7 +473,7 @@ function AJAXRequest(config={
             * was added to the pool. If the ID does not exist, All callbacks will be disabled.
             * @returns {undefined}
             */
-            value:function(pool_name,id){
+            value:function(pool_name,id=-1){
                 if (pool_name !== undefined && pool_name !== null) {
                     if (typeof pool_name === 'string') {
                         pool_name = pool_name.toLowerCase();
@@ -505,7 +505,7 @@ function AJAXRequest(config={
             /**
             * Enable or disable a callback on specific pool.
             * @param {String} pool_name The name of the pool. It must be one of the 
-            * values in the aray AJAXRequestCALLBACK_POOLS.
+            * values in the aray AJAXRequest.CALLBACK_POOLS.
             * @param {Number} id The ID of the callback. It is given when the callback 
             * was added.
             * @param {Boolean} call If set to true, the function will be called. Else 
@@ -542,13 +542,13 @@ function AJAXRequest(config={
             /**
             * Returns an object that contains the information of a callback function. 
             * @param {type} pool_name The name of the pool. It must be in the array 
-            * AJAXRequestCALLBACK_POOLS.
+            * AJAXRequest.CALLBACK_POOLS.
             * @param {Number} id The ID of the callback.
             * @returns {Object|undefined} Returns an object that contains the 
             * information of the callback. If it is not found, or the pool name is invalid, 
             * the method will show a warning in the console and returns undefined.
             */
-            value:function(pool_name='',id){
+            value:function(pool_name,id){
                 if (pool_name !== undefined && pool_name !== null) {
                     if (typeof pool_name === 'string') {
                         pool_name = pool_name.toLowerCase();
