@@ -1,3 +1,31 @@
+# Table of Content
+* [Constructor](#constructor)
+* [Constants](#constants)
+* [Methods](#methods)
+  * <a href="#ajaxrequestaddheadername-value">`AJAXRequest.addHeader(name, value)`</a>
+  * <a href="#ajaxrequestdisablecallexceptpool_nameid-1">`AJAXRequest.disableCallExcept(pool_name[,id=-1])`</a>
+  * <a href="#ajaxrequestgetcallbackpool_nameid">`AJAXRequest.getCallBack(pool_name,id)`</a>
+  * <a href="#ajaxrequestgetcsrftoken">`AJAXRequest.getCsrfToken()`</a>
+  * <a href="#ajaxrequestgetparams">`AJAXRequest.getParams()`</a>
+  * <a href="#ajaxrequestgetrequmethod">`AJAXRequest.getReqMethod()`</a>
+  * <a href="#ajaxrequestgetserverresponse">`AJAXRequest.getServerResponse()`</a>
+  * <a href="#ajaxrequestgeturl">`AJAXRequest.getURL()`</a>
+  * <a href="#ajaxrequestlogmessagetypeforce">`AJAXRequest.log(message[,type[,force]])`</a>
+  * <a href="#ajaxrequestremovecallpool_nameid">`AJAXRequest.removeCall(pool_name,id)`</a>
+  * <a href="#ajaxrequestresponseasjson">`AJAXRequest.responseAsJSON()`</a>
+  * <a href="#ajaxrequestsetcallenabledpool_nameidcall">`AJAXRequest.setCallEnabled(pool_name,id[,call])`</a>
+  * <a href="#ajaxrequestsetafterajaxcallbackcall">`AJAXRequest.setAfterAjax(callback[,call])`</a>
+  * <a href="#ajaxrequestsetbeforeajaxcallbackcall">`AJAXRequest.setBeforeAjax(callback[,call])`</a>
+  * <a href="#ajaxrequestsetenabledbool">`AJAXRequest.setEnabled(bool)`</a>
+  * <a href="#ajaxrequestsend">`AJAXRequest.send()`</a>
+  * <a href="#ajaxrequestsetonclienterrorcallbackcall">`AJAXRequest.setOnClientError(callback[,call])`</a>
+  * <a href="#ajaxrequestsetondisconnectedcallbackcall">`AJAXRequest.setOnDisconnected(callback[,call])`</a>
+  * <a href="#ajaxrequestsetonservererrorcallbackcall">`AJAXRequest.setOnServerError(callback[,call])`</a>
+  * <a href="#ajaxrequestsetonsuccesscallbackcall">`AJAXRequest.setOnSuccess(callback[,call])`</a>
+  * <a href="#ajaxrequestsetparamsparams">`AJAXRequest.setParams(params)`</a>
+  * <a href="#ajaxrequestsetrequmethodmethod">`AJAXRequest.setReqMethod(method)`</a>
+  * <a href="#ajaxrequestseturlurl">`AJAXRequest.setURL(url)`</a>
+
 # Constructor
 <a href="">`AJAXRequest([config])`</a>
 Create an instance of the class. 
@@ -28,29 +56,6 @@ Note that for callback arrays, they can be a single callback instead of an array
 |`AJAXRequest.META`| An object that holds meta information about the library. It includes the following values: <ul><li>`VERSION`: Library version number.</li><li>`REALSE_DATE` The date at which the library was released.</li><li>`CONTRIBUTORS`: An array that contains the names of people who have cotrubuted to the development of the library.</li></ul>|
 |`AJAXRequest.CALLBACK_POOLS`| An array that contains the names of pools that will store callbacks. |
 # Methods
-* <a href="#ajaxrequestaddheadername-value">`AJAXRequest.addHeader(name, value)`</a>
-* <a href="#ajaxrequestdisablecallexceptpool_nameid-1">`AJAXRequest.disableCallExcept(pool_name[,id=-1])`</a>
-* <a href="#ajaxrequestgetcallbackpool_nameid">`AJAXRequest.getCallBack(pool_name,id)`</a>
-* <a href="#ajaxrequestgetcsrftoken">`AJAXRequest.getCsrfToken()`</a>
-* <a href="#ajaxrequestgetparams">`AJAXRequest.getParams()`</a>
-* <a href="#ajaxrequestgetrequmethod">`AJAXRequest.getReqMethod()`</a>
-* <a href="#ajaxrequestgetserverresponse">`AJAXRequest.getServerResponse()`</a>
-* <a href="#ajaxrequestgeturl">`AJAXRequest.getURL()`</a>
-* <a href="#ajaxrequestlogmessagetypeforce">`AJAXRequest.log(message[,type[,force]])`</a>
-* <a href="#ajaxrequestremovecallpool_nameid">`AJAXRequest.removeCall(pool_name,id)`</a>
-* <a href="#ajaxrequestresponseasjson">`AJAXRequest.responseAsJSON()`</a>
-* <a href="#ajaxrequestsetcallenabledpool_nameidcall">`AJAXRequest.setCallEnabled(pool_name,id[,call])`</a>
-* <a href="#ajaxrequestsetafterajaxcallbackcall">`AJAXRequest.setAfterAjax(callback[,call])`</a>
-* <a href="#ajaxrequestsetbeforeajaxcallbackcall">`AJAXRequest.setBeforeAjax(callback[,call])`</a>
-* <a href="#ajaxrequestsetenabledbool">`AJAXRequest.setEnabled(bool)`</a>
-* <a href="#ajaxrequestsend">`AJAXRequest.send()`</a>
-* <a href="#ajaxrequestsetonclienterrorcallbackcall">`AJAXRequest.setOnClientError(callback[,call])`</a>
-* <a href="#ajaxrequestsetondisconnectedcallbackcall">`AJAXRequest.setOnDisconnected(callback[,call])`</a>
-* <a href="#ajaxrequestsetonservererrorcallbackcall">`AJAXRequest.setOnServerError(callback[,call])`</a>
-* <a href="#ajaxrequestsetonsuccesscallbackcall">`AJAXRequest.setOnSuccess(callback[,call])`</a>
-* <a href="#ajaxrequestsetparamsparams">`AJAXRequest.setParams(params)`</a>
-* <a href="#ajaxrequestsetrequmethodmethod">`AJAXRequest.setReqMethod(method)`</a>
-* <a href="#ajaxrequestseturlurl">`AJAXRequest.setURL(url)`</a>
 
 
 ## `AJAXRequest.addHeader(name, value)`
@@ -125,18 +130,112 @@ The type of the message. It can be 'info',  'error' or 'warning'.
 If set to true, the message will be shown even if verbose mode is disabled.
 
 ## `AJAXRequest.removeCall(pool_name,id)`
-## `AJAXRequest.responseAsJSON()`
-## `AJAXRequest.setCallEnabled(pool_name,id[,call])`
-## `AJAXRequest.setAfterAjax(callback[,call])`
-## `AJAXRequest.setBeforeAjax(callback[,call])`
-## `AJAXRequest.setEnabled(bool)`
-## `AJAXRequest.send()`
-## `AJAXRequest.setOnClientError(callback[,call])`
-## `AJAXRequest.setOnDisconnected(callback[,call])`
-## `AJAXRequest.setOnServerError(callback[,call])`
-## `AJAXRequest.setOnSuccess(callback[,call])`
-## `AJAXRequest.setParams(params)`
-## `AJAXRequest.setReqMethod(method)`
-## `AJAXRequest.setURL(url)`
+Removes a callback function from a specific pool given its ID.
+### Parameters:
+#### `pool_name` : `String`
+The name of the pool. It should be one of the values in the array `AJAXRequest.CALLBACK_POOLS`.
+#### `id` : `Number` 
+The ID of the callback function.
 
+## `AJAXRequest.responseAsJSON()`
+Return a JSON object that represents response payload. The method will attempt to convert server response to JSON object. If it fails, it will return `undefined`.
+### Returns: `Object|undefined`
+
+## `AJAXRequest.setCallEnabled(pool_name,id[,call])`
+Enable or disable a callback on specific pool.
+### Parameters:
+#### `pool_name` : `String`
+The name of the pool. It should be one of the values in the array `AJAXRequest.CALLBACK_POOLS`.
+#### `id` : `Number` 
+The ID of the callback function.
+#### `call` : `Boolean`
+If set to true, the callback function will be enabled and executed. Else if it is set to false, it will be not called.
+
+## `AJAXRequest.setAfterAjax(callback[,call])`
+Append a function to the pool of functions that will be called after ajax request is finished regardless of the status. 
+### Parameters:
+####  `callback` : `Function`
+A function to call after AJAX request is finished.
+#### `call` : `Boolean` [Optional]
+If set to true, the callback will be called. If false, it woun't be called. Default is `true`.
+### Returns: `Number`
+If the callback is added, the method will return a number that represents its ID. If not added, the method will return `undefined`.
+
+## `AJAXRequest.setBeforeAjax(callback[,call])`
+Append a function to the pool of functions that will be called before ajax request is sent. 
+### Parameters:
+####  `callback` : `Function`
+A function to call before AJAX request is sent.
+#### `call` : `Boolean` [Optional]
+If set to true, the callback will be called. If false, it woun't be called. Default is `true`.
+### Returns: `Number`
+If the callback is added, the method will return a number that represents its ID. If not added, the method will return `undefined`.
+## `AJAXRequest.setEnabled(bool)`
+Enable or disable AJAX.
+### Parameters:
+#### `boolean` : `Boolean` 
+True to enable AJAX. False to disable. If other value is given, AJAX will be enabled.
+
+## `AJAXRequest.send()`
+Send AJAX request to the server.
+### Returns: `Boolean`
+True in case of the status of AJAX request is open. else, it will return false.
+
+## `AJAXRequest.setOnClientError(callback[,call])`
+Append a function to the pool of functions that will be called in case of client error (code 4xx). 
+### Parameters:
+#### `callback` : `Function` 
+A function to call on client error.
+#### `call` : `Boolean` [Optional]
+If true, the method will be called. Else if false is given, the method will be not called. Default value is `true`.
+## Returns: `Number|undefined`
+If the callback is added, the method will return a number that represents its ID. If not added, the method will return `undefined`.
+
+## `AJAXRequest.setOnDisconnected(callback[,call])`
+Append a function to the pool of functions that will be called in case there is no internet connection. 
+### Parameters:
+#### `callback` : `Function` 
+A function to call on disconnected.
+#### `call` : `Boolean` [Optional]
+If true, the method will be called. Else if false is given, the method will be not called. Default value is `true`.
+## Returns: `Number|undefined`
+If the callback is added, the method will return a number that represents its ID. If not added, the method will return `undefined`.
+
+## `AJAXRequest.setOnServerError(callback[,call])`
+Append a function to the pool of functions that will be called in case of server error (code 5xx). 
+### Parameters:
+#### `callback` : `Function` 
+A function to call on server error.
+#### `call` : `Boolean` [Optional]
+If true, the method will be called. Else if false is given, the method will be not called. Default value is `true`.
+## Returns: `Number|undefined`
+If the callback is added, the method will return a number that represents its ID. If not added, the method will return `undefined`.
+
+## `AJAXRequest.setOnSuccess(callback[,call])`
+Append a function to the pool of functions that will be called in case of success (code 2xx or 3xx). 
+### Parameters:
+#### `callback` : `Function` 
+A function to call on success.
+#### `call` : `Boolean` [Optional]
+If true, the method will be called. Else if false is given, the method will be not called. Default value is `true`.
+## Returns: `Number|undefined`
+If the callback is added, the method will return a number that represents its ID. If not added, the method will return `undefined`.
+
+## `AJAXRequest.setParams(params)`
+Sets request payload that will be send with it.
+### Parameters:
+#### `params` : `String|FormData|Object`
+The parameters can be a simple string like `a=super`, A `FormData` object or a javaScript object. The object can have any type of data.
+
+## `AJAXRequest.setReqMethod(method)`
+Sets the request method.
+### Parameters:
+#### `method` : `String`
+A string such as 'get', 'post' or 'delete'. If the request method is not valid, A warning will be shown in the console and default (which is 'GET') will be set.
+
+## `AJAXRequest.setURL(url)`
+Sets AJAX request URL (or URI)
+### Parameters:
+#### `url` : `String`
+The URL that will receive AJAX request.
 
