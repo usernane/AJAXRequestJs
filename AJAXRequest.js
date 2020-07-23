@@ -599,11 +599,11 @@ function AJAXRequest(config={
         setBeforeAjax:{
             /**
             * Append a function to the pool of functions that will be called before 
-            * ajax request is sent to the server. 
-            * @param {Boolean} If set to true, the callback will be called. If false, 
-            * it woun't be called.
+            * ajax request is sent to the server.  
             * @param {Function} callback A function to call before ajax request is 
             * sent to the server.
+            * @param {Boolean} call If set to true, the callback will be called. If false, 
+            * it woun't be called.
             * @returns {undefined|Number} Returns an ID for the function. If not added, 
             * the method will return undefined.
             */
@@ -624,11 +624,11 @@ function AJAXRequest(config={
             /**
             * Append a function to the pool of functions that will be called after 
             * ajax request is finished regardless of the status. 
-            * @param {Boolean} If set to true, the callback will be called. If false, 
-            * it woun't be called.
             * @param {Function} callback A function to call after AJAX request is finished.
             * @returns {undefined|Number} Returns an ID for the function. If not added, 
             * the method will return undefined.
+            * @param {Boolean} call If set to true, the callback will be called. If false, 
+            * it woun't be called.
             */
             value:function(callback,call=true){
                 if (typeof callback === 'function') {
@@ -1080,30 +1080,42 @@ function AJAXRequest(config={
         config.beforeAjax.forEach((callback) => {
             instance.setBeforeAjax(callback);
         });
+    } else if (typeof config.beforeAjax === 'function') {
+        instance.setBeforeAjax(config.beforeAjax);
     }
     if (Array.isArray(config.onSuccess)) {
         config.onSuccess.forEach((callback) => {
             instance.setOnSuccess(callback);
         });
+    } else if (typeof config.onSuccess === 'function') {
+        instance.setBeforeAjax(config.onSuccess);
     }
     if (Array.isArray(config.onClientErr)) {
         config.onClientErr.forEach((callback) => {
             instance.setOnClientError(callback);
         });
+    } else if (typeof config.onClientErr === 'function') {
+        instance.setBeforeAjax(config.onClientErr);
     }
     if (Array.isArray(config.onServerErr)) {
         config.onServerErr.forEach((callback) => {
             instance.setOnServerError(callback);
         });
+    } else if (typeof config.onServerErr === 'function') {
+        instance.setBeforeAjax(config.onServerErr);
     }
     if (Array.isArray(config.onDisconnected)) {
         config.onDisconnected.forEach((callback) => {
             instance.setOnDisconnected(callback);
         });
+    } else if (typeof config.onDisconnected === 'function') {
+        instance.setBeforeAjax(config.onDisconnected);
     }
     if (Array.isArray(config.afterAjax)) {
         config.afterAjax.forEach((callback) => {
             instance.setAfterAjax(callback);
         });
+    } else if (typeof config.afterAjax === 'function') {
+        instance.setBeforeAjax(config.afterAjax);
     }
 }
