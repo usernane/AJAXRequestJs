@@ -1083,39 +1083,44 @@ function AJAXRequest(config={
     } else if (typeof config.beforeAjax === 'function') {
         instance.setBeforeAjax(config.beforeAjax);
     }
+    
     if (Array.isArray(config.onSuccess)) {
         config.onSuccess.forEach((callback) => {
             instance.setOnSuccess(callback);
         });
     } else if (typeof config.onSuccess === 'function') {
-        instance.setBeforeAjax(config.onSuccess);
+        instance.setOnSuccess(config.onSuccess);
     }
+    
     if (Array.isArray(config.onClientErr)) {
         config.onClientErr.forEach((callback) => {
             instance.setOnClientError(callback);
         });
     } else if (typeof config.onClientErr === 'function') {
-        instance.setBeforeAjax(config.onClientErr);
+        instance.setOnClientError(config.onClientErr);
     }
+    
     if (Array.isArray(config.onServerErr)) {
         config.onServerErr.forEach((callback) => {
             instance.setOnServerError(callback);
         });
     } else if (typeof config.onServerErr === 'function') {
-        instance.setBeforeAjax(config.onServerErr);
+        instance.setOnServerError(config.onServerErr);
     }
+    
     if (Array.isArray(config.onDisconnected)) {
         config.onDisconnected.forEach((callback) => {
             instance.setOnDisconnected(callback);
         });
     } else if (typeof config.onDisconnected === 'function') {
-        instance.setBeforeAjax(config.onDisconnected);
+        instance.setOnDisconnected(config.onDisconnected);
     }
+    
     if (Array.isArray(config.afterAjax)) {
         config.afterAjax.forEach((callback) => {
             instance.setAfterAjax(callback);
         });
     } else if (typeof config.afterAjax === 'function') {
-        instance.setBeforeAjax(config.afterAjax);
+        instance.setAfterAjax(config.afterAjax);
     }
 }
