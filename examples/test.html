@@ -3,7 +3,7 @@
     <head>
         <title>TODO supply a title</title>
         <meta charset="UTF-8">
-        <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@1.1.0/AJAXRequest.js">
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@1.1.1/AJAXRequest.js">
             
         </script>
         <script>
@@ -11,22 +11,20 @@
                 verbose:true,
                 method:'get',
                 url:'https://api.github.com/repos/usernane/AJAXRequestJs',
-                afterAjax:[
-                    function () {
-                        document.getElementById('status-code-display').innerHTML = 'Status Code: '+this.status;
-                        var headersList = document.getElementById('headers-display');
-                        var headersKeys = Object.keys(this.responseHeaders);
-                        headersList.innerHTML = '';
-                        if (headersKeys.length === 0) {
-                            headersList.innerHTML = 'NO Headers received.';
-                        } else {
-                            for (var x = 0 ; x < headersKeys.length ; x++) {
-                                headersList.innerHTML += '<li>'+headersKeys[x]+': '+this.responseHeaders[headersKeys[x]]+'</li>';
-                            }
+                afterAjax:function () {
+                    document.getElementById('status-code-display').innerHTML = 'Status Code: '+this.status;
+                    var headersList = document.getElementById('headers-display');
+                    var headersKeys = Object.keys(this.responseHeaders);
+                    headersList.innerHTML = '';
+                    if (headersKeys.length === 0) {
+                        headersList.innerHTML = 'NO Headers received.';
+                    } else {
+                        for (var x = 0 ; x < headersKeys.length ; x++) {
+                            headersList.innerHTML += '<li>'+headersKeys[x]+': '+this.responseHeaders[headersKeys[x]]+'</li>';
                         }
-                        document.getElementById('display-area').innerHTML = this.response;
                     }
-                ]
+                    document.getElementById('display-area').innerHTML = this.response;
+                }
             });
         </script>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
