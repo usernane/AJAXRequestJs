@@ -28,29 +28,29 @@ Note that for callback arrays, they can be a single callback instead of an array
 |`AJAXRequest.META`| An object that holds meta information about the library. It includes the following values: <ul><li>`VERSION`: Library version number.</li><li>`REALSE_DATE` The date at which the library was released.</li><li>`CONTRIBUTORS`: An array that contains the names of people who have cotrubuted to the development of the library.</li></ul>|
 |`AJAXRequest.CALLBACK_POOLS`| An array that contains the names of pools that will store callbacks. |
 # Methods
-* <a href="#addheader">`AJAXRequest.addHeader(name, value)`</a>
-* <a href="#disablecallexcept">`AJAXRequest.disableCallExcept(pool_name[,id])`</a>
-* <a href="#getcallback">`AJAXRequest.getCallBack(pool_name,id)`</a>
+* <a href="#addheadername-value">`AJAXRequest.addHeader(name, value)`</a>
+* <a href="#disablecallexceptpool_nameid-1">`AJAXRequest.disableCallExcept(pool_name[,id=-1])`</a>
+* <a href="#getcallbackpool_nameid">`AJAXRequest.getCallBack(pool_name,id)`</a>
 * <a href="#getcsrftoken">`AJAXRequest.getCsrfToken()`</a>
 * <a href="#getparams">`AJAXRequest.getParams()`</a>
 * <a href="#getrequmethod">`AJAXRequest.getReqMethod()`</a>
 * <a href="#getserverresponse">`AJAXRequest.getServerResponse()`</a>
 * <a href="#geturl">`AJAXRequest.getURL()`</a>
-* <a href="#log">`AJAXRequest.log(message[,type[,force]])`</a>
-* <a href="#removecall">`AJAXRequest.removeCall(pool_name,id)`</a>
+* <a href="#logmessagetypeforce">`AJAXRequest.log(message[,type[,force]])`</a>
+* <a href="#removecallpool_nameid">`AJAXRequest.removeCall(pool_name,id)`</a>
 * <a href="#responseasjson">`AJAXRequest.responseAsJSON()`</a>
-* <a href="#setcallenabled">`AJAXRequest.setCallEnabled(pool_name,id[,call])`</a>
-* <a href="#setafterajax">`AJAXRequest.setAfterAjax(callback[,call])`</a>
-* <a href="#setbeforeajax">`AJAXRequest.setBeforeAjax(callback[,call])`</a>
-* <a href="#setenabled">`AJAXRequest.setEnabled(bool)`</a>
+* <a href="#setcallenabledpool_nameidcall">`AJAXRequest.setCallEnabled(pool_name,id[,call])`</a>
+* <a href="#setafterajaxcallbackcall">`AJAXRequest.setAfterAjax(callback[,call])`</a>
+* <a href="#setbeforeajaxcallbackcall">`AJAXRequest.setBeforeAjax(callback[,call])`</a>
+* <a href="#setenabledbool">`AJAXRequest.setEnabled(bool)`</a>
 * <a href="#send">`AJAXRequest.send()`</a>
-* <a href="#setonclienterror">`AJAXRequest.setOnClientError(callback[,call])`</a>
-* <a href="#setondisconnected">`AJAXRequest.setOnDisconnected(callback[,call])`</a>
-* <a href="#setonservererror">`AJAXRequest.setOnServerError(callback[,call])`</a>
-* <a href="#setonsuccess">`AJAXRequest.setOnSuccess(callback[,call])`</a>
-* <a href="#setparams">`AJAXRequest.setParams(params)`</a>
-* <a href="#setrequmethod">`AJAXRequest.setReqMethod(method)`</a>
-* <a href="#seturl">`AJAXRequest.setURL(url)`</a>
+* <a href="#setonclienterrorcallbackcall">`AJAXRequest.setOnClientError(callback[,call])`</a>
+* <a href="#setondisconnectedcallbackcall">`AJAXRequest.setOnDisconnected(callback[,call])`</a>
+* <a href="#setonservererrorcallbackcall">`AJAXRequest.setOnServerError(callback[,call])`</a>
+* <a href="#setonsuccesscallbackcall">`AJAXRequest.setOnSuccess(callback[,call])`</a>
+* <a href="#setparamsparams">`AJAXRequest.setParams(params)`</a>
+* <a href="#setrequmethodmethod">`AJAXRequest.setReqMethod(method)`</a>
+* <a href="#seturlurl">`AJAXRequest.setURL(url)`</a>
 
 
 ## `AJAXRequest.addHeader(name, value)`
