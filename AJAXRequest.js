@@ -696,6 +696,33 @@ function AJAXRequest(config={
             writable:false,
             enumerable: true
         },
+        getHeader:{
+            /**
+             * Returns the value of added custom request header.
+             * @param {String} headerName The name of the header.
+             * 
+             * @returns {String|undefined} If a header which has the name was added, 
+             * the method will return its value as string. Other than that, the 
+             * method will return undefined.
+             */
+            value:function(headerName) {
+                this.log('AJAXRequest.getHeader: Trying to get the value of the header with name "'+headerName+'"....', 'info');
+                if (typeof headerName === 'string') {
+                    headerName = headerName.trim().toLocaleLowerCase();
+                    if (headerName.length > 0) {
+                        var retVal = this.customHeaders[headerName];
+                        this.log('AJAXRequest.getHeader: Header value = '+retVal+'.', 'info');
+                        return retVal;
+                    } else {
+                        this.log('AJAXRequest.getHeader: Invalid header name is given.', 'warning');
+                    }
+                } else {
+                    this.log('AJAXRequest.getHeader: Invalid header name is given.', 'warning');
+                }
+            },
+            writable:false,
+            enumerable: true
+        },
         addHeader:{
             /**
              * Adds new custom header to the request.
@@ -711,7 +738,7 @@ function AJAXRequest(config={
                     name = name.trim();
                     if (name.length > 0) {
                         if (typeof value === 'string') {
-                            this.customHeaders[name] = value;
+                            this.customHeaders[name.toLocaleLowerCase()] = value;
                             this.log('AJAXRequest.addHeader: Header added.', 'info');
                             return true;
                         } else {
@@ -883,6 +910,10 @@ function AJAXRequest(config={
                     this.log('AJAXRequest.send: It is enabled.','info');
                     var method = this.getReqMethod();
                     var params = this.getParams();
+                    var contentType = this.getHeader('content-type');
+                    if (contentType !== undefined) {
+                        contentType = contentType.split(';')[0];
+                    }
                     var url = this.getURL();
                     this.log('AJAXRequest.send: Params: '+params,'info');
                     this.log('AJAXRequest.send: Request Method: '+method,'info');
@@ -900,59 +931,64 @@ function AJAXRequest(config={
                     this.log('AJAXRequest.send: Checking parameters type...', 'info');
                     if (typeof this.params === 'object' && this.params.toString() !== '[object FormData]') {
                         this.log('AJAXRequest.send: An object is given. Extracting values...', 'info');
-                        if (method === 'PUT' || method === 'POST') {
+                        if ((method === 'PUT' || method === 'POST') && contentType === undefined) {
                             this.log('AJAXRequest.send: Will store parameters in FormData since request method is '+method+'.', 'info');
                             var localParams = new FormData();
+                        } else if (contentType === 'application/json' && (method === 'PUT' || method === 'POST')) {
+                            this.log('AJAXRequest.send: POST or PUT with content type = application/json.', 'info');
+                            var localParams = JSON.stringify(this.params);
                         } else {
                             var localParams = '';
                         }
-                        var keys = Object.keys(this.params);
-                        var and = '';
-                        for (var x = 0 ; x < keys.length ; x++) {
-                            var paramVal = this.params[keys[x]];
-                            
-                            if (paramVal !== undefined && paramVal !== null) {
-                                this.log('AJAXRequest.send: Parameter as string: '+paramVal.toString());
-                                if (Array.isArray(paramVal)) {
-                                    this.log('AJAXRequest.send: Array is found. Turning it to string-like array.', 'info');
-                                    //Turn the array to array-like string
-                                    var toAppend = '[';
-                                    var comma = '';
-                                    for (var y = 0 ; y < paramVal.length ; y++) {
-                                        if (typeof paramVal[y] === 'string') {
-                                            toAppend += comma+'"'+encodeURIComponent(paramVal[y])+'"';
-                                        } else if (typeof paramVal[y] === 'number') {
-                                            toAppend += comma+paramVal[y];
-                                        } else if (typeof paramVal[y] === 'boolean') {
-                                            toAppend += paramVal[y] ? comma+'true' : comma+'false';
-                                        }
-                                        comma = ',';
-                                    }
-                                    toAppend += ']';
-                                    if (typeof localParams === 'object') {
-                                        localParams.append(keys[x], encodeURIComponent(toAppend));
-                                    } else {
-                                        localParams += and+encodeURIComponent(keys[x])+'='+encodeURIComponent(toAppend);
-                                    }
+                        if (localParams.toString() === '[object FormData]' || localParams.length === 0) {
+                            var keys = Object.keys(this.params);
+                            var and = '';
+                            for (var x = 0 ; x < keys.length ; x++) {
+                                var paramVal = this.params[keys[x]];
 
-                                } else {
-                                    if (typeof localParams === 'object') {
-                                        if (typeof paramVal === 'object' && (paramVal.toString() === '[object File]' || paramVal.toString() === '[object Blob]')) {
-                                            this.log('AJAXRequest.send: File or Blob is found.', 'info');
-                                            localParams.append(keys[x], this.params[keys[x]]);
-                                        } else {
-                                            localParams.append(keys[x], encodeURIComponent(this.params[keys[x]]));
+                                if (paramVal !== undefined && paramVal !== null) {
+                                    this.log('AJAXRequest.send: Parameter as string: '+paramVal.toString());
+                                    if (Array.isArray(paramVal)) {
+                                        this.log('AJAXRequest.send: Array is found. Turning it to string-like array.', 'info');
+                                        //Turn the array to array-like string
+                                        var toAppend = '[';
+                                        var comma = '';
+                                        for (var y = 0 ; y < paramVal.length ; y++) {
+                                            if (typeof paramVal[y] === 'string') {
+                                                toAppend += comma+'"'+encodeURIComponent(paramVal[y])+'"';
+                                            } else if (typeof paramVal[y] === 'number') {
+                                                toAppend += comma+paramVal[y];
+                                            } else if (typeof paramVal[y] === 'boolean') {
+                                                toAppend += paramVal[y] ? comma+'true' : comma+'false';
+                                            }
+                                            comma = ',';
                                         }
+                                        toAppend += ']';
+                                        if (typeof localParams === 'object') {
+                                            localParams.append(keys[x], encodeURIComponent(toAppend));
+                                        } else {
+                                            localParams += and+encodeURIComponent(keys[x])+'='+encodeURIComponent(toAppend);
+                                        }
+
                                     } else {
-                                        localParams += and+encodeURIComponent(keys[x])+'='+encodeURIComponent(this.params[keys[x]]);
+                                        if (typeof localParams === 'object') {
+                                            if (typeof paramVal === 'object' && (paramVal.toString() === '[object File]' || paramVal.toString() === '[object Blob]')) {
+                                                this.log('AJAXRequest.send: File or Blob is found.', 'info');
+                                                localParams.append(keys[x], this.params[keys[x]]);
+                                            } else {
+                                                localParams.append(keys[x], encodeURIComponent(this.params[keys[x]]));
+                                            }
+                                        } else {
+                                            localParams += and+encodeURIComponent(keys[x])+'='+encodeURIComponent(this.params[keys[x]]);
+                                        }
                                     }
+                                    and = '&';
+                                } else {
+                                    this.log('AJAXRequest.send: The value of the parameter "'+keys[x]+'" is undefined or null. It will be not included in the request.', 'warning', true);
                                 }
-                                and = '&';
-                            } else {
-                                this.log('AJAXRequest.send: The value of the parameter "'+keys[x]+'" is undefined or null. It will be not included in the request.', 'warning', true);
                             }
+                            this.log('AJAXRequest.send: Extracted. Result = '+localParams, 'info');
                         }
-                        this.log('AJAXRequest.send: Extracted. Result = '+localParams, 'info');
                     } else {
                         this.log('AJAXRequest.send: Form data or string is given.', 'info');
                         var localParams = this.params;
@@ -989,15 +1025,22 @@ function AJAXRequest(config={
                             this.xhr.setRequestHeader('X-CSRF-TOKEN', csrfTok);
                         }
                         if(localParams.toString() !== '[object FormData]'){
-                            this.xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-                            this.log('AJAXRequest.send: Setting header \'Content-Type\' to \'application/x-www-form-urlencoded\'.','info');
+                            if (contentType === 'application/json') {
+                                this.xhr.setRequestHeader('Content-Type', this.getHeader('content-type'));
+                                this.log('AJAXRequest.send: Setting header \'Content-Type\' to \''+this.getHeader('content-type')+'\'.','info');
+                            } else {
+                                this.xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                                this.log('AJAXRequest.send: Setting header \'Content-Type\' to \'application/x-www-form-urlencoded\'.','info');
+                            }
                         }
                         var customHeadersKeys = Object.keys(this.customHeaders);
                         if (customHeadersKeys.length > 0) {
                             this.log('AJAXRequest.send: Adding custom headers to request..','info');
                         }
                         for (var x = 0 ; x < customHeadersKeys.length ; x++) {
-                             this.xhr.setRequestHeader(customHeadersKeys[x], this.customHeaders[customHeadersKeys[x]]);
+                            if (customHeadersKeys[x] !== 'content-type') {
+                                this.xhr.setRequestHeader(customHeadersKeys[x], this.customHeaders[customHeadersKeys[x]]);
+                            }
                         }
                         this.xhr.send(localParams);
                         return true;
