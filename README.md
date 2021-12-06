@@ -80,48 +80,81 @@ When creating an instance of the class `AJAXRequest`, there are configuration op
 
 ``` javascript
 {
-    //The URL that will receive the request.
+    /**
+     * The URL that will receive the request.
+     */
     url:string,
     
-    //Request method. If not provided, 'GET' is used.
+    /**
+     * Request method. If not provided, 'GET' is used.
+     */
     method:string,
     
-    //Parameters which will be send with the request. It can be an object, a 
-    //`FormData` object or string in the form `key1=value1&key2=value2`.
+    /**
+     * Parameters which will be send with the request. It can be an object, a 
+     * `FormData` object or string in the form `key1=value1&key2=value2`.
+     */
     params:object|string|FormData,
     
-    //A boolean which is used to enable or disable AJAX.
+    /**
+     * A boolean which is used to enable or disable AJAX.
+     */
     enabled:true,
     
-    //If this one is set to true, more informative messages will appear in the console.
+    /**
+     * If this one is set to true, more informative messages will appear in the console.
+     */
     verbose:boolean,
     
-    //Extra headers to send with the request.
+    /**
+     * Extra headers to send with the request.
+     */
     headers:{},
     
-    //A set of callbacks. The enabled ones will be executed before AJAX request is sent.
-    //The developer can use them to collect user inputs or intrupt AJAX request and disable it before 
-    //Sending it to server.
+    /**
+     * A set of callbacks. The enabled ones will be executed before AJAX request is sent.
+     * The developer can use them to collect user inputs or intrupt AJAX request and disable it before 
+     * Sending it to server.
+     */
     beforeAjax:array|function, 
     
-    //A set of callbacks. The enabled ones executed when the request is finished with status code 2xx or 3xx.
+    /**
+     * A set of callbacks. The enabled ones executed when the request is finished with status code 2xx or 3xx.
+     */
     onSuccess:array|function, 
     
-    //A set of callbacks. The enabled ones executed when the request is finished with status code 4xx.
+    /**
+     * A set of callbacks. The enabled ones executed when the request is finished with status code 4xx.
+     */
     onClientErr:array|function, 
     
-    //A set of callbacks. The enabled ones executed when the request is finished with status code 5xx.
+    /**
+     * A set of callbacks. The enabled ones executed when the request is finished with status code 5xx.
+     */
     onServerErr:array|function, 
     
-    //A set of callbacks. The enabled ones executed when there is no interned connection.
+    /**
+     * A set of callbacks. The enabled ones executed when there is no interned connection.
+     */
     onDisconnected:array|function, 
     
-    //A set of callbacks. The enabled ones executed when the request is finished without 
-    //looking at the status of the response.
+    /**
+     * A set of callbacks. The enabled ones executed when the request is finished without 
+     * looking at the status of the response.
+     */
     afterAjax:array|function, 
+    
+    /**
+     * A set of callbacks. The enabled ones executed when an exception is thrown by 
+     * any callback in the 'beforeAjax', 'afterAjax', 'onSuccess', 'onClientErr',
+     * 'onServerErr' and 'onDisconnected'.
+     */
+    onErr:array|function,
 }
 ```
-Note that starting version 1.1.1 the array of callbacks can be also a single function.
+
+>> Note: Starting version 1.1.1, the array of callbacks can be also a single function.
+
 ## Properties Accessable in Callbacks
 Inside the callback that will be executed, the developer will have access to the properties of AJAX request and its response. The developer can use the keyword `this` to access them. The available properties are as follows:
 
@@ -150,10 +183,11 @@ function () {
     this.responseHeaders;
 }
 ```
-Note that for the callbacks which are set to be executed before the AJAX request is sent to the server only the property `this.AJAXRequest` is available. The other ones will be `undefined`.
+Note that for the callbacks which are set to be executed before the AJAX request is sent to the server only the property `this.AJAXRequest` is available. The other ones will be `undefined`. For the `onErr` callbacks, there is additional property which has the name `e` that represents the thrown [`Error`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error).
 
 ## Types of Callbacks
 One of the features of the library is the ability to set functions to execute in specific cases. In this section, we explain the available callbacks and how to use them.
+
 ### Before AJAX
 Usually, before sending AJAX request to the server, checking for user inputs validation happens in this callback. A callback of this type can be set using the method `AJAXRequest.setBeforeAjax()`. Also, it can be part of the configuration that is used to initialize the `AJAXRequest` instance.
 ```  javascript
@@ -302,6 +336,25 @@ var ajax = new AJAXRequest({
 });
 
 var id = ajax.setOnDisconnected(function() {
+    // Do something else
+});
+```
+
+### On Error
+This type of callback will be executed only when an exception is thrown by any callback which is included in the `beforeAjax`, `afterAjax`, `onSuccess`, `onClientErr`, `onServerErr` or `onDisconnected`. Think of it as the `catch` block of the AJAX request.
+
+```  javascript
+var ajax = new AJAXRequest({
+    method:'get',
+    url:'https://api.github.com/repos/usernane/AJAXRequestJs',
+    
+    onErr:function(){
+         console.log('An error in the code');
+         console.log(this.e);
+     }
+});
+
+var id = ajax.setOnError(function() {
     // Do something else
 });
 ```

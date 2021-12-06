@@ -110,6 +110,7 @@ function AJAXRequest(config={
     onServerErr:[],
     onDisconnected:[],
     afterAjax:[],
+    onErr:[],
     headers:{}
 }){
     /**
@@ -183,6 +184,19 @@ function AJAXRequest(config={
             call:true,
             func:function(){
                 console.info('AJAXRequest: After AJAX '+this.status);
+            }
+        }
+    ];
+    /**
+     * A pool of functions to call in case one of the functions in the 
+     * instance thrown an exception.
+     */
+    this.onerrorpool = [
+        {
+            id:0,
+            call:true,
+            func:function(){
+                console.info('AJAXRequest: Error in one of the callbacks.');
             }
         }
     ];
@@ -270,18 +284,65 @@ function AJAXRequest(config={
             inst['on'+pool_name+'pool'][i].jsonResponse = jsonResponse;
             inst['on'+pool_name+'pool'][i].responseHeaders = getResponseHeadersObj(inst);
             if (inst['on'+pool_name+'pool'][i].call === true) {
-                inst['on'+pool_name+'pool'][i].func();
+                try {
+                    inst['on'+pool_name+'pool'][i].func();
+                } catch (e) {
+                    inst.log('An error occurred while executing the callback at "'+e.fileName+'" line '+e.lineNumber+'. Check Below for more details.','error', true);
+                    inst.log(e,'error', true);
+                    
+                    for(var i = 0 ; i < inst.onerrorpool.length ; i++){
+                        try {
+                            if (inst.onerrorpool[i].call === true) {
+                                inst.onerrorpool[i].AJAXRequest = inst;
+                                inst.onerrorpool[i].e = e;
+                                inst.onerrorpool[i].status = inst.status;
+                                inst.onerrorpool[i].response = inst.responseText;
+                                inst.onerrorpool[i].xmlResponse = inst.responseXML;
+                                inst.onerrorpool[i].jsonResponse = jsonResponse;
+                                inst.onerrorpool[i].responseHeaders = headers;
+                                inst.onerrorpool[i].func();
+                            }
+                        } catch (e) {
+                            inst.log('An error occurred while executing the callback at "'+e.fileName+'" line '+e.lineNumber+'. Check Below for more details.','error', true);
+                            inst.log(e,'error', true);
+                        }
+                    }
+                }
             }
         }
         for(var i = 0 ; i < inst.onafterajaxpool.length ; i++){
+            var headers = getResponseHeadersObj(inst);
             inst.onafterajaxpool[i].AJAXRequest = inst;
             inst.onafterajaxpool[i].status = inst.status;
             inst.onafterajaxpool[i].response = inst.responseText;
             inst.onafterajaxpool[i].xmlResponse = inst.responseXML;
             inst.onafterajaxpool[i].jsonResponse = jsonResponse;
-            inst.onafterajaxpool[i].responseHeaders = getResponseHeadersObj(inst);
+            inst.onafterajaxpool[i].responseHeaders = headers;
             if (inst.onafterajaxpool[i].call === true) {
-                inst.onafterajaxpool[i].func();
+                try {
+                    inst.onafterajaxpool[i].func();
+                } catch (e) {
+                    inst.log('An error occurred while executing the callback at "'+e.fileName+'" line '+e.lineNumber+'. Check Below for more details.','error', true);
+                    inst.log(e,'error', true);
+                    
+                    for(var i = 0 ; i < inst['onerrorpool'].length ; i++){
+                        try {
+                            if (inst.onerrorpool[i].call === true) {
+                                inst.onerrorpool[i].AJAXRequest = inst;
+                                inst.onerrorpool[i].e = e;
+                                inst.onerrorpool[i].status = inst.status;
+                                inst.onerrorpool[i].response = inst.responseText;
+                                inst.onerrorpool[i].xmlResponse = inst.responseXML;
+                                inst.onerrorpool[i].jsonResponse = jsonResponse;
+                                inst.onerrorpool[i].responseHeaders = headers;
+                                inst.onerrorpool[i].func();
+                            }
+                        } catch (e) {
+                            inst.log('An error occurred while executing the callback at "'+e.fileName+'" line '+e.lineNumber+'. Check Below for more details.','error', true);
+                            inst.log(e,'error', true);
+                        }
+                    }
+                }
             }
         }
     }
@@ -643,6 +704,32 @@ function AJAXRequest(config={
             writable:false,
             enumerable: true
         },
+        setOnError:{
+            /**
+            * Append a function to the pool of functions that will be called in case 
+            * one of the callbacks on the instance thrown an exception. 
+            * 
+            * @param {Function} callback A function to call.
+            * 
+            * @returns {undefined|Number} Returns an ID for the function. If not added, 
+            * the method will return undefined.
+            * 
+            * @param {Boolean} call If set to true, the callback will be called. If false, 
+            * it woun't be called.
+            */
+            value:function(callback,call=true){
+                if (typeof callback === 'function') {
+                    var id = this.onerrorpool[this.onerrorpool.length - 1]['id'] + 1; 
+                    this.onerrorpool.push({'id':id,'call':call,'func':callback});
+                    this.log('AJAXRequest.setOnError: New callback added [id = '+id+' , call = '+call+'].','info');
+                    return id;
+                } else {
+                    this.log('AJAXRequest.setOnError: Provided parameter is not a function.','error');
+                }
+            },
+            writable:false,
+            enumerable: true
+        },
         getCsrfToken: {
             value:function(){
                 this.log('AJAXRequest.getCsrfToken: Searching for CSRF token value.','info');
@@ -896,6 +983,7 @@ function AJAXRequest(config={
                     this.xhr.onclienterrorpool = this.onclienterrorpool;
                     this.xhr.onconnectionlostpool = this.onconnectionlostpool;
                     this.xhr.onafterajaxpool = this.onafterajaxpool;
+                    this.xhr.onerrorpool = this.onerrorpool;
                     this.xhr.verbose = this.verbose;
                     this.log('AJAXRequest.send: Checking parameters type...', 'info');
                     if (typeof this.params === 'object' && this.params.toString() !== '[object FormData]') {
@@ -1122,5 +1210,13 @@ function AJAXRequest(config={
         });
     } else if (typeof config.afterAjax === 'function') {
         instance.setAfterAjax(config.afterAjax);
+    }
+    
+    if (Array.isArray(config.onErr)) {
+        config.onErr.forEach((callback) => {
+            instance.setOnError(callback);
+        });
+    } else if (typeof config.onErr === 'function') {
+        instance.setOnError(config.onErr);
     }
 }
