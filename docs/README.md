@@ -18,6 +18,7 @@
   * <a href="#ajaxrequestsetbeforeajaxcallbackcall">`AJAXRequest.setBeforeAjax(callback[,call])`</a>
   * <a href="#ajaxrequestsetenabledbool">`AJAXRequest.setEnabled(bool)`</a>
   * <a href="#ajaxrequestsend">`AJAXRequest.send()`</a>
+  * <a href="#ajaxrequestsetonerrorcallbackcall">`AJAXRequest.setOnError(callback[,call])`</a>
   * <a href="#ajaxrequestsetonclienterrorcallbackcall">`AJAXRequest.setOnClientError(callback[,call])`</a>
   * <a href="#ajaxrequestsetondisconnectedcallbackcall">`AJAXRequest.setOnDisconnected(callback[,call])`</a>
   * <a href="#ajaxrequestsetonservererrorcallbackcall">`AJAXRequest.setOnServerError(callback[,call])`</a>
@@ -181,11 +182,21 @@ Send AJAX request to the server.
 ### Returns: `Boolean`
 True in case of the status of AJAX request is open. else, it will return false.
 
-## `AJAXRequest.setOnClientError(callback[,call])`
+## `AJAXRequest.setOnError(callback[,call])`
 Append a function to the pool of functions that will be called in case of client error (code 4xx). 
 ### Parameters:
 #### `callback` : `Function` 
 A function to call on client error.
+#### `call` : `Boolean` [Optional]
+If true, the method will be called. Else if false is given, the method will be not called. Default value is `true`.
+## Returns: `Number|undefined`
+If the callback is added, the method will return a number that represents its ID. If not added, the method will return `undefined`.
+
+## `AJAXRequest.setOnClientError(callback[,call])`
+Append a function to the pool of functions that will be called in case one of the callbacks on the instance thrown an exception. 
+### Parameters:
+#### `callback` : `Function` 
+A function to call on error.
 #### `call` : `Boolean` [Optional]
 If true, the method will be called. Else if false is given, the method will be not called. Default value is `true`.
 ## Returns: `Number|undefined`

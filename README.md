@@ -368,7 +368,7 @@ The following sample code shows how to send parameters to the server as an objec
  var ajax = new AJAXRequest({
     method:'get',
     url:'https://packagist.org/packages/list.json',
-    parama:'vendor=webfiori',
+    params:'vendor=webfiori',
     onSuccess: [
         function(){
             if (this.jsonResponse) {
