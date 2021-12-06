@@ -10,7 +10,7 @@ Object.defineProperties(AJAXRequest,{
         * Names of pools of events.
         * @type Array
         */
-        value:['servererror','clienterror','success','connectionlost','afterajax','beforeajax'],
+        value:['servererror','clienterror','success','connectionlost','afterajax','beforeajax', 'onerror'],
         writable:false
     },
     'XMLHttpFactories':{
@@ -47,11 +47,11 @@ Object.defineProperties(AJAXRequest,{
 });
 Object.defineProperties(AJAXRequest.META,{
     VERSION:{
-        value:'1.1.1',
+        value:'1.2.1',
         writable:false
     },
     REALSE_DATE:{
-        value:'24/07/2020',
+        value:'01/12/2021',
         writable:false
     },
     CONTRIBUTORS:{
