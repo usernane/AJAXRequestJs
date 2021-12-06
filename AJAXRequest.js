@@ -47,7 +47,7 @@ Object.defineProperties(AJAXRequest,{
 });
 Object.defineProperties(AJAXRequest.META,{
     VERSION:{
-        value:'1.2.1',
+        value:'1.2.0',
         writable:false
     },
     REALSE_DATE:{
