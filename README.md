@@ -35,14 +35,14 @@ A light weight JavaScript class library that can help in making AJAX requests mu
 In order to use the library, you must first include the JavaScript file in your head tag of your web page:
 ``` html
 <head>
-  <script src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@1.1.1/AJAXRequest.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@1.2.0/AJAXRequest.js"></script>
 </head>
 ```
 It is possible to use the minified version of the libray by including the following JavaScript:
 
 ``` html
 <head>
-  <script src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@1.1.1/AJAXRequest.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@1.2.0/AJAXRequest.min.js"></script>
 </head>
 ```
 
