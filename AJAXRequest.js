@@ -145,9 +145,12 @@ function AJAXRequest(config={
      */
     this.onload = function(){};
     this.onprogress = function(e){
+        console.log(e);
         if (e.lengthComputable) {
             var percentComplete = (e.loaded / e.total) * 100;
-            console.info('Uploaded: '+percentComplete+'%');
+            console.info('AJAXRequest: Uploaded '+percentComplete+'%');
+        } else {
+            console.info('AJAXRequest: Not lengthComputable!');
         }
     };
     /**
@@ -268,6 +271,28 @@ function AJAXRequest(config={
         writable:false,
         enumerable: false
     });
+    function callOnErr(inst, jsonResponse, headers, e) {
+        inst.log('An error occurred while executing the callback at "'+e.fileName+'" line '+e.lineNumber+'. Check Below for more details.','error', true);
+        inst.log(e,'error', true);
+
+        for(var i = 0 ; i < inst.onerrorpool.length ; i++){
+            try {
+                if (inst.onerrorpool[i].call === true) {
+                    inst.onerrorpool[i].AJAXRequest = inst;
+                    inst.onerrorpool[i].e = e;
+                    inst.onerrorpool[i].status = inst.status;
+                    inst.onerrorpool[i].response = inst.responseText;
+                    inst.onerrorpool[i].xmlResponse = inst.responseXML;
+                    inst.onerrorpool[i].jsonResponse = jsonResponse;
+                    inst.onerrorpool[i].responseHeaders = headers;
+                    inst.onerrorpool[i].func();
+                }
+            } catch (e) {
+                inst.log('An error occurred while executing the callback at "'+e.fileName+'" line '+e.lineNumber+'. Check Below for more details.','error', true);
+                inst.log(e,'error', true);
+            }
+        }
+    }
     function setProbsAfterAjax(inst, pool_name) {
         try{
             var jsonResponse = JSON.parse(inst.responseText);
@@ -287,26 +312,7 @@ function AJAXRequest(config={
                 try {
                     inst['on'+pool_name+'pool'][i].func();
                 } catch (e) {
-                    inst.log('An error occurred while executing the callback at "'+e.fileName+'" line '+e.lineNumber+'. Check Below for more details.','error', true);
-                    inst.log(e,'error', true);
-                    
-                    for(var i = 0 ; i < inst.onerrorpool.length ; i++){
-                        try {
-                            if (inst.onerrorpool[i].call === true) {
-                                inst.onerrorpool[i].AJAXRequest = inst;
-                                inst.onerrorpool[i].e = e;
-                                inst.onerrorpool[i].status = inst.status;
-                                inst.onerrorpool[i].response = inst.responseText;
-                                inst.onerrorpool[i].xmlResponse = inst.responseXML;
-                                inst.onerrorpool[i].jsonResponse = jsonResponse;
-                                inst.onerrorpool[i].responseHeaders = headers;
-                                inst.onerrorpool[i].func();
-                            }
-                        } catch (e) {
-                            inst.log('An error occurred while executing the callback at "'+e.fileName+'" line '+e.lineNumber+'. Check Below for more details.','error', true);
-                            inst.log(e,'error', true);
-                        }
-                    }
+                    callOnErr(inst, jsonResponse, headers, e);
                 }
             }
         }
@@ -322,26 +328,7 @@ function AJAXRequest(config={
                 try {
                     inst.onafterajaxpool[i].func();
                 } catch (e) {
-                    inst.log('An error occurred while executing the callback at "'+e.fileName+'" line '+e.lineNumber+'. Check Below for more details.','error', true);
-                    inst.log(e,'error', true);
-                    
-                    for(var i = 0 ; i < inst['onerrorpool'].length ; i++){
-                        try {
-                            if (inst.onerrorpool[i].call === true) {
-                                inst.onerrorpool[i].AJAXRequest = inst;
-                                inst.onerrorpool[i].e = e;
-                                inst.onerrorpool[i].status = inst.status;
-                                inst.onerrorpool[i].response = inst.responseText;
-                                inst.onerrorpool[i].xmlResponse = inst.responseXML;
-                                inst.onerrorpool[i].jsonResponse = jsonResponse;
-                                inst.onerrorpool[i].responseHeaders = headers;
-                                inst.onerrorpool[i].func();
-                            }
-                        } catch (e) {
-                            inst.log('An error occurred while executing the callback at "'+e.fileName+'" line '+e.lineNumber+'. Check Below for more details.','error', true);
-                            inst.log(e,'error', true);
-                        }
-                    }
+                    callOnErr(inst, jsonResponse, headers, e);
                 }
             }
         }
