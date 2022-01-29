@@ -10,7 +10,8 @@
             window.ajax = new AJAXRequest({
                 verbose:true,
                 method:'get',
-                url:'https://api.github.com/repos/usernane/AJAXRequestJs',
+                base:'https://api.github.com',
+                url:'repos/usernane/AJAXRequestJs',
                 afterAjax:function () {
                     document.getElementById('status-code-display').innerHTML = 'Status Code: '+this.status;
                     var headersList = document.getElementById('headers-display');
@@ -52,7 +53,10 @@
                 <option value='HEAD'>Head</option>
                 <option value='DELETE'>Delete</option>
             </select><br/>
-            <input style="width: 400px" value='https://api.github.com/repos/usernane/AJAXRequestJs' type='url' id='url' oninput='window.ajax.setURL(this.value)'>
+            <input placeholder="BASE URL" style="width: 400px" value='https://api.github.com' type='url' id='url' oninput='window.ajax.setBase(this.value)'>
+            <br/>
+            <input placeholder="REQUEST URL" style="width: 400px" value='repos/usernane/AJAXRequestJs' type='url' id='url' oninput='window.ajax.setURL(this.value)'>
+            <br/>
             <input value="Send" type="submit" onclick="window.ajax.send()">
         </form>
         <p id='status-code-display'>Status Code: N/A</p>
