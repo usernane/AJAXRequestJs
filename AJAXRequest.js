@@ -1,11 +1,11 @@
 
 "use strict";
 Object.defineProperties(AJAXRequest,{
-    'META':{
+    META:{
         writable:false,
         value:{}
     },
-    'CALLBACK_POOLS':{
+    CALLBACK_POOLS:{
         /**
         * Names of pools of events.
         * @type Array
@@ -13,7 +13,7 @@ Object.defineProperties(AJAXRequest,{
         value:['servererror','clienterror','success','connectionlost','afterajax','beforeajax', 'onerror'],
         writable:false
     },
-    'XMLHttpFactories':{
+    XMLHttpFactories:{
         /**
         * Array of functions used to create XMLHttpRequest object.
         * @type Array
@@ -43,6 +43,48 @@ Object.defineProperties(AJAXRequest,{
             return false;
         },
         wriable:false
+    },
+    extractBase:{
+        /**
+         * Extract the value of the attribute 'href' of the 'base' tag.
+         * 
+         * @returns {String|null} If the tag 'base' and the attribute 'base' is set,
+         * the method will return its value. Other than that, the method will return
+         * null.
+         */
+        value:function() {
+            var base = null;
+            var baseTagsArr = document.getElementsByTagName('base');
+
+            if (baseTagsArr.length === 1) {
+                var baseTag = baseTagsArr[0];
+                base = baseTag.getAttribute('href');
+
+                if (base !== null && base.length === 0) {
+                    base = null;
+                }
+            }
+            return base;
+        }
+    },
+    isValidURL:{
+        /**
+         * Checks if given string represents a valid URL or not.
+         * 
+         * @param {String} url The string that will be validated.
+         * 
+         * @returns {Boolean} If the given string is a valid URL, the method will return true.
+         * Other than that, the method will return false.
+         */
+        value:function (url) {
+            var pattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
+                '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
+                '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
+                '(\\:\\d+)?(\\/[-a-z\\d%_.=~+!]*)*'+ // port and path
+                '(\\?[;&a-z\\d%_.~+=/-]*)?'+ // query string
+                '(\\#[-a-z\\d_]*)?$','i'); // fragment locator
+            return !!pattern.test(url);
+        }
     }
 });
 Object.defineProperties(AJAXRequest.META,{
@@ -127,6 +169,10 @@ function AJAXRequest(config={
      */
     this.url = '';
     /**
+     * The base URL which is used to send requests.
+     */
+    this.base = null;
+    /**
      * Any parameters to send with the request.
      */
     this.params = '';
@@ -145,7 +191,7 @@ function AJAXRequest(config={
      */
     this.onload = function(){};
     this.onprogress = function(e){
-        console.log(e);
+
         if (e.lengthComputable) {
             var percentComplete = (e.loaded / e.total) * 100;
             console.info('AJAXRequest: Uploaded '+percentComplete+'%');
@@ -382,6 +428,49 @@ function AJAXRequest(config={
             */
             value:function(){
                 return this.enabled;
+            },
+            writable:false,
+            enumerable: true
+        },
+        getBase:{
+            /**
+             * Returns the value of the base URL which is used to send AJAX requests.
+             * 
+             * @returns {String|null} If the base is set, the method will return its value.
+             * If not, the method will return the value of the attribute 'href' of the 
+             * 'base' tag. Other than that, null is returned.
+             */
+            value:function () {
+                return this.base;
+            },
+            writable:false,
+            enumerable: true
+        },
+        setBase:{
+            /**
+             * Updates the value of the base URL which is used to send AJAX requests.
+             * 
+             * @param {String|null} base The value of the new base URL. Only set if given URL is
+             * valid.
+             */
+            value:function(base) {
+
+                if (base === null || base === undefined || base.trim().length === 0) {
+                    this.base = null;
+                    this.log('AJAXREquest.setBase: Base is set to "null".');
+                    return;
+                }
+                base = base.trim();
+
+                if (AJAXRequest.isValidURL(base)) {
+                    while (base[base.length - 1] === '/') {
+                        base = base.substring(0, base.length - 1);
+                    }
+                    this.base = base;
+                    this.log('AJAXREquest.setBase: Base is set to "'+this.getBase()+'".');
+                } else {
+                    this.log('AJAXREquest.setBase: Base not updated.', 'warning');
+                }
             },
             writable:false,
             enumerable: true
@@ -892,6 +981,9 @@ function AJAXRequest(config={
             * @returns {undefined}
             */
             value:function(url){
+                while (url[0] === '/') {
+                    url = url.substring(1, url.length);
+                }
                 this.url = url;
                 this.log('AJAXRequest.setURL: URL is set to \''+url+'\'.','info');
             },
@@ -958,9 +1050,19 @@ function AJAXRequest(config={
                     var method = this.getReqMethod();
                     var params = this.getParams();
                     var url = this.getURL();
+                    var base = this.getBase();
                     this.log('AJAXRequest.send: Params: '+params,'info');
                     this.log('AJAXRequest.send: Request Method: '+method,'info');
+                    this.log('AJAXRequest.send: Base: '+base,'info');
                     this.log('AJAXRequest.send: URL: '+url,'info');
+
+                    if (base === null) {
+                        var requestUrl = url;
+                    } else {
+                        var requestUrl = base+'/'+url;
+                    }
+                    this.log('AJAXRequest.send: Request URL: '+requestUrl,'info');
+
                     this.xhr.log = this.log;
                     this.xhr.onreadystatechange = this.onreadystatechange;
                     this.xhr.onload = this.onload;
@@ -1035,9 +1137,9 @@ function AJAXRequest(config={
                     
                     if (method === 'GET' || method === 'DELETE') {
                         if(localParams !== undefined && localParams !== null && localParams !== ''){
-                            this.xhr.open(method,url+'?'+localParams);
+                            this.xhr.open(method,requestUrl+'?'+localParams);
                         } else {
-                            this.xhr.open(method,url);
+                            this.xhr.open(method,requestUrl);
                         }
                         if (method === 'DELETE') {
                             //Add CSRF token.
@@ -1056,7 +1158,7 @@ function AJAXRequest(config={
                         this.xhr.send();
                         return true;
                     } else if (method === 'POST' || method === 'PUT'){
-                        this.xhr.open(method,url);
+                        this.xhr.open(method,requestUrl);
                         
                         //Add CSRF token.
                         var csrfTok = this.getCsrfToken();
@@ -1077,7 +1179,7 @@ function AJAXRequest(config={
                         this.xhr.send(localParams);
                         return true;
                     } else {
-                        this.xhr.open(method,url);
+                        this.xhr.open(method,requestUrl);
                         this.xhr.send();
                     }
                 } else{
@@ -1139,6 +1241,11 @@ function AJAXRequest(config={
     this.setURL(config.url);
     this.setEnabled(config.enabled);
     
+    if (config.base) {
+        this.setBase(config.base);
+    } else {
+        this.setBase(AJAXRequest.extractBase());
+    }
     //Set params
     instance.setParams(config.params);
     
