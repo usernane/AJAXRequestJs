@@ -1,13 +1,15 @@
 # Table of Content
 * [Constructor](#constructor)
 * [Constants](#constants)
+* [Static Methods](#static-methods)
 * [Methods](#methods)
   * <a href="#ajaxrequestaddheadername-value">`AJAXRequest.addHeader(name, value)`</a>
   * <a href="#ajaxrequestdisablecallexceptpool_nameid-1">`AJAXRequest.disableCallExcept(pool_name[,id=-1])`</a>
+  * <a href="#ajaxrequestgetbase">`AJAXRequest.getBase`</a>
   * <a href="#ajaxrequestgetcallbackpool_nameid">`AJAXRequest.getCallBack(pool_name,id)`</a>
   * <a href="#ajaxrequestgetcsrftoken">`AJAXRequest.getCsrfToken()`</a>
   * <a href="#ajaxrequestgetparams">`AJAXRequest.getParams()`</a>
-  * <a href="#ajaxrequestgetrequmethod">`AJAXRequest.getReqMethod()`</a>
+  * <a href="#ajaxrequestgetreqmethod">`AJAXRequest.getReqMethod()`</a>
   * <a href="#ajaxrequestgetserverresponse">`AJAXRequest.getServerResponse()`</a>
   * <a href="#ajaxrequestgeturl">`AJAXRequest.getURL()`</a>
   * <a href="#ajaxrequestlogmessagetypeforce">`AJAXRequest.log(message[,type[,force]])`</a>
@@ -18,15 +20,15 @@
   * <a href="#ajaxrequestsetbeforeajaxcallbackcall">`AJAXRequest.setBeforeAjax(callback[,call])`</a>
   * <a href="#ajaxrequestsetenabledbool">`AJAXRequest.setEnabled(bool)`</a>
   * <a href="#ajaxrequestsend">`AJAXRequest.send()`</a>
+  * <a href="#ajaxrequestsetbasebaseurl">`AJAXRequest.setBase(baseUrl)`</a>
   * <a href="#ajaxrequestsetonerrorcallbackcall">`AJAXRequest.setOnError(callback[,call])`</a>
   * <a href="#ajaxrequestsetonclienterrorcallbackcall">`AJAXRequest.setOnClientError(callback[,call])`</a>
   * <a href="#ajaxrequestsetondisconnectedcallbackcall">`AJAXRequest.setOnDisconnected(callback[,call])`</a>
   * <a href="#ajaxrequestsetonservererrorcallbackcall">`AJAXRequest.setOnServerError(callback[,call])`</a>
   * <a href="#ajaxrequestsetonsuccesscallbackcall">`AJAXRequest.setOnSuccess(callback[,call])`</a>
   * <a href="#ajaxrequestsetparamsparams">`AJAXRequest.setParams(params)`</a>
-  * <a href="#ajaxrequestsetrequmethodmethod">`AJAXRequest.setReqMethod(method)`</a>
+  * <a href="#ajaxrequestsetreqmethodmethod">`AJAXRequest.setReqMethod(method)`</a>
   * <a href="#ajaxrequestseturlurl">`AJAXRequest.setURL(url)`</a>
-
 # Constructor
 ## `AJAXRequest([config])`
 Create an instance of the class. 
@@ -35,27 +37,28 @@ Create an instance of the class.
 AJAX configuration object. The object can have the 
 following properties:
 <ul>
-  <li><b>method</b>: Request method such as GET or POST.</li>
-  <li><b>url</b>: The URL at which AJAX request will be sent to.</li>
-  <li><b>params</b>: A parameters which will be sent with the request. It can be an object, a FormData or a query string.</li>
-  <li><b>verbose</b>:A boolean Used for development. If set to true, more informative messages will appear in the console.</li>
-  <li><b>headers</b>: An object that can hold custom headers that will be sent with the request. The keys of the object are headers names and the values are headers values.</li>
-  <li><b>enabled</b>: A boolean to enable or disable AJAX.</li>
-  <li><b>beforeAjax</b>: An array that contains one or more callbacks which will be executed before AJAX request is sent. The callbacks can be used to collect user inputs and do final configuration before sending the request to the server.</li>
-  <li><b>onSuccess</b>: An array that contains one or more callbacks which will be executed when server sends the response code 2xx.</li>
-  <li><b>onClientErr</b>: An array that contains one or more callbacks which will be executed when server sends the response code 4xx.</li>
-  <li><b>onServerErr</b>: An array that contains one or more callbacks which will be executed when server sends the response code 5xx.</li>
-  <li><b>onDisconnected</b>: An array that contains one or more callbacks which will be executed when there is no internet connection.</li>
-  <li><b>afterAjax</b>: An array that contains one or more callbacks which will be executed after AJAX request is finishhed regrardless of status code.</li>
+  <li><b>`method`</b>: Request method such as GET or POST.</li>
+  <li><b>`base`</b>: A base URL to send request to.</li>
+  <li><b>`url`</b>: The URL at which AJAX request will be sent to. this also can be the path part of a URL if a base is set.</li>
+  <li><b>`params`</b>: A parameters which will be sent with the request. It can be an object, a FormData or a query string.</li>
+  <li><b>`verbose`</b>:A boolean Used for development. If set to true, more informative messages will appear in the console.</li>
+  <li><b>`headers`</b>: An object that can hold custom headers that will be sent with the request. The keys of the object are headers names and the values are headers values.</li>
+  <li><b>`enabled`</b>: A boolean to enable or disable AJAX.</li>
+  <li><b>`beforeAjax`</b>: An array that contains one or more callbacks which will be executed before AJAX request is sent. The callbacks can be used to collect user inputs and do final configuration before sending the request to the server.</li>
+  <li><b>`onSuccess`</b>: An array that contains one or more callbacks which will be executed when server sends the response code 2xx.</li>
+  <li><b>`onClientErr`</b>: An array that contains one or more callbacks which will be executed when server sends the response code 4xx.</li>
+  <li><b>`onServerErr`</b>: An array that contains one or more callbacks which will be executed when server sends the response code 5xx.</li>
+  <li><b>`onDisconnected`</b>: An array that contains one or more callbacks which will be executed when there is no internet connection.</li>
+  <li><b>`afterAjax`</b>: An array that contains one or more callbacks which will be executed after AJAX request is finishhed regrardless of status code.</li>
 </ul>
-<b>Note that for callback arrays, they can be a single callback instead of an array as of version 1.1.1.</b>
+<b>Note that for callback arrays, they can be a single callback instead of an array.</b>
 
 # Constants
 | Name | Description |
 |------|-------------|
 |`AJAXRequest.CALLBACK_POOLS`| An array that contains the names of pools that will store callbacks. |
 |`AJAXRequest.META`| An object that holds meta information about the library. It includes the following values: <ul><li>`VERSION`: Library version number.</li><li>`REALSE_DATE` The date at which the library was released.</li><li>`CONTRIBUTORS`: An array that contains the names of people who have cotrubuted to the development of the library.</li></ul>|
-|`AJAXRequest.CALLBACK_POOLS`| An array that contains the names of pools that will store callbacks. |
+|`AJAXRequest.CALLBACK_POOLS`| An array that contains the names of pools that will store callbacks. The array have the following values: `servererror`,`clienterror`,`success`,`connectionlost`,`afterajax`,`beforeajax`, `onerror`|
 # Methods
 
 
@@ -75,6 +78,12 @@ Disable all callback functions except the one that its ID is given.
 The name of the pool. It should be a value from the array `AJAXRequest.CALLBACK_POOLS`.
 #### `id` : Number 
 The ID of the callback that was provided when the callback was added to the pool. If the ID does not exist or not provided, All callbacks in the pool will be disabled.
+
+## `AJAXRequest.getBase()`
+Returns the value of the base URL which is used to send AJAX requests.
+
+### Returns: `String|null` 
+If the base is set, the method will return its value. If not, the method will return the value of the attribute 'href' of the 'base' tag. Other than that, null is returned.
 
 ## `AJAXRequest.getCallBack(pool_name,id)`
 Returns an object that contains the information of a callback function given its ID. 
@@ -182,6 +191,11 @@ Send AJAX request to the server.
 ### Returns: `Boolean`
 True in case of the status of AJAX request is open. else, it will return false.
 
+## `AJAXRequest.setBase(baseurl)`
+Updates the value of the base URL which is used to send AJAX requests.
+### Parameters:
+#### `baseurl` : `String|null` base The value of the new base URL. Only set if given URL is valid.
+
 ## `AJAXRequest.setOnError(callback[,call])`
 Append a function to the pool of functions that will be called in case of client error (code 4xx). 
 ### Parameters:
@@ -250,3 +264,13 @@ Sets AJAX request URL (or URI)
 #### `url` : `String`
 The URL that will receive AJAX request.
 
+# Static Methods
+
+## `AJAXRequest.createXhr()`
+A factory method used to create XHR object for diffrent browsers.
+
+## `AJAXRequest.extractBase()`
+Extract the value of the attribute 'href' of the 'base' tag.
+
+## `AJAXRequest.isValidURL(url)`
+Checks if given string represents a valid URL or not.
