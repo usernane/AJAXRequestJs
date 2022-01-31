@@ -33,19 +33,20 @@ A light weight JavaScript class library that can help in making AJAX requests mu
 * Automatic CSRF token extraction.
 
 ## Installation
-In order to use the library, you must first include the JavaScript file in your head tag of your web page:
+In order to use the library, you must first include the JavaScript file in your head tag of your web page. To have the latest v1.x.x release, include the following tag:
 ``` html
 <head>
-  <script src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@1.2.1/AJAXRequest.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@1.x.x/AJAXRequest.js"></script>
 </head>
 ```
 It is possible to use the minified version of the libray by including the following JavaScript:
 
 ``` html
 <head>
-  <script src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@1.2.1/AJAXRequest.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@1.x.x/AJAXRequest.min.js"></script>
 </head>
 ```
+
 
 ## Basic Usage
 The following code sample shows the most basic usage of the library.
@@ -58,7 +59,7 @@ The following code sample shows the most basic usage of the library.
     //The URL that will receive the request.
     url:'https://api.github.com/repos/usernane/AJAXRequestJs',
     
-    //enable for development to get more informative messages in the console
+    //enable verbose mode for development to get more informative messages in the console
     verbose:true
     
     //Adds one call back to execute on success. We can add more.
@@ -82,7 +83,12 @@ When creating an instance of the class `AJAXRequest`, there are configuration op
 ``` javascript
 {
     /**
-     * The URL that will receive the request.
+     * The base URL that will receive the request.
+     */
+    base:string,
+    
+    /**
+     * The URL that will receive the request or the path part of the URL if base is set.
      */
     url:string,
     
@@ -154,10 +160,8 @@ When creating an instance of the class `AJAXRequest`, there are configuration op
 }
 ```
 
->> Note: Starting version 1.1.1, the array of callbacks can be also a single function.
-
 ## Properties Accessable in Callbacks
-Inside the callback that will be executed, the developer will have access to the properties of AJAX request and its response. The developer can use the keyword `this` to access them. The available properties are as follows:
+Inside the callback that will be executed, developer will have access to the properties of AJAX request and its response. The developer can use the keyword `this` to access them. The available properties are as follows:
 
 ``` javascript
 function () {
@@ -184,7 +188,7 @@ function () {
     this.responseHeaders;
 }
 ```
-Note that for the callbacks which are set to be executed before the AJAX request is sent to the server only the property `this.AJAXRequest` is available. The other ones will be `undefined`. For the `onErr` callbacks, there is additional property which has the name `e` that represents the thrown [`Error`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error).
+Note that for the callbacks which are set to be executed before the AJAX request is sent to the server only the property `this.AJAXRequest` is available. The other ones will be `undefined`. For the `onErr` callbacks, there is additional property which has the name `e` that represents the thrown [`Error`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) and can be accessed in same manner.
 
 ## Types of Callbacks
 One of the features of the library is the ability to set functions to execute in specific cases. In this section, we explain the available callbacks and how to use them.
@@ -194,7 +198,8 @@ Usually, before sending AJAX request to the server, checking for user inputs val
 ```  javascript
 var ajax = new AJAXRequest({
     method:'get',
-    url:'https://api.github.com/repos/usernane/AJAXRequestJs',
+    base:'https://api.github.com/repos',
+    url:'usernane/AJAXRequestJs',
     
     beforeAjax:function(){
           // Collect user inputs, validate them, etc...
@@ -222,7 +227,8 @@ This type of callback will be executed after AJAX response is received. It will 
 ```  javascript
 var ajax = new AJAXRequest({
     method:'get',
-    url:'https://api.github.com/repos/usernane/AJAXRequestJs',
+    base:'https://api.github.com/repos',
+    url:'usernane/AJAXRequestJs',
     
     afterAjax:function(){
          console.log('Status code: '+this.status);
@@ -501,7 +507,7 @@ If one of the 3 is met, the token will be sent to the server in the headers. The
 ## API Reference
 If you would like to read the API reference of the library, please check <a href="https://github.com/usernane/AJAXRequestJs/blob/master/docs/README.md">here</a>.
 
-## Usag Examples
+## Usage Examples
 If you are looking for example on how to use the library, please check <a href="https://github.com/usernane/AJAXRequestJs/tree/master/examples">here</a>.
 
 ## License
