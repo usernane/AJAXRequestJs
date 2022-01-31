@@ -1,6 +1,7 @@
 # Table of Content
 * [Constructor](#constructor)
 * [Constants](#constants)
+* [Static Methods](#static-methods)
 * [Methods](#methods)
   * <a href="#ajaxrequestaddheadername-value">`AJAXRequest.addHeader(name, value)`</a>
   * <a href="#ajaxrequestdisablecallexceptpool_nameid-1">`AJAXRequest.disableCallExcept(pool_name[,id=-1])`</a>
@@ -28,7 +29,6 @@
   * <a href="#ajaxrequestsetparamsparams">`AJAXRequest.setParams(params)`</a>
   * <a href="#ajaxrequestsetreqmethodmethod">`AJAXRequest.setReqMethod(method)`</a>
   * <a href="#ajaxrequestseturlurl">`AJAXRequest.setURL(url)`</a>
-
 # Constructor
 ## `AJAXRequest([config])`
 Create an instance of the class. 
@@ -38,7 +38,7 @@ AJAX configuration object. The object can have the
 following properties:
 <ul>
   <li><b>`method`</b>: Request method such as GET or POST.</li>
-  <li><b>`base`</b>: A vase URL to send request to.</li>
+  <li><b>`base`</b>: A base URL to send request to.</li>
   <li><b>`url`</b>: The URL at which AJAX request will be sent to. this also can be the path part of a URL if a base is set.</li>
   <li><b>`params`</b>: A parameters which will be sent with the request. It can be an object, a FormData or a query string.</li>
   <li><b>`verbose`</b>:A boolean Used for development. If set to true, more informative messages will appear in the console.</li>
@@ -264,3 +264,13 @@ Sets AJAX request URL (or URI)
 #### `url` : `String`
 The URL that will receive AJAX request.
 
+# Static Methods
+
+## `AJAXRequest.createXhr()`
+A factory method used to create XHR object for diffrent browsers.
+
+## `AJAXRequest.extractBase()`
+Extract the value of the attribute 'href' of the 'base' tag.
+
+## `AJAXRequest.isValidURL(url)`
+Checks if given string represents a valid URL or not.
