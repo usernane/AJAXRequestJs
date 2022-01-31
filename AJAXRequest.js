@@ -89,11 +89,11 @@ Object.defineProperties(AJAXRequest,{
 });
 Object.defineProperties(AJAXRequest.META,{
     VERSION:{
-        value:'1.2.2',
+        value:'1.2.3',
         writable:false
     },
     REALSE_DATE:{
-        value:'13/12/2021',
+        value:'2022-01-31',
         writable:false
     },
     CONTRIBUTORS:{
@@ -101,6 +101,10 @@ Object.defineProperties(AJAXRequest.META,{
             {
                 name:'Ibrahim Ali BinAlshikh',
                 email:'ibinshikh@hotmail.com'
+            },
+            {
+                name:'Ibrahim Beladi',
+                email:''
             }
         ],
         writable:false
@@ -108,7 +112,6 @@ Object.defineProperties(AJAXRequest.META,{
 });
 /**
  * A class that can be used to simplfy AJAX requests.
- * @version 1.1.0
  * @author Ibrahim BinAlshikh <ibinshikh@hotmail.com>
  * @constructor
  * @param {Object} config AJAX configuration. The object can have the 
