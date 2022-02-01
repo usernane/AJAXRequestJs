@@ -1,5 +1,6 @@
 
 "use strict";
+
 Object.defineProperties(AJAXRequest,{
     META:{
         writable:false,
@@ -470,7 +471,7 @@ function AJAXRequest(config={
                         base = base.substring(0, base.length - 1);
                     }
                     this.base = base;
-                    this.log('AJAXREquest.setBase: Base is set to "'+this.getBase()+'".');
+                    this.log('AJAXREquest.setBase: Base is set to "'+this.getBase()+'".', 'info');
                 } else {
                     this.log('AJAXREquest.setBase: Base not updated.', 'warning');
                 }
@@ -1032,6 +1033,33 @@ function AJAXRequest(config={
             writable:false,
             enumerable: true
         },
+        getRequestURL:{
+            /**
+            * Returns a string that represents the URL at which AJAX request will be send to.
+            * 
+            * @returns {String} A string such as 'https://example.com/apis/get-user'.
+            */
+             value:function(){
+                var url = this.getURL();
+                var base = this.getBase();
+                var requestUrl = url;
+
+                if (base === null) {
+                    return requestUrl;
+                } else {
+                    var subPart = url.substring(0, base.length);
+
+                    if (subPart === base) {
+                        var requestUrl = url;
+                    } else {
+                        var requestUrl = base+'/'+url;
+                    }
+                }
+                return requestUrl;
+            },
+            writable:false,
+            enumerable: true
+        },
         send:{
             /**
             * Send AJAX request to the server.
@@ -1054,16 +1082,12 @@ function AJAXRequest(config={
                     var params = this.getParams();
                     var url = this.getURL();
                     var base = this.getBase();
+                    var requestUrl = this.getRequestURL();
+
                     this.log('AJAXRequest.send: Params: '+params,'info');
                     this.log('AJAXRequest.send: Request Method: '+method,'info');
                     this.log('AJAXRequest.send: Base: '+base,'info');
                     this.log('AJAXRequest.send: URL: '+url,'info');
-
-                    if (base === null) {
-                        var requestUrl = url;
-                    } else {
-                        var requestUrl = base+'/'+url;
-                    }
                     this.log('AJAXRequest.send: Request URL: '+requestUrl,'info');
 
                     this.xhr.log = this.log;
