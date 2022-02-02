@@ -11,7 +11,7 @@ Object.defineProperties(AJAXRequest,{
         * Names of pools of events.
         * @type Array
         */
-        value:['servererror','clienterror','success','connectionlost','afterajax','beforeajax', 'onerror'],
+        value:['servererror','clienterror','success','connectionlost','afterajax','beforeajax', 'error'],
         writable:false
     },
     XMLHttpFactories:{
@@ -210,6 +210,7 @@ function AJAXRequest(config={
         {
             id:0,
             call:true,
+            props:{},
             func:function(){
                 console.info('AJAXRequest: Connection lost. Status: '+this.status);
             }
@@ -222,8 +223,9 @@ function AJAXRequest(config={
         {
             id:0,
             call:true,
+            props:{},
             func:function(){
-                console.info('AJAXRequest: Before AJAX callback.');
+                console.info('AJAXRequest: Executing Before AJAX callbacks.');
             }
         }
     ];
@@ -235,6 +237,7 @@ function AJAXRequest(config={
         {
             id:0,
             call:true,
+            props:{},
             func:function(){
                 console.info('AJAXRequest: After AJAX '+this.status);
             }
@@ -248,6 +251,7 @@ function AJAXRequest(config={
         {
             id:0,
             call:true,
+            props:{},
             func:function(){
                 console.info('AJAXRequest: Error in one of the callbacks.');
             }
@@ -260,6 +264,7 @@ function AJAXRequest(config={
         {
             id:0,
             call:true,
+            props:{},
             func:function(){
                 console.info('AJAXRequest: Success '+this.status);
             }
@@ -272,6 +277,7 @@ function AJAXRequest(config={
         {
             id:0,
             call:true,
+            props:{},
             func:function(){
                 console.info('AJAXRequest: Server Error '+this.status);
             }
@@ -284,6 +290,7 @@ function AJAXRequest(config={
         {
             id:0,
             call:true,
+            props:{},
             func:function(){
                 console.info('AJAXRequest: Client Error '+this.status);
             }
@@ -303,16 +310,16 @@ function AJAXRequest(config={
                 this.log('AJAXRequest: Ready State = 4 (DONE)','info');
                 setProbsAfterAjax(this, 'connectionlost');
             } else if (this.readyState === 4 && this.status >= 200 && this.status < 300) {
-                this.log('AJAXRequest: Ready State = 4 (DONE)','info');
+                this.log('AJAXRequest: Ready State = 4 (DONE).','info');
                 setProbsAfterAjax(this, 'success');
             } else if (this.readyState === 4 && this.status >= 400 && this.status < 500) {
-                this.log('AJAXRequest: Ready State = 4 (DONE)','info');
+                this.log('AJAXRequest: Ready State = 4 (DONE).','info');
                 setProbsAfterAjax(this, 'clienterror');
             } else if (this.readyState === 4 && this.status >= 300 && this.status < 400) {
-                this.log('AJAXRequest: Ready State = 4 (DONE)','info');
+                this.log('AJAXRequest: Ready State = 4 (DONE).','info');
                 this.log('Redirect','info',true);
             } else if (this.readyState === 4 && this.status >= 500 && this.status < 600) {
-                this.log('AJAXRequest: Ready State = 4 (DONE)','info');
+                this.log('AJAXRequest: Ready State = 4 (DONE).','info');
                 setProbsAfterAjax(this, 'servererror');
             } else if(this.readyState === 4) {
                 this.log('Status: '+this.status,'info');
@@ -322,12 +329,19 @@ function AJAXRequest(config={
         enumerable: false
     });
     function callOnErr(inst, jsonResponse, headers, e) {
-        inst.log('An error occurred while executing the callback at "'+e.fileName+'" line '+e.lineNumber+'. Check Below for more details.','error', true);
+        inst.log('AJAXRequest: An error occurred while executing the callback at "'+e.fileName+'" line '+e.lineNumber+'. Check Below for more details.','error', true);
         inst.log(e,'error', true);
 
         for(var i = 0 ; i < inst.onerrorpool.length ; i++){
             try {
-                if (inst.onerrorpool[i].call === true) {
+                
+                var canCall = inst.onerrorpool[i].call === true || 
+                (typeof inst.onerrorpool[i].call === 'function' && 
+                inst.onerrorpool[i].call() === true);
+
+                if (canCall) {
+                    inst.log('AJAXRequest: Callback '+inst.onerrorpool[i].id+' is enabled.', 'info');
+                    setCallbackProps(inst, 'error', inst.onerrorpool[i]);
                     inst.onerrorpool[i].AJAXRequest = inst;
                     inst.onerrorpool[i].e = e;
                     inst.onerrorpool[i].status = inst.status;
@@ -336,37 +350,75 @@ function AJAXRequest(config={
                     inst.onerrorpool[i].jsonResponse = jsonResponse;
                     inst.onerrorpool[i].responseHeaders = headers;
                     inst.onerrorpool[i].func();
+                } else {
+                    inst.log('AJAXRequest: Callback "'+inst.onerrorpool[i].id+'" is disabled.', 'warning');
                 }
             } catch (e) {
-                inst.log('An error occurred while executing the callback at "'+e.fileName+'" line '+e.lineNumber+'. Check Below for more details.','error', true);
+                inst.log('AJAXRequest: An error occurred while executing the callback at "'+e.fileName+'" line '+e.lineNumber+'. Check Below for more details.','error', true);
                 inst.log(e,'error', true);
             }
         }
+    }
+    function setCallbackProps(inst,pool_name, callback) {
+        inst.log('AJAXRequest: Setting callback "'+callback.id+'" props on the pool "'+pool_name+'"...', 'info');
+        var invalidNames = [
+            'e', 
+            'AJAXRequest', 
+            'status', 
+            'response', 
+            'xmlResponse',
+            'jsonResponse', 
+            'responseHeaders'
+        ];
+        var keys = Object.keys(callback.props);
+
+        for (var x = 0 ; x < keys.length ; x++) {
+            if (invalidNames.indexOf(keys[x]) === -1) {
+                for(var i = 0 ; i < inst['on'+pool_name+'pool'].length ; i++){
+                    inst['on'+pool_name+'pool'][i][keys[x]] = callback.props[keys[x]];
+                }
+            }
+        }
+        inst.log('AJAXRequest: Successfully finished setting callback "'+callback.id+'" props.', 'info');
     }
     function setProbsAfterAjax(inst, pool_name) {
         try{
             var jsonResponse = JSON.parse(inst.responseText);
         } catch(e) {
-            inst.log('Unable to convert response into JSON object.','warning', true);
-            inst.log('"jsonResponse" is set to \'null\'.','warning', true);
+            inst.log('AJAXRequest: Unable to convert response into JSON object.','warning', true);
+            inst.log('AJAXRequest: "jsonResponse" is set to \'null\'.','warning', true);
             var jsonResponse = null;
         }
         for(var i = 0 ; i < inst['on'+pool_name+'pool'].length ; i++){
+
+            setCallbackProps(inst, pool_name, inst['on'+pool_name+'pool'][i]);
+
             inst['on'+pool_name+'pool'][i].AJAXRequest = inst;
             inst['on'+pool_name+'pool'][i].status = inst.status;
             inst['on'+pool_name+'pool'][i].response = inst.responseText;
             inst['on'+pool_name+'pool'][i].xmlResponse = inst.responseXML;
             inst['on'+pool_name+'pool'][i].jsonResponse = jsonResponse;
             inst['on'+pool_name+'pool'][i].responseHeaders = getResponseHeadersObj(inst);
-            if (inst['on'+pool_name+'pool'][i].call === true) {
+
+            var canCall = inst['on'+pool_name+'pool'][i].call === true || 
+                (typeof inst['on'+pool_name+'pool'][i].call === 'function' && 
+                inst['on'+pool_name+'pool'][i].call() === true);
+
+            if (canCall) {
+                inst.log('AJAXRequest: Callback "'+inst['on'+pool_name+'pool'][i].id+'" is enabled.', 'info');
                 try {
                     inst['on'+pool_name+'pool'][i].func();
                 } catch (e) {
                     callOnErr(inst, jsonResponse, headers, e);
                 }
+            } else {
+                inst.log('AJAXRequest: Callback "'+inst['on'+pool_name+'pool'][i].id+'" is disabled.', 'warning');
             }
         }
         for(var i = 0 ; i < inst.onafterajaxpool.length ; i++){
+
+            setCallbackProps(inst, 'afterajax', inst.onafterajaxpool[i]);
+
             var headers = getResponseHeadersObj(inst);
             inst.onafterajaxpool[i].AJAXRequest = inst;
             inst.onafterajaxpool[i].status = inst.status;
@@ -374,14 +426,24 @@ function AJAXRequest(config={
             inst.onafterajaxpool[i].xmlResponse = inst.responseXML;
             inst.onafterajaxpool[i].jsonResponse = jsonResponse;
             inst.onafterajaxpool[i].responseHeaders = headers;
-            if (inst.onafterajaxpool[i].call === true) {
+
+            var canCall = inst.onafterajaxpool[i].call === true || 
+                (typeof inst.onafterajaxpool[i].call === 'function' && 
+                inst.onafterajaxpool[i].call() === true);
+
+            if (canCall) {
+                inst.log('AJAXRequest: Callback "'+inst.onafterajaxpool[i].id+'" is enabled.', 'info');
+
                 try {
                     inst.onafterajaxpool[i].func();
                 } catch (e) {
                     callOnErr(inst, jsonResponse, headers, e);
                 }
+            } else {
+                inst.log('AJAXRequest: Callback "'+inst.onafterajaxpool[i].id+'" is disabled.', 'warning');
             }
         }
+        inst.log('AJAXRequest: Finished AJAX Request.', 'info');
     }
     /**
      * This function will extract response headers from the response.
@@ -461,7 +523,7 @@ function AJAXRequest(config={
 
                 if (base === null || base === undefined || base.trim().length === 0) {
                     this.base = null;
-                    this.log('AJAXREquest.setBase: Base is set to "null".');
+                    this.log('AJAXRequest.setBase: Base is set to "null".');
                     return;
                 }
                 base = base.trim();
@@ -471,9 +533,9 @@ function AJAXRequest(config={
                         base = base.substring(0, base.length - 1);
                     }
                     this.base = base;
-                    this.log('AJAXREquest.setBase: Base is set to "'+this.getBase()+'".', 'info');
+                    this.log('AJAXRequest.setBase: Base is set to "'+this.getBase()+'".', 'info');
                 } else {
-                    this.log('AJAXREquest.setBase: Base not updated.', 'warning');
+                    this.log('AJAXRequest.setBase: Base not updated.', 'warning');
                 }
             },
             writable:false,
@@ -548,26 +610,110 @@ function AJAXRequest(config={
             writable:false,
             enumerable: true
         },
+        addCallback:{
+            /**
+            * 
+            * @param {Function|Object} callback A function to call. This also can be an object.
+            * The object can have following properties, 'callback' The function that will be executed.
+            * 'id': A unique itentifier for the callback.
+            * 'call': a boolean or function that evaluate to a boolean. Used to decide if the 
+            * callback will be executed or not. 'props' Extra properties that the developer would like
+            * to have passed in the callback. Accessed using the keyword 'this' in the body of the
+            * callback.
+            * 
+            * @param {String} poolName The name of the pool at which the callback will be added to.
+            * Must be a value from the array AJAXRequest.CALLBACK_POOLS.
+            * 
+            * @returns {undefined|String|Number} Returns an ID for the function. If not added, 
+            * the method will return undefined.
+            */
+            value:function(callback, poolName) {
+                var pool_name = poolName.toLowerCase();
+                this.log('AJAXRequest.addCallback: Adding new callback to the pool "'+pool_name+'"...','info');
+
+                if (AJAXRequest.CALLBACK_POOLS.indexOf(pool_name) !== -1) {
+                    pool_name = 'on'+pool_name+'pool';
+
+                    var callType = typeof callback;
+                    var id = this[pool_name].length + 1; 
+
+                    if (callType === 'function') {
+                        this.log('AJAXRequest.addCallback: Callback given as function.','info');
+                        
+                        this[pool_name].push({id:id,call:true,func:callback, props:{}});
+                        this.log('AJAXRequest.addCallback: New callback added [id = "'+id+'"].','info');
+                    
+                        return id;
+                    } else if (callType === 'object') {
+                        this.log('AJAXRequest.addCallback: Callback given as an object.','info');
+
+                        if (typeof callback.callback === 'function') {
+                            this.log('AJAXRequest.addCallback: Property "callback" is set.','info');
+                            var toAdd = {
+                                func:callback.callback
+                            }
+                            var typeOfId = typeof callback.id;
+
+                            if (typeOfId === 'undefined' || callback.id === null) {
+                                this.log('AJAXRequest.addCallback: Property "id" is not set. Using generated ID.','warning');
+                                toAdd.id = id;
+                            } else {
+                                this.log('AJAXRequest.addCallback: Property "id" is set.','info');
+                                toAdd.id = callback.id;
+                                id = callback.id;
+                            }
+
+                            if (typeof callback.props === 'object') {
+                                this.log('AJAXRequest.addCallback: Property "props" is set as an object.','info');
+                                toAdd.props = callback.props;
+                            } else {
+                                this.log('AJAXRequest.addCallback: Property "props" is not an object.','warning');
+                                toAdd.props = {};
+                            }
+
+                            if (typeof callback.call === 'boolean') {
+                                this.log('AJAXRequest.addCallback: Property "call" is set as a boolean.','info');
+                                toAdd.call = callback.call;
+                            } else if (typeof callback.call === 'function') {
+                                this.log('AJAXRequest.addCallback: Property "call" is set as a function.','info');
+                                toAdd.call = callback.call;
+                            } else {
+                                this.log('AJAXRequest.addCallback: Property "call" is not set. Using "true" as default value.','warning');
+                                toAdd.call = true;
+                            }
+
+                            this[pool_name].push(toAdd);
+                            this.log('AJAXRequest.addCallback: New callback added [id = "'+toAdd.id+'"].','info');
+                        } else {
+                            this.log('AJAXRequest.addCallback: Property "callback" is not set or invalid. Callback not added.','warning', true);
+                        }
+                    }
+                    
+                } else {
+                    this.log('AJAXRequest.addCallback: No such pool: \''+pool_name+'\'','error');
+                }
+            },
+            writable:false,
+            enumerable: true
+        },
         setOnServerError:{
             /**
             * Append a function to the pool of functions that will be called in case of 
             * server error (code 5xx). 
-            * @param {Function} callback A function to call on server error. If this 
-            * @param {Boolean} call If true, the method will be called. Else if false,
-            * the method will be not called.
-            * @returns {undefined|Number} Returns an ID for the function. If not added, 
+            * 
+            * @param {Function|Object} callback A function to call. This also can be an object.
+            * The object can have following properties, 'callback' The function that will be executed.
+            * 'id': A unique itentifier for the callback.
+            * 'call': a boolean or function that evaluate to a boolean. Used to decide if the 
+            * callback will be executed or not. 'props' Extra properties that the developer would like
+            * to have passed in the callback. Accessed using the keyword 'this' in the body of the
+            * callback.
+            * 
+            * @returns {undefined|String|Number} Returns an ID for the function. If not added, 
             * the method will return undefined.
             */
-            value:function(callback,call=true){
-                if (typeof callback === 'function') {
-                    var id = this.onservererrorpool[this.onservererrorpool.length - 1]['id'] + 1; 
-                    this.onservererrorpool.push({'id':id,'call':call,'func':callback});
-                    this.log('AJAXRequest.setOnServerError: New callback added [id = '+id+' , call = '+call+'].','info');
-                    return id;
-                } else {
-                    this.log('AJAXRequest.setOnServerError: Provided parameter is not a function.','warning');
-                }
-                return undefined;
+            value:function(callback){
+                return this.addCallback(callback, 'servererror');
             },
             writable:false,
             enumerable: true
@@ -577,7 +723,7 @@ function AJAXRequest(config={
             * Removes a callback function from a specific pool given its ID.
             * @param {String} pool_name The name of the pool. It should be one of the 
             * values in the array AJAXRequestCALLBACK_POOLS.
-            * @param {Number} id The ID of the callback function.
+            * @param {Number|String} id The ID of the callback function.
             * @returns {undefined}
             */
             value:function(pool_name,id){
@@ -591,7 +737,7 @@ function AJAXRequest(config={
                                     return this[pool_name].pop(this[pool_name][x]);
                                 }
                             }
-                            this.log('AJAXRequest.removeCall: No callback was found with ID = '+id+' in the pool \''+pool_name+'\'','error');
+                            this.log('AJAXRequest.removeCall: No callback was found with ID = "'+id+'" in the pool \''+pool_name+'\'','error');
                         } else {
                             noSuchPool(pool_name);
                         }
@@ -642,30 +788,48 @@ function AJAXRequest(config={
             writable:false,
             enumerable: true
         },
+        setCallsEnabled:{
+            /**
+             * Enable or disable a callbacks with same ID in all pools given the ID.
+             * 
+             * @param {String|Number} id The ID that was set for all callbacks.
+             * 
+             * @param {Boolean|Function} call This can be a boolean or can be a function that evaluate
+             * to a boolean.
+             */
+            value:function (id, call) {
+                for (var x = 0 ; x < AJAXRequest.CALLBACK_POOLS.length ; x++) {
+                    this.setCallEnabled(AJAXRequest.CALLBACK_POOLS[x], id, call);
+                }
+            }
+        },
         setCallEnabled:{
             /**
             * Enable or disable a callback on specific pool.
             * @param {String} pool_name The name of the pool. It must be one of the 
             * values in the aray AJAXRequest.CALLBACK_POOLS.
+            * 
             * @param {Number} id The ID of the callback. It is given when the callback 
             * was added.
+            * 
             * @param {Boolean} call If set to true, the function will be called. Else 
             * if it is set to false, it will be not called.
-            * @returns {undefined}
             */
-            value:function(pool_name,id,call=true){
+            value:function(pool_name,id,call){
                 if (pool_name !== undefined && pool_name !== null) {
                     if (typeof pool_name === 'string') {
                         pool_name = pool_name.toLowerCase();
+                        this.log('AJAXRequest.setCallEnabled: Checking if pool "'+pool_name+'" exist...', 'info')
                         if (AJAXRequest.CALLBACK_POOLS.indexOf(pool_name) !== -1) {
                             pool_name = 'on'+pool_name+'pool';
                             for (var x = 0 ; x < this[pool_name].length ; x++) {
                                 if (this[pool_name][x]['id'] === id) {
                                     this[pool_name][x]['call'] = call;
+                                    this.log('AJAXRequest.setCallEnabled: Callback status updated.', 'info');
                                     return;
                                 }
                             }
-                            this.log('AJAXRequest.setCallEnabled: No callback was found with ID = '+id+' in the pool \''+pool_name+'\'','warning');
+                            this.log('AJAXRequest.setCallEnabled: No callback was found with ID = "'+id+'" in the pool \''+pool_name+'\'','warning');
                         } else {
                             noSuchPool(pool_name);
                         }
@@ -700,7 +864,7 @@ function AJAXRequest(config={
                                     return this[pool_name][x];
                                 }
                             }
-                            this.log('AJAXRequest.getCallBack: No callback was found with ID = '+id+' in the pool \''+pool_name+'\'','warning');
+                            this.log('AJAXRequest.getCallBack: No callback was found with ID = "'+id+'" in the pool \''+pool_name+'\'','warning');
                         } else {
                             noSuchPool(pool_name);
                         }
@@ -718,21 +882,20 @@ function AJAXRequest(config={
             /**
             * Append a function to the pool of functions that will be called in case of 
             * client error (code 4xx). 
-            * @param {Boolean} call If true, the method will be called. Else if i i false,
-            * the method will be not called.
-            * @param {Function} callback A function to call on client error.
-            * @returns {undefined|Number} Returns an ID for the function. If not added, 
+            * 
+            * @param {Function|Object} callback A function to call. This also can be an object.
+            * The object can have following properties, 'callback' The function that will be executed.
+            * 'id': A unique itentifier for the callback.
+            * 'call': a boolean or function that evaluate to a boolean. Used to decide if the 
+            * callback will be executed or not. 'props' Extra properties that the developer would like
+            * to have passed in the callback. Accessed using the keyword 'this' in the body of the
+            * callback.
+            * 
+            * @returns {undefined|String|Number} Returns an ID for the function. If not added, 
             * the method will return undefined.
             */
             value:function(callback,call=true){
-                if (typeof callback === 'function') {
-                    var id = this.onclienterrorpool[this.onclienterrorpool.length - 1]['id'] + 1; 
-                    this.onclienterrorpool.push({'id':id,'call':call,'func':callback});
-                    this.log('AJAXRequest.setOnClientError: New callback added [id = '+id+' , call = '+call+'].','info');
-                    return id;
-                } else {
-                    this.log('AJAXRequest.setOnClientError: Provided parameter is not a function.','error');
-                }
+                return this.addCallback(callback, 'clienterror');
             },
             writable:false,
             enumerable: true
@@ -741,22 +904,20 @@ function AJAXRequest(config={
             /**
             * Append a function to the pool of functions that will be called before 
             * ajax request is sent to the server.  
-            * @param {Function} callback A function to call before ajax request is 
-            * sent to the server.
-            * @param {Boolean} call If set to true, the callback will be called. If false, 
-            * it woun't be called.
-            * @returns {undefined|Number} Returns an ID for the function. If not added, 
+            * 
+            * @param {Function|Object} callback A function to call. This also can be an object.
+            * The object can have following properties, 'callback' The function that will be executed.
+            * 'id': A unique itentifier for the callback.
+            * 'call': a boolean or function that evaluate to a boolean. Used to decide if the 
+            * callback will be executed or not. 'props' Extra properties that the developer would like
+            * to have passed in the callback. Accessed using the keyword 'this' in the body of the
+            * callback.
+            * 
+            * @returns {undefined|String|Number} Returns an ID for the function. If not added, 
             * the method will return undefined.
             */
-            value:function(callback,call=true){
-                if (typeof callback === 'function') {
-                    var id = this.onbeforeajaxpool[this.onbeforeajaxpool.length - 1]['id'] + 1; 
-                    this.onbeforeajaxpool.push({'id':id,'call':call,'func':callback});
-                    this.log('AJAXRequest.setBeforeAjax: New callback added [id = '+id+' , call = '+call+'].','info');
-                    return id;
-                } else {
-                    this.log('AJAXRequest.setBeforeAjax: Provided parameter is not a function.','error');
-                }
+            value:function(callback){
+                return this.addCallback(callback, 'beforeajax');
             },
             writable:false,
             enumerable: true
@@ -765,21 +926,20 @@ function AJAXRequest(config={
             /**
             * Append a function to the pool of functions that will be called after 
             * ajax request is finished regardless of the status. 
-            * @param {Function} callback A function to call after AJAX request is finished.
-            * @returns {undefined|Number} Returns an ID for the function. If not added, 
+            * 
+            * @param {Function|Object} callback A function to call. This also can be an object.
+            * The object can have following properties, 'callback' The function that will be executed.
+            * 'id': A unique itentifier for the callback.
+            * 'call': a boolean or function that evaluate to a boolean. Used to decide if the 
+            * callback will be executed or not. 'props' Extra properties that the developer would like
+            * to have passed in the callback. Accessed using the keyword 'this' in the body of the
+            * callback.
+            * 
+            * @returns {undefined|String|Number} Returns an ID for the function. If not added, 
             * the method will return undefined.
-            * @param {Boolean} call If set to true, the callback will be called. If false, 
-            * it woun't be called.
             */
-            value:function(callback,call=true){
-                if (typeof callback === 'function') {
-                    var id = this.onafterajaxpool[this.onafterajaxpool.length - 1]['id'] + 1; 
-                    this.onafterajaxpool.push({'id':id,'call':call,'func':callback});
-                    this.log('AJAXRequest.setAfterAjax: New callback added [id = '+id+' , call = '+call+'].','info');
-                    return id;
-                } else {
-                    this.log('AJAXRequest.setAfterAjax: Provided parameter is not a function.','error');
-                }
+            value:function(callback){
+                return this.addCallback(callback, 'afterajax');
             },
             writable:false,
             enumerable: true
@@ -789,23 +949,20 @@ function AJAXRequest(config={
             * Append a function to the pool of functions that will be called in case 
             * one of the callbacks on the instance thrown an exception. 
             * 
-            * @param {Function} callback A function to call.
+            * @param {Function|Object} callback A function to call. This also can be an object.
+            * The object can have following properties, 'callback' The function that will be executed.
+            * 'id': A unique itentifier for the callback.
+            * 'call': a boolean or function that evaluate to a boolean. Used to decide if the 
+            * callback will be executed or not. 'props' Extra properties that the developer would like
+            * to have passed in the callback. Accessed using the keyword 'this' in the body of the
+            * callback.
             * 
-            * @returns {undefined|Number} Returns an ID for the function. If not added, 
+            * @returns {undefined|String|Number} Returns an ID for the function. If not added, 
             * the method will return undefined.
             * 
-            * @param {Boolean} call If set to true, the callback will be called. If false, 
-            * it woun't be called.
             */
-            value:function(callback,call=true){
-                if (typeof callback === 'function') {
-                    var id = this.onerrorpool[this.onerrorpool.length - 1]['id'] + 1; 
-                    this.onerrorpool.push({'id':id,'call':call,'func':callback});
-                    this.log('AJAXRequest.setOnError: New callback added [id = '+id+' , call = '+call+'].','info');
-                    return id;
-                } else {
-                    this.log('AJAXRequest.setOnError: Provided parameter is not a function.','error');
-                }
+            value:function(callback){
+                return this.addCallback(callback, 'error');
             },
             writable:false,
             enumerable: true
@@ -899,21 +1056,20 @@ function AJAXRequest(config={
             /**
             * Append a function to the pool of functions that will be called in case of 
             * successfull request (code 2xx). 
-            * @param {Boolean} call If true, the method will be called. Else if i i false,
-            * the method will be not called.
-            * @param {Function} callback A function to call on success.
-            * @returns {undefined|Number} Returns an ID for the function. If not added, 
+            * 
+            * @param {Function|Object} callback A function to call. This also can be an object.
+            * The object can have following properties, 'callback' The function that will be executed.
+            * 'id': A unique itentifier for the callback.
+            * 'call': a boolean or function that evaluate to a boolean. Used to decide if the 
+            * callback will be executed or not. 'props' Extra properties that the developer would like
+            * to have passed in the callback. Accessed using the keyword 'this' in the body of the
+            * callback.
+            * 
+            * @returns {undefined|String|Number} Returns an ID for the function. If not added, 
             * the method will return undefined.
             */
-            value:function(callback,call=true){
-                if (typeof callback === 'function') {
-                    var id = this.onsuccesspool[this.onsuccesspool.length - 1]['id'] + 1; 
-                    this.onsuccesspool.push({'id':id,'call':call,'func':callback});
-                    this.log('AJAXRequest.setOnSuccess: New callback added [id = '+id+' , call = '+call+'].','info');
-                    return id;
-                } else {
-                    this.log('AJAXRequest.setOnSuccess: Provided parameter is not a function.','error');
-                }
+            value:function(callback){
+                return this.addCallback(callback, 'success');
             },
             writable:false,
             enumerable: true
@@ -922,20 +1078,45 @@ function AJAXRequest(config={
             /**
             * Append a function to the pool of functions that will be called in case of 
             * internec connection is lost (code 0). 
-            * @param {Boolean} call If true, the method will be called. Else if false,
-            * the method will be not called.
-            * @param {Function} callback A function to call on lost connection event.
-            * @returns {undefined|Number} Returns an ID for the function. If not added, 
+            * 
+            * @param {Function|Object} callback A function to call. This also can be an object.
+            * The object can have following properties, 'callback' The function that will be executed.
+            * 'id': A unique itentifier for the callback.
+            * 'call': a boolean or function that evaluate to a boolean. Used to decide if the 
+            * callback will be executed or not. 'props' Extra properties that the developer would like
+            * to have passed in the callback. Accessed using the keyword 'this' in the body of the
+            * callback.
+            * 
+            * @returns {undefined|String|Number} Returns an ID for the function. If not added, 
             * the method will return undefined.
             */
-            value:function(callback,call=true){
-                if(typeof callback === 'function'){
-                    var id = this.onconnectionlostpool[this.onconnectionlostpool.length - 1]['id'] + 1; 
-                    this.onconnectionlostpool.push({'id':id,'call':call,'func':callback});
-                    this.log('AJAXRequest.setOnDisconnected: New callback added [id = '+id+' , call = '+call+'].','info');
-                    return id;
+            value:function(callback){
+                return this.addCallback(callback, 'connectionlost');
+            },
+            writable:false,
+            enumerable: true
+        },
+        setMethod:{
+            /**
+            * Sets the request method.
+            * @param {String} method get, post or delete. If the request method is not 
+            * supported, A warning will be shown in the console and default (GET) will 
+            * be used.
+            * @returns {undefined}
+            */
+            value:function(method){
+                if (method !== undefined && method !== null) {
+                    method = method.toUpperCase();
+                    if(method === 'GET' || method === 'POST' || method === 'DELETE' || method === 'PUT' || method === 'HEAD' || method === 'OPTIONS'){
+                        this.method = method;
+                        this.log('AJAXRequest.setMethod: Request method is set to '+method+'.','info');
+                    } else {
+                        this.log('AJAXRequest.setMethod: Null, undefined or unsupported method. GET is set as default.','warning',true);
+                        this.method = 'GET';
+                    }
                 } else {
-                    this.log('AJAXRequest.setOnDisconnected: Provided parameter is not a function.','error');
+                    this.log('AJAXRequest.setMethod: Null, undefined or unsupported method. GET is set as default.','warning',true);
+                    this.method = 'GET';
                 }
             },
             writable:false,
@@ -948,6 +1129,7 @@ function AJAXRequest(config={
             * supported, A warning will be shown in the console and default (GET) will 
             * be used.
             * @returns {undefined}
+            * @deprecated since version 2.0.0
             */
             value:function(method){
                 if (method !== undefined && method !== null) {
@@ -967,10 +1149,22 @@ function AJAXRequest(config={
             writable:false,
             enumerable: true
         },
+        getMethod:{
+            /**
+            * Returns request method.
+            * @returns {String}
+            */
+            value:function(){
+                return this.method;
+            },
+            writable:false,
+            enumerable: true
+        },
         getReqMethod:{
             /**
             * Returns request method.
             * @returns {String}
+            * @deprecated since version 2.0.0
             */
             value:function(){
                 return this.method;
@@ -1289,7 +1483,7 @@ function AJAXRequest(config={
         config.beforeAjax.forEach((callback) => {
             instance.setBeforeAjax(callback);
         });
-    } else if (typeof config.beforeAjax === 'function') {
+    } else if (typeof config.beforeAjax === 'function' || typeof config.beforeAjax === 'object') {
         instance.setBeforeAjax(config.beforeAjax);
     }
     
@@ -1297,7 +1491,7 @@ function AJAXRequest(config={
         config.onSuccess.forEach((callback) => {
             instance.setOnSuccess(callback);
         });
-    } else if (typeof config.onSuccess === 'function') {
+    } else if (typeof config.onSuccess === 'function' || typeof config.onSuccess === 'object') {
         instance.setOnSuccess(config.onSuccess);
     }
     
@@ -1305,7 +1499,7 @@ function AJAXRequest(config={
         config.onClientErr.forEach((callback) => {
             instance.setOnClientError(callback);
         });
-    } else if (typeof config.onClientErr === 'function') {
+    } else if (typeof config.onClientErr === 'function' || typeof config.onClientErr === 'object') {
         instance.setOnClientError(config.onClientErr);
     }
     
@@ -1313,7 +1507,7 @@ function AJAXRequest(config={
         config.onServerErr.forEach((callback) => {
             instance.setOnServerError(callback);
         });
-    } else if (typeof config.onServerErr === 'function') {
+    } else if (typeof config.onServerErr === 'function' || typeof config.onServerErr === 'object') {
         instance.setOnServerError(config.onServerErr);
     }
     
@@ -1321,7 +1515,7 @@ function AJAXRequest(config={
         config.onDisconnected.forEach((callback) => {
             instance.setOnDisconnected(callback);
         });
-    } else if (typeof config.onDisconnected === 'function') {
+    } else if (typeof config.onDisconnected === 'function' || typeof config.onDisconnected === 'object') {
         instance.setOnDisconnected(config.onDisconnected);
     }
     
@@ -1329,15 +1523,17 @@ function AJAXRequest(config={
         config.afterAjax.forEach((callback) => {
             instance.setAfterAjax(callback);
         });
-    } else if (typeof config.afterAjax === 'function') {
+    } else if (typeof config.afterAjax === 'function' || typeof config.afterAjax === 'object') {
         instance.setAfterAjax(config.afterAjax);
-    }
+    } 
     
     if (Array.isArray(config.onErr)) {
         config.onErr.forEach((callback) => {
             instance.setOnError(callback);
         });
-    } else if (typeof config.onErr === 'function') {
+    } else if (typeof config.onErr === 'function' || typeof config.onErr === 'object') {
         instance.setOnError(config.onErr);
     }
 }
+//Global AJAXRequest Instance
+var ajax = new AJAXRequest();
