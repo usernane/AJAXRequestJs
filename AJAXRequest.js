@@ -1096,6 +1096,32 @@ function AJAXRequest(config={
             writable:false,
             enumerable: true
         },
+        setMethod:{
+            /**
+            * Sets the request method.
+            * @param {String} method get, post or delete. If the request method is not 
+            * supported, A warning will be shown in the console and default (GET) will 
+            * be used.
+            * @returns {undefined}
+            */
+            value:function(method){
+                if (method !== undefined && method !== null) {
+                    method = method.toUpperCase();
+                    if(method === 'GET' || method === 'POST' || method === 'DELETE' || method === 'PUT' || method === 'HEAD' || method === 'OPTIONS'){
+                        this.method = method;
+                        this.log('AJAXRequest.setMethod: Request method is set to '+method+'.','info');
+                    } else {
+                        this.log('AJAXRequest.setMethod: Null, undefined or unsupported method. GET is set as default.','warning',true);
+                        this.method = 'GET';
+                    }
+                } else {
+                    this.log('AJAXRequest.setMethod: Null, undefined or unsupported method. GET is set as default.','warning',true);
+                    this.method = 'GET';
+                }
+            },
+            writable:false,
+            enumerable: true
+        },
         setReqMethod:{
             /**
             * Sets the request method.
@@ -1103,6 +1129,7 @@ function AJAXRequest(config={
             * supported, A warning will be shown in the console and default (GET) will 
             * be used.
             * @returns {undefined}
+            * @deprecated since version 2.0.0
             */
             value:function(method){
                 if (method !== undefined && method !== null) {
@@ -1122,10 +1149,22 @@ function AJAXRequest(config={
             writable:false,
             enumerable: true
         },
+        getMethod:{
+            /**
+            * Returns request method.
+            * @returns {String}
+            */
+            value:function(){
+                return this.method;
+            },
+            writable:false,
+            enumerable: true
+        },
         getReqMethod:{
             /**
             * Returns request method.
             * @returns {String}
+            * @deprecated since version 2.0.0
             */
             value:function(){
                 return this.method;
