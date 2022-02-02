@@ -1536,4 +1536,4 @@ function AJAXRequest(config={
     }
 }
 //Global AJAXRequest Instance
-var ajax = new AJAXRequest();
+const ajax = new AJAXRequest();
