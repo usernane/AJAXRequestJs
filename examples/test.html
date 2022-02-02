@@ -3,19 +3,21 @@
     <head>
         <title>TODO supply a title</title>
         <meta charset="UTF-8">
-        <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@1.x.x/AJAXRequest.js">
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@2.x.x/AJAXRequest.js">
             
         </script>
         <script>
-            window.ajax = new AJAXRequest({
-                verbose:true,
-                method:'get',
-                base:'https://api.github.com',
-                url:'repos/usernane/AJAXRequestJs',
-                afterAjax:function () {
+            ajax.verbose = true;
+            ajax.setReqMethod('get');
+            ajax.setBase('https://api.github.com');
+            ajax.setURL('repos/usernane/AJAXRequestJs');
+            ajax.setAfterAjax({
+                id:'Process After AJAX',
+                callback:function() {
                     document.getElementById('status-code-display').innerHTML = 'Status Code: '+this.status;
                     var headersList = document.getElementById('headers-display');
                     var headersKeys = Object.keys(this.responseHeaders);
+
                     headersList.innerHTML = '';
                     if (headersKeys.length === 0) {
                         headersList.innerHTML = 'NO Headers received.';
