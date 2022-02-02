@@ -38,17 +38,17 @@ A light weight JavaScript class library that can help in making AJAX requests mu
 * Automatic CSRF token extraction.
 
 ## Installation
-In order to use the library, you must first include the JavaScript file in your head tag of your web page. To have the latest v1.x.x release, include the following tag:
+In order to use the library, you must first include the JavaScript file in your head tag of your web page. To have the latest v2.x.x release, include the following tag:
 ``` html
 <head>
-  <script src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@1.x.x/AJAXRequest.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@2.x.x/AJAXRequest.js"></script>
 </head>
 ```
 It is possible to use the minified version of the libray by including the following JavaScript:
 
 ``` html
 <head>
-  <script src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@1.x.x/AJAXRequest.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@2.x.x/AJAXRequest.min.js"></script>
 </head>
 ```
 
