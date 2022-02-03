@@ -751,6 +751,15 @@ function AJAXRequest(config={
             writable:false,
             enumerable: true
         },
+        disableCallsExcept:{
+            value:function (id, call) {
+                for (var x = 0 ; x < AJAXRequest.CALLBACK_POOLS.length ; x++) {
+                    this.disableCallExcept(AJAXRequest.CALLBACK_POOLS[x], id);
+                }
+            },
+            writable:false,
+            enumerable: true
+        },
         disableCallExcept:{
             /**
             * Disable all callback functions except the one that its ID is given.
@@ -801,7 +810,9 @@ function AJAXRequest(config={
                 for (var x = 0 ; x < AJAXRequest.CALLBACK_POOLS.length ; x++) {
                     this.setCallEnabled(AJAXRequest.CALLBACK_POOLS[x], id, call);
                 }
-            }
+            },
+            writable:false,
+            enumerable: true
         },
         setCallEnabled:{
             /**
