@@ -188,11 +188,12 @@ function () {
     //An object that contains response headers. The keys of the object are headers 
     //names and the values are headers values.
     this.responseHeaders;
+    
+    //An object that holds binded object information.
+    this.props
 }
 ```
 Note that for the callbacks which are set to be executed before the AJAX request is sent to the server only the property `this.AJAXRequest` is available. The other ones will be `undefined`. For the `onErr` callbacks, there is additional property which has the name `e` that represents the thrown [`Error`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) and can be accessed in same manner.
-
-Also, the developer can bind his own custom properties to access them inside the callback. They can be binded when adding the callback.
 
 ## Types of Callbacks
 One of the features of the library is the ability to set functions to execute in specific cases. In this section, we explain the available callbacks and how to use them.
@@ -607,16 +608,36 @@ ajax.setOnServerError({
 The developer might want to access properties which are not in the scope of the function. One way to do it is to have global variables. Another way which is the recomended way is to bind the variables with properties while adding the callback and later access them.
 
 ``` javascript
-var u = 'Ibrahim'
+var obj = {username:'Ibrahim'};
+
 ajax.setOnServerError({
  id:'Update User',
- props: {
-  username:u
- }
+ props: obj
  callback:function () {
- //Will print the value of 'u' which is 'Ibrahim'.
-  console.log(this.username);
+ //Will print the value of 'obj.username' which is 'Ibrahim'.
+  console.log(this.props.username);
  }
+```
+
+If the value of the property is changed inside the callback, it will be also changed in the referenced objec.
+
+Another way to bind an object to multiple callbacks is to use the method `AJAXRequest.bind()`. The method can be used to bind an object to multipe callbacks in multiple pools or to specific callback in specific pool.
+
+``` javascript
+var o1 = {
+ name:'Hassan'
+};
+//Bind with all callbacks
+ajax.bind(o1);
+
+//Bind with any callback with ID = 'AJAX Success' on all pools.
+ajax.bind(o1, 'AJAX Success');
+
+//Bind with all callbacks on the pool 'success'.
+ajax.bind(o1, null, 'success');
+
+//Bind with all callback with ID = 'AJAX Success' on the pool 'success'.
+ajax.bind(o1, 'AJAX Success', 'success');
 ```
 
 ## Verbose Mode

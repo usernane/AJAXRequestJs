@@ -208,7 +208,7 @@ function AJAXRequest(config={
      */
     this.onconnectionlostpool = [
         {
-            id:0,
+            id:'0',
             call:true,
             props:{},
             func:function(){
@@ -221,7 +221,7 @@ function AJAXRequest(config={
      */
     this.onbeforeajaxpool = [
         {
-            id:0,
+            id:'0',
             call:true,
             props:{},
             func:function(){
@@ -235,7 +235,7 @@ function AJAXRequest(config={
      */
     this.onafterajaxpool = [
         {
-            id:0,
+            id:'0',
             call:true,
             props:{},
             func:function(){
@@ -249,7 +249,7 @@ function AJAXRequest(config={
      */
     this.onerrorpool = [
         {
-            id:0,
+            id:'0',
             call:true,
             props:{},
             func:function(){
@@ -262,7 +262,7 @@ function AJAXRequest(config={
      */
     this.onsuccesspool = [
         {
-            id:0,
+            id:'0',
             call:true,
             props:{},
             func:function(){
@@ -275,7 +275,7 @@ function AJAXRequest(config={
      */
     this.onservererrorpool = [
         {
-            id:0,
+            id:'0',
             call:true,
             props:{},
             func:function(){
@@ -288,7 +288,7 @@ function AJAXRequest(config={
      */
     this.onclienterrorpool = [
         {
-            id:0,
+            id:'0',
             call:true,
             props:{},
             func:function(){
@@ -341,7 +341,6 @@ function AJAXRequest(config={
 
                 if (canCall) {
                     inst.log('AJAXRequest: Callback '+inst.onerrorpool[i].id+' is enabled.', 'info');
-                    setCallbackProps(inst, 'error', inst.onerrorpool[i]);
                     inst.onerrorpool[i].AJAXRequest = inst;
                     inst.onerrorpool[i].e = e;
                     inst.onerrorpool[i].status = inst.status;
@@ -359,28 +358,6 @@ function AJAXRequest(config={
             }
         }
     }
-    function setCallbackProps(inst,pool_name, callback) {
-        inst.log('AJAXRequest: Setting callback "'+callback.id+'" props on the pool "'+pool_name+'"...', 'info');
-        var invalidNames = [
-            'e', 
-            'AJAXRequest', 
-            'status', 
-            'response', 
-            'xmlResponse',
-            'jsonResponse', 
-            'responseHeaders'
-        ];
-        var keys = Object.keys(callback.props);
-
-        for (var x = 0 ; x < keys.length ; x++) {
-            if (invalidNames.indexOf(keys[x]) === -1) {
-                for(var i = 0 ; i < inst['on'+pool_name+'pool'].length ; i++){
-                    inst['on'+pool_name+'pool'][i][keys[x]] = callback.props[keys[x]];
-                }
-            }
-        }
-        inst.log('AJAXRequest: Successfully finished setting callback "'+callback.id+'" props.', 'info');
-    }
     function setProbsAfterAjax(inst, pool_name) {
         try{
             var jsonResponse = JSON.parse(inst.responseText);
@@ -390,8 +367,6 @@ function AJAXRequest(config={
             var jsonResponse = null;
         }
         for(var i = 0 ; i < inst['on'+pool_name+'pool'].length ; i++){
-
-            setCallbackProps(inst, pool_name, inst['on'+pool_name+'pool'][i]);
 
             inst['on'+pool_name+'pool'][i].AJAXRequest = inst;
             inst['on'+pool_name+'pool'][i].status = inst.status;
@@ -416,8 +391,6 @@ function AJAXRequest(config={
             }
         }
         for(var i = 0 ; i < inst.onafterajaxpool.length ; i++){
-
-            setCallbackProps(inst, 'afterajax', inst.onafterajaxpool[i]);
 
             var headers = getResponseHeadersObj(inst);
             inst.onafterajaxpool[i].AJAXRequest = inst;
@@ -508,6 +481,98 @@ function AJAXRequest(config={
              */
             value:function () {
                 return this.base;
+            },
+            writable:false,
+            enumerable: true
+        },
+        bind: {
+            /**
+             * Binds a variable to a callback.
+             * 
+             * Note that this method will override any existing bindings and bind with the
+             * new provided object.
+             * 
+             * @param {Object} obj An object that contains the variables that will be binded.
+             * 
+             * @param {String|null} callbackId Optional callback ID. If Specified, the variable will
+             * only binded with callbacks having provided ID.
+             * 
+             * @param {String|null} poolName An optional pool name. If specified, the variable will
+             * only be binded to the callbacks in the given pool. Possible values for the parameter
+             * must be taken from the array AJAXRequest.CALLBACK_POOLS.
+             * 
+             * @returns {undefined}
+             */
+            value: function (obj ,callbackId = null, poolName = null) {
+                if (obj === null || obj === undefined || typeof obj !== 'object') {
+                    this.log('AJAXRequest.bind: Provided object is invalid.', 'warning');
+                    return;
+                }
+
+                this.log('AJAXRequest.bind: Callback ID = "'+callbackId+'"', 'info');
+                this.log('AJAXRequest.bind: Pool = "'+poolName+'"', 'info');
+
+                if (callbackId === null || callbackId === undefined) {
+                    this.log('AJAXRequest.bind: The binding will be for all callbacks.', 'warning');
+                    var cId = 'ALL';
+                } else {
+                    var cId = callbackId+'';
+                    this.log('AJAXRequest.bind: The binding will be for callbacks with given ID.', 'info');
+                }
+
+                if (poolName === null || poolName === undefined) {
+                    this.log('AJAXRequest.bind: The binding will be for all pools.', 'warning');
+                    var pName = 'ALL';
+                } else {
+                    if (AJAXRequest.CALLBACK_POOLS.indexOf(poolName) === -1) {
+                        this.log('AJAXRequest.bind: No such pool: ""'+poolName+'.', 'warning');
+                        return;
+                    }
+                    this.log('AJAXRequest.bind: The binding will be for callbacks in the specified pool.', 'info');
+                    var pName = poolName;
+                }
+
+                if (pName === 'ALL') {
+                    for (var x = 0 ; x < AJAXRequest.CALLBACK_POOLS.length ; x++) {
+                        var p = 'on'+AJAXRequest.CALLBACK_POOLS[x]+'pool';
+
+                        if (cId === 'ALL') {
+                            for (var y = 0 ; y < this[p].length ; y++) {
+                                this[p][y].props = obj;
+                                this.log('AJAXRequest.bind: Binded property to callback "'+this[p][y].id+'" on the pool: "'+p+'".', 'info');
+                            }
+                        } else {
+                            var callBack = this.getCallBack(AJAXRequest.CALLBACK_POOLS[x], cId);
+
+                            if (callBack !== undefined) {
+                                callBack.props = obj;
+
+                                this.log('AJAXRequest.bind: Binded property to callback "'+callBack.id+'" on the pool: "'+p+'".', 'info');
+                            } else {
+                                this.log('AJAXRequest.bind: No callback with ID "'+cId+'" found on the pool on the pool: "'+p+'".', 'warning');
+                            }
+                        }
+                    }
+                } else {
+                    var p = 'on'+pName+'pool';
+
+                    if (cId === 'ALL') {
+                        for (var y = 0 ; y < this[p].length ; y++) {
+                            this[p][y].prop = obj;
+
+                            this.log('AJAXRequest.bind: Binded property to callback "'+this[p][y].id+'" on the pool: "'+pName+'".', 'info');
+                        }
+                    } else {
+                        var callBack = this.getCallBack(pName, cId);
+
+                        if (callBack !== undefined) {
+                            callBack.props = obj;
+                            this.log('AJAXRequest.bind: Binded property to callback "'+callBack.id+'" on the pool: "'+pName+'".', 'info');
+                        } else {
+                            this.log('AJAXRequest.bind: No callback with ID "'+cId+'" found on the pool on the pool: "'+pName+'".', 'warning');
+                        }
+                    }
+                }
             },
             writable:false,
             enumerable: true
@@ -635,7 +700,7 @@ function AJAXRequest(config={
                     pool_name = 'on'+pool_name+'pool';
 
                     var callType = typeof callback;
-                    var id = this[pool_name].length + 1; 
+                    var id = this[pool_name].length + ''; 
 
                     if (callType === 'function') {
                         this.log('AJAXRequest.addCallback: Callback given as function.','info');
@@ -659,8 +724,8 @@ function AJAXRequest(config={
                                 toAdd.id = id;
                             } else {
                                 this.log('AJAXRequest.addCallback: Property "id" is set.','info');
-                                toAdd.id = callback.id;
-                                id = callback.id;
+                                toAdd.id = callback.id+'';
+                                id = toAdd.id;
                             }
 
                             if (typeof callback.props === 'object') {
@@ -722,11 +787,13 @@ function AJAXRequest(config={
             /**
             * Removes a callback function from a specific pool given its ID.
             * @param {String} pool_name The name of the pool. It should be one of the 
-            * values in the array AJAXRequestCALLBACK_POOLS.
-            * @param {Number|String} id The ID of the callback function.
+            * values in the array AJAXRequest.CALLBACK_POOLS.
+            * @param {String} id The ID of the callback function.
             * @returns {undefined}
             */
-            value:function(pool_name,id){
+            value:function(pool_name, id){
+                id = id+'';
+
                 if (pool_name !== undefined && pool_name !== null) {
                     if (typeof pool_name === 'string'){
                         pool_name = pool_name.toLowerCase();
@@ -764,12 +831,14 @@ function AJAXRequest(config={
             /**
             * Disable all callback functions except the one that its ID is given.
             * @param {String} pool_name The name of the pool. It should be a value from 
-            * the array AJAXRequestCALLBACK_POOLS.
-            * @param {Number} id The ID of the function that was provided when the function 
+            * the array AJAXRequest.CALLBACK_POOLS.
+            * @param {String} id The ID of the function that was provided when the function 
             * was added to the pool. If the ID does not exist, All callbacks will be disabled.
             * @returns {undefined}
             */
-            value:function(pool_name,id=-1){
+            value:function(pool_name, id=-1){
+                id = id+'';
+
                 if (pool_name !== undefined && pool_name !== null) {
                     if (typeof pool_name === 'string') {
                         pool_name = pool_name.toLowerCase();
@@ -820,13 +889,14 @@ function AJAXRequest(config={
             * @param {String} pool_name The name of the pool. It must be one of the 
             * values in the aray AJAXRequest.CALLBACK_POOLS.
             * 
-            * @param {Number} id The ID of the callback. It is given when the callback 
+            * @param {String} id The ID of the callback. It is given when the callback 
             * was added.
             * 
             * @param {Boolean} call If set to true, the function will be called. Else 
             * if it is set to false, it will be not called.
             */
-            value:function(pool_name,id,call){
+            value:function(pool_name, id, call){
+                id = id + ''
                 if (pool_name !== undefined && pool_name !== null) {
                     if (typeof pool_name === 'string') {
                         pool_name = pool_name.toLowerCase();
@@ -859,12 +929,13 @@ function AJAXRequest(config={
             * Returns an object that contains the information of a callback function. 
             * @param {type} pool_name The name of the pool. It must be in the array 
             * AJAXRequest.CALLBACK_POOLS.
-            * @param {Number} id The ID of the callback.
+            * @param {String} id The ID of the callback.
             * @returns {Object|undefined} Returns an object that contains the 
             * information of the callback. If it is not found, or the pool name is invalid, 
             * the method will show a warning in the console and returns undefined.
             */
-            value:function(pool_name,id){
+            value:function(pool_name, id){
+                id = id+'';
                 if (pool_name !== undefined && pool_name !== null) {
                     if (typeof pool_name === 'string') {
                         pool_name = pool_name.toLowerCase();
