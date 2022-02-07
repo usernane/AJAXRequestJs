@@ -35,9 +35,9 @@
     </head>
     <body>
         <div>TODO: Test AJAXRequest.js</div>
-        <div>An object of the class is created and can be accessed 
+        <div>A global object of the class is created and can be accessed 
         as follows:
-        <code>window.ajax</code>
+        <code>ajax</code>
         <p>
             This page can be used to test the functionality of the library. 
             Simply, select request method, specify the URL and hit 'Send'. 
@@ -47,7 +47,7 @@
         </div>
         <form id="file-upload-form" onsubmit="return false">
             <label >Request Method:</label>
-            <select onchange='window.ajax.setReqMethod(this.value)' id='request-method-input'>
+            <select onchange='ajax.setReqMethod(this.value)' id='request-method-input'>
                 <option selected value='GET'>Get</option>
                 <option value='POST'>Post</option>
                 <option value='DELETE'>Delete</option>
@@ -55,11 +55,13 @@
                 <option value='HEAD'>Head</option>
                 <option value='DELETE'>Delete</option>
             </select><br/>
-            <input placeholder="BASE URL" style="width: 400px" value='https://api.github.com' type='url' id='url' oninput='window.ajax.setBase(this.value)'>
+            <input type="checkbox" checked oninput="ajax.setCallsEnabled('Process After AJAX', this.checked)">
+            <label>Enable Processing Request</label><br>
+            <input placeholder="BASE URL" style="width: 400px" value='https://api.github.com' type='url' id='url' oninput='ajax.setBase(this.value)'>
             <br/>
-            <input placeholder="REQUEST URL" style="width: 400px" value='repos/usernane/AJAXRequestJs' type='url' id='url' oninput='window.ajax.setURL(this.value)'>
+            <input placeholder="REQUEST URL" style="width: 400px" value='repos/usernane/AJAXRequestJs' type='url' id='url' oninput='ajax.setURL(this.value)'>
             <br/>
-            <input value="Send" type="submit" onclick="window.ajax.send()">
+            <input value="Send" type="submit" onclick="ajax.send()">
         </form>
         <p id='status-code-display'>Status Code: N/A</p>
         <p>Response Headers:</p>
