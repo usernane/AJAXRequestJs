@@ -21,8 +21,13 @@ A light weight JavaScript class library that can help in making AJAX requests mu
 * <a href="#sending-parameters-to-server">Sending Parameters to Server</a>
 * <a href="#adding-custom-headers">Adding Custom Headers</a>
 * <a href="#csrf-token">CSRF Token</a>
+* <a href="#customizing-callback-options">Customizing Callback Options</a>
+  * <a href="#custom-id">Custom ID</a>
+  * <a href="#enabling-or-disabling">Enabling or Disabling</a>
+  * <a href="#binding-properties">Binding Properties</a>
+* <a href="#verbose-mode">Verbose Mode</a>
 * <a href="#api-reference">API Docs</a>
-* <a href="usage-examples">Usage Examples</a>
+* <a href="#usage-examples">Usage Examples</a>
 * <a href="#license">License</a>
 
 ## Main features:
@@ -33,17 +38,17 @@ A light weight JavaScript class library that can help in making AJAX requests mu
 * Automatic CSRF token extraction.
 
 ## Installation
-In order to use the library, you must first include the JavaScript file in your head tag of your web page. To have the latest v1.x.x release, include the following tag:
+In order to use the library, you must first include the JavaScript file in your head tag of your web page. To have the latest v2.x.x release, include the following tag:
 ``` html
 <head>
-  <script src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@1.x.x/AJAXRequest.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@2.x.x/AJAXRequest.js"></script>
 </head>
 ```
 It is possible to use the minified version of the libray by including the following JavaScript:
 
 ``` html
 <head>
-  <script src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@1.x.x/AJAXRequest.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@2.x.x/AJAXRequest.min.js"></script>
 </head>
 ```
 
@@ -51,30 +56,27 @@ It is possible to use the minified version of the libray by including the follow
 ## Basic Usage
 The following code sample shows the most basic usage of the library.
 ``` javascript
- var ajax = new AJAXRequest({
+// Use the global instance 'ajax'. Another option is to create new instance of the class [`AJAXRequest`](https://github.com/usernane/AJAXRequestJs/masterAJAXRequest.js)
+ajax.setMethod('get');
+
+//The URL that will receive the request.
+ajax.setURL('https://api.github.com/repos/usernane/AJAXRequestJs');
+
+//enable verbose mode for development to get more informative messages in the console
+ajax.verbos = true;
+
+//Adds one call back to execute on success. We can add more.
+ajax.setOnSuccess(function(){
+    //The response might be stored as JSON object
+    if(this.jsonResponse){
+        console.log(this.jsonResponse);
+    } else {
+        //Or, it can be plain
+        console.log(this.response);
+    }
+});
     
-    //Request method of the request
-    method:'get',
-    
-    //The URL that will receive the request.
-    url:'https://api.github.com/repos/usernane/AJAXRequestJs',
-    
-    //enable verbose mode for development to get more informative messages in the console
-    verbose:true
-    
-    //Adds one call back to execute on success. We can add more.
-    onSuccess:[
-        function(){
-            //The response might be stored as JSON object
-            if(this.jsonResponse){
-                console.log(this.jsonResponse);
-            } else {
-                //Or, it can be plain
-                console.log(this.response);
-            }
-        }
-    ]
-}).send();
+ajax.send();
 
 ```
 ## Configuration
@@ -190,33 +192,39 @@ function () {
 ```
 Note that for the callbacks which are set to be executed before the AJAX request is sent to the server only the property `this.AJAXRequest` is available. The other ones will be `undefined`. For the `onErr` callbacks, there is additional property which has the name `e` that represents the thrown [`Error`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) and can be accessed in same manner.
 
+Also, the developer can bind his own custom properties to access them inside the callback. They can be binded when adding the callback.
+
 ## Types of Callbacks
 One of the features of the library is the ability to set functions to execute in specific cases. In this section, we explain the available callbacks and how to use them.
 
 ### Before AJAX
-Usually, before sending AJAX request to the server, checking for user inputs validation happens in this callback. A callback of this type can be set using the method `AJAXRequest.setBeforeAjax()`. Also, it can be part of the configuration that is used to initialize the `AJAXRequest` instance.
+Usually, before sending AJAX request to the server, checking for user inputs validation happens in this callback. A callback of this type can be set using the method `AJAXRequest.setBeforeAjax()`. Also, it can be part of the configuration that is used to initialize the `AJAXRequest` instance. This type of callback works as an interceptor. 
+
 ```  javascript
-var ajax = new AJAXRequest({
-    method:'get',
-    base:'https://api.github.com/repos',
-    url:'usernane/AJAXRequestJs',
-    
-    beforeAjax:function(){
-          // Collect user inputs, validate them, etc...
-          var firstName = document.getElementById('name-input').value.trim();
-          if (firstName.length === 0) {
-              this.AJAXRequest.setEnabled(false);
-              console.log('Missing name.');
-          } else {
-              this.AJAXRequest.setEnabled(true);
-          }
-          this.AJAXRequest.setParams({
-              name:firstName
-          });
-      }
+ajax.setMethod('get');
+ajax.setBase('https://api.github.com/repo');
+ajax.setURL('url:'usernane/AJAXRequestJs');
+
+//A call back can be added as an object or a function.
+//Add as an object for customizing options.
+ajax.setBeforeAjax({
+  id:'Update Name',
+  callback:function(){
+       // Collect user inputs, validate them, etc...
+       var firstName = document.getElementById('name-input').value.trim();
+       if (firstName.length === 0) {
+           this.AJAXRequest.setEnabled(false);
+           console.log('Missing name.');
+       } else {
+           this.AJAXRequest.setEnabled(true);
+       }
+       this.AJAXRequest.setParams({
+           name:firstName
+       });
+   }
 });
 
-// Note that the callback will not override the existing one.
+//Note that the callback will not override the existing one.
 //It will be added beside the existng one.
 var id = ajax.setBeforeAjax(function() {
     // Do something else
@@ -225,7 +233,8 @@ var id = ajax.setBeforeAjax(function() {
 ### After AJAX
 This type of callback will be executed after AJAX response is received. It will get executed regradless of response code of the server. This acts like the `finally` in a `try-catch` statement. If the developer would like to handle server response in case of error and success, he can use this callback.
 ```  javascript
-var ajax = new AJAXRequest({
+//Creating new instance instead of using global 'ajax' constant.
+var ajaxObj = new AJAXRequest({
     method:'get',
     base:'https://api.github.com/repos',
     url:'usernane/AJAXRequestJs',
@@ -240,7 +249,7 @@ var ajax = new AJAXRequest({
      }
 });
 
-var id = ajax.setAfterAjax(function() {
+var id = ajaxObj.setAfterAjax(function() {
     // Do something else
 });
 ```
@@ -248,7 +257,7 @@ var id = ajax.setAfterAjax(function() {
 ### On Success
 The on success callback is executed when the server sends a 2xx or 3xx response code.
 ```  javascript
-var ajax = new AJAXRequest({
+var ajaxObj = new AJAXRequest({
     method:'get',
     url:'https://api.github.com/repos/usernane/AJAXRequestJs',
     
@@ -267,7 +276,7 @@ var ajax = new AJAXRequest({
      }
 });
 
-var id = ajax.setOnSuccess(function() {
+var id = ajaxObj.setOnSuccess(function() {
     // Do something else
 });
 ```
@@ -275,7 +284,7 @@ var id = ajax.setOnSuccess(function() {
 The on client callback is executed when the server sends a 4xx response code.
 
 ``` javascript
-var ajax = new AJAXRequest({
+var ajaxObj = new AJAXRequest({
     method:'get',
     url:'https://api.github.com/repos/usernane/AJAXRequestJs',
     
@@ -301,7 +310,7 @@ var id = ajax.setOnClientError(function() {
 ### On Server Error
 The on server error callback is executed when the server sends a 5xx response code. 
 ``` javascript
-var ajax = new AJAXRequest({
+var ajaxObj = new AJAXRequest({
     method:'get',
     url:'https://api.github.com/repos/usernane/AJAXRequestJs',
     
@@ -322,7 +331,7 @@ var ajax = new AJAXRequest({
     ]
 });
 
-var id = ajax.setOnServerError(function() {
+var id = ajaxObj.setOnServerError(function() {
     // Do something else
 });
 ```
@@ -330,7 +339,7 @@ var id = ajax.setOnServerError(function() {
 ### On Disconnected
 The on disconnected callback is executed when the class detects that there is no internet connection is available. 
 ``` javascript
-var ajax = new AJAXRequest({
+var ajaxObj = new AJAXRequest({
     method:'get',
     url:'https://api.github.com/repos/usernane/AJAXRequestJs',
     
@@ -342,7 +351,7 @@ var ajax = new AJAXRequest({
     ]
 });
 
-var id = ajax.setOnDisconnected(function() {
+var id = ajaxObj.setOnDisconnected(function() {
     // Do something else
 });
 ```
@@ -351,7 +360,7 @@ var id = ajax.setOnDisconnected(function() {
 This type of callback will be executed only when an exception is thrown by any callback which is included in the `beforeAjax`, `afterAjax`, `onSuccess`, `onClientErr`, `onServerErr` or `onDisconnected`. Think of it as the `catch` block of the AJAX request.
 
 ```  javascript
-var ajax = new AJAXRequest({
+var ajaxObj = new AJAXRequest({
     method:'get',
     url:'https://api.github.com/repos/usernane/AJAXRequestJs',
     
@@ -361,7 +370,7 @@ var ajax = new AJAXRequest({
      }
 });
 
-var id = ajax.setOnError(function() {
+var id = ajaxObj.setOnError(function() {
     // Do something else
 });
 ```
@@ -394,7 +403,7 @@ The following sample code shows how to send parameters to the server as an objec
 ### As an Object
 The following sample code shows how to send parameters to the server as a JavaScript object. This time, we are using the methods of the class `AJAXRequest` instead of using the configuration object.
 ``` javascript
- var ajax = new AJAXRequest({
+ var ajaxObj = new AJAXRequest({
     method:'get',
     url:'https://packagist.org/search.json'
 });
@@ -404,8 +413,8 @@ var searchString = 'webfiori';
 var seachObj = {
     q:searchString
 };
-ajax.setParams(seachObj);
-ajax.setOnSuccess(function(){
+ajaxObj.setParams(seachObj);
+ajaxObj.setOnSuccess(function(){
     if (this.jsonResponse) {
         console.warn('Printing Search Results:');
         for(var x = 0 ; x < this.jsonResponse.results.length ; x++) {
@@ -420,7 +429,7 @@ ajax.setOnSuccess(function(){
         console.warn('No JSON data was received.');
     }
 });
-ajax.send();
+ajaxObj.send();
 ```
 ### As a `FormData` Object
 `FormData` is usually used to send data to the server using `POST` or `PUT` to modify something in the database. Also, it can be used to upload files to the server. Simply, we create the object `FormData`, add the attributes and use the method `AJAXRequest.setParams()`. This time, we collect user input on a callback which is executed before sending the request. Let's assume that we have the following HTML code.
@@ -439,7 +448,7 @@ ajax.send();
 The following JavasScript code can be used to handel the search action.
 
 ``` javascript
-window.ajax = new AJAXRequest({
+var ajaxObj = new AJAXRequest({
     url:'https://example.com/search',
     beforeAjax:[
         function () {
@@ -464,7 +473,7 @@ window.ajax = new AJAXRequest({
 ## Adding Custom Headers
 It is possible to add custom headers to the request in two ways. One way is to use the configuration variable `headers` and the second one is to use the method `AJAXRequest.addHeader()`. The following example shows how to add headers using first way.
 ``` javascript
-var ajax = new AJAXRequest({
+var ajaxObj = new AJAXRequest({
     url:'https://example.com/api',
     method:'post',
     headers:{
@@ -483,7 +492,7 @@ var ajax = new AJAXRequest({
 The next example shows how to use second way.
 
 ``` javascript
-var ajax = new AJAXRequest({
+var ajaxObj = new AJAXRequest({
     url:'https://example.com/api',
     method:'post',
     onSuccess:[
@@ -492,9 +501,9 @@ var ajax = new AJAXRequest({
         }
     ]
 });
-ajax.addHeader('custom-header-1','Header value');
-ajax.addHeader('token','Some token');
-ajax.send();
+ajaxObj.addHeader('custom-header-1','Header value');
+ajaxObj.addHeader('token','Some token');
+ajaxObj.send();
 ```
 
 ## CSRF Token
@@ -503,6 +512,123 @@ The library can extract CSRF token from the DOM and send it with request headers
 * As an input element with `name="csrf-token` and `value="the_token"`.
 * As a `window.csrfToken` variable. 
 If one of the 3 is met, the token will be sent to the server in the headers. The name of the header will be `X-CSRF-TOKEN`. Note that the token must be created and set by the server. Also, note that it will be only sent with unsafe request methods (`PUT`,`POST` and `DELETE`).
+
+## Customizing Callback Options
+
+When adding new callback, it can be added as a function or as an object. The later way can be used to customize callback options and how it behave. When adding a callback as an object, the object can have following properties:
+
+``` javascript
+{
+ //An ID for the callback.
+ id:'My Callback',
+ 
+ //A boolean or a function that evaluate to true. Used to decide if the callback will be executed or not.
+ call:true,
+ 
+ //An optional object that holds properties at which they can be accessed withen the callback
+ props:{}
+ 
+ //The callback function
+ callback:function
+}
+``` 
+
+### Custom ID
+The ID is used to distinguish callbacks from each other in one pool. This means it is not possible to have two callbacks with same IDs set for a case such as `on-success`. The property that is used to set custom ID has the name `id`. 
+
+```
+// This is not allowed.
+ajax.setOnSuccess({
+ id:'Update User',
+ callback:function () {
+  //...
+ }
+});
+ajax.setOnSuccess({
+ id:'Update User',
+ callback:function () {
+  //...
+ }
+});
+```
+
+On the other hand, it is possible to have two callbacks in two pools with same ID. This can help in grouping callbacks in different pools and enable or disable them using one ID.
+
+``` javascript
+This is allowed.
+
+ajax.setOnSuccess({
+ id:'Update User',
+ callback:function () {
+  //...
+ }
+});
+ajax.setOnClientError({
+ id:'Update User',
+ callback:function () {
+  //...
+ }
+});
+ajax.setOnServerError({
+ id:'Update User',
+ callback:function () {
+  //...
+ }
+});
+
+// Now can enable or disable them in one batch
+ajax.setCallsEnabled('Update User', false);
+```
+
+### Enabling or Disabling
+
+One feature that the developer can use is the ability to disable or enable callback based on function expression. If the function evaluate to true, then the callback will be executed. Other than that, it will be skipped.
+
+The property that is used to set if the callback is enabled or disabled has the name `call`.
+
+``` javascript
+ajax.setOnServerError({
+ id:'Update User',
+ call:function() {
+  if (this.status === 505) {
+   return true;
+  }
+  return false;
+ },
+ callback:function () {
+  //...
+ }
+});
+
+```
+
+### Binding Properties 
+
+The developer might want to access properties which are not in the scope of the function. One way to do it is to have global variables. Another way which is the recomended way is to bind the variables with properties while adding the callback and later access them.
+
+``` javascript
+var u = 'Ibrahim'
+ajax.setOnServerError({
+ id:'Update User',
+ props: {
+  username:u
+ }
+ callback:function () {
+ //Will print the value of 'u' which is 'Ibrahim'.
+  console.log(this.username);
+ }
+```
+
+## Verbose Mode
+Verbose mode is used in development. It shows more informative messages in the console regarding the execution. To enable or disable verbose mode, the developer must change the value of the property `verbose` of the instance as follows:
+
+``` javascript
+// Enabled
+ajax.verbose = true;
+
+// Disabled
+ajax.verbose = false;
+```
 
 ## API Reference
 If you would like to read the API reference of the library, please check <a href="https://github.com/usernane/AJAXRequestJs/blob/master/docs/README.md">here</a>.
