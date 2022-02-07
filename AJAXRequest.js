@@ -471,6 +471,50 @@ function AJAXRequest(config={
             writable:false,
             enumerable: true
         },
+        getCallbacksIDs: {
+            /**
+             * Returns the IDs of all added callbacks.
+             * 
+             * @param {String} poolName If specified, only the IDs of callbacks in the selected pool will be
+             * returned.
+             * 
+             * @returns {Object|Array} If the pool name is not provided, the method will return an object. The
+             * properties of the object are pools names and the value of each property is an array that
+             * contains the IDs of callbacks in the pool. If pool name is given, the method will return an
+             * array that contains the IDs of callbacks in the specified pool.
+             */
+            value: function (poolName = null) {
+                var retVal = {};
+
+                if (AJAXRequest.CALLBACK_POOLS.indexOf(poolName) !== -1) {
+                    retVal = [];
+
+                    var p = 'on'+poolName+'pool';
+                    for(var y = 0 ; y < this[p].length ; y++) {
+                        retVal.push(this[p][y].id);
+                    }
+
+                    return retVal;
+                } else if (poolName === null) {
+                    for (var x = 0 ; x < AJAXRequest.CALLBACK_POOLS.length ; x++) {
+                        var poolName = AJAXRequest.CALLBACK_POOLS[x];
+                        if (retVal[poolName] === undefined) {
+                            retVal[poolName] = [];
+                        }
+                        var p = 'on'+poolName+'pool';
+    
+                        for(var y = 0 ; y < this[p].length ; y++) {
+                            retVal[poolName].push(this[p][y].id);
+                        }
+                    }
+                }
+                
+
+                return retVal
+            },
+            writable:false,
+            enumerable: true
+        },
         getBase:{
             /**
              * Returns the value of the base URL which is used to send AJAX requests.
@@ -689,7 +733,7 @@ function AJAXRequest(config={
             * @param {String} poolName The name of the pool at which the callback will be added to.
             * Must be a value from the array AJAXRequest.CALLBACK_POOLS.
             * 
-            * @returns {undefined|String|Number} Returns an ID for the function. If not added, 
+            * @returns {undefined|String} Returns an ID for the function. If not added, 
             * the method will return undefined.
             */
             value:function(callback, poolName) {
@@ -697,15 +741,15 @@ function AJAXRequest(config={
                 this.log('AJAXRequest.addCallback: Adding new callback to the pool "'+pool_name+'"...','info');
 
                 if (AJAXRequest.CALLBACK_POOLS.indexOf(pool_name) !== -1) {
-                    pool_name = 'on'+pool_name+'pool';
+                    var p = 'on'+pool_name+'pool';
 
                     var callType = typeof callback;
-                    var id = this[pool_name].length + ''; 
+                    var id = this[p].length + ''; 
 
                     if (callType === 'function') {
                         this.log('AJAXRequest.addCallback: Callback given as function.','info');
                         
-                        this[pool_name].push({id:id,call:true,func:callback, props:{}});
+                        this[p].push({id:id,call:true,func:callback, props:{}});
                         this.log('AJAXRequest.addCallback: New callback added [id = "'+id+'"].','info');
                     
                         return id;
@@ -725,6 +769,10 @@ function AJAXRequest(config={
                             } else {
                                 this.log('AJAXRequest.addCallback: Property "id" is set.','info');
                                 toAdd.id = callback.id+'';
+                                if (this.getCallbacksIDs(pool_name).indexOf(toAdd.id) !== -1) {
+                                    this.log('AJAXRequest.addCallback: Can\'t Add callback. A callback with same ID was already added.','warning', true);
+                                    return;
+                                }
                                 id = toAdd.id;
                             }
 
@@ -747,7 +795,7 @@ function AJAXRequest(config={
                                 toAdd.call = true;
                             }
 
-                            this[pool_name].push(toAdd);
+                            this[p].push(toAdd);
                             this.log('AJAXRequest.addCallback: New callback added [id = "'+toAdd.id+'"].','info');
                         } else {
                             this.log('AJAXRequest.addCallback: Property "callback" is not set or invalid. Callback not added.','warning', true);
