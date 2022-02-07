@@ -188,11 +188,12 @@ function () {
     //An object that contains response headers. The keys of the object are headers 
     //names and the values are headers values.
     this.responseHeaders;
+    
+    //An object that holds binded object information.
+    this.props
 }
 ```
 Note that for the callbacks which are set to be executed before the AJAX request is sent to the server only the property `this.AJAXRequest` is available. The other ones will be `undefined`. For the `onErr` callbacks, there is additional property which has the name `e` that represents the thrown [`Error`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) and can be accessed in same manner.
-
-Also, the developer can bind his own custom properties to access them inside the callback. They can be binded when adding the callback.
 
 ## Types of Callbacks
 One of the features of the library is the ability to set functions to execute in specific cases. In this section, we explain the available callbacks and how to use them.
