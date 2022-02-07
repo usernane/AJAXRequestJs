@@ -512,6 +512,98 @@ function AJAXRequest(config={
             writable:false,
             enumerable: true
         },
+        bind: {
+            /**
+             * Binds a variable to a callback.
+             * 
+             * @param {String} name The name of the property. Used to access the value of the property
+             * in callback using the keyword 'this'.
+             * 
+             * @param {Mixed} varToBind The variable that will be binded.
+             * 
+             * @param {String|null} callbackId Optional callback ID. If Specified, the variable will
+             * only binded with callbacks having provided ID.
+             * 
+             * @param {String|null} poolName An optional pool name. If specified, the variable will
+             * only be binded to the callbacks in the given pool. Possible values for the parameter
+             * must be taken from the array AJAXRequestCALLBACK_POOLS.
+             * 
+             * @returns {undefined}
+             */
+            value: function (name, varToBind ,callbackId = null, poolName = null) {
+                if (name === null || name === undefined) {
+                    this.log('AJAXRequest.bind: Variable name is null or undefined.', 'warning');
+                    return;
+                }
+                var acName = name.trim();
+
+                if (acName.length === 0) {
+                    this.log('AJAXRequest.bind: Variable name is empty string.', 'warning');
+                }
+
+                this.log('AJAXRequest.bind: Callback ID = "'+callbackId+'"', 'info');
+
+                if (callbackId === null || callbackId === undefined) {
+                    this.log('AJAXRequest.bind: The binding will be for all callbacks.', 'warning');
+                    var cId = 'ALL';
+                } else {
+                    var cId = callbackId;
+                    this.log('AJAXRequest.bind: The binding will be for callbacks with given ID.', 'info');
+                }
+
+                if (poolName === null || poolName === undefined) {
+                    this.log('AJAXRequest.bind: The binding will be for all pools.', 'warning');
+                    var pName = 'ALL';
+                } else {
+                    if (AJAXRequest.CALLBACK_POOLS.indexOf(poolName) === -1) {
+                        this.log('AJAXRequest.bind: No such pool: ""'+poolName+'.', 'warning');
+                        return;
+                    }
+                    this.log('AJAXRequest.bind: The binding will be for callbacks in the specified pool.', 'info');
+                    var pName = poolName;
+                }
+
+                if (pName === 'ALL') {
+                    for (var x = 0 ; x < AJAXRequest.CALLBACK_POOLS.length ; x++) {
+                        var p = 'on'+AJAXRequest.CALLBACK_POOLS[x]+'pool';
+
+                        if (cId === 'ALL') {
+                            for (var y = 0 ; y < this[p].length ; x++) {
+                                this[p][y].props[acName] = varToBind;
+                                this.log('AJAXRequest.bind: Binded property to callback "'+this[p][y].id+'" on the pool: ""'+p+'.', 'warning');
+                            }
+                        } else {
+                            var callBack = this.getCallBack(p, cId);
+
+                            if (callBack !== undefined) {
+                                callBack.props[acName] = varToBind;
+                                this.log('AJAXRequest.bind: Binded property to callback "'+callBack.id+'" on the pool: ""'+p+'.', 'warning');
+                            } else {
+                                this.log('AJAXRequest.bind: No callback with ID "'+cId+'" found on the pool on the pool: ""'+p+'.', 'warning');
+                            }
+                        }
+                    }
+                } else {
+                    if (cId === 'ALL') {
+                        for (var y = 0 ; y < this[pName].length ; x++) {
+                            this[pName][y].props[acName] = varToBind;
+                            this.log('AJAXRequest.bind: Binded property to callback "'+this[pName][y].id+'" on the pool: ""'+pName+'.', 'warning');
+                        }
+                    } else {
+                        var callBack = this.getCallBack(pName, cId);
+
+                        if (callBack !== undefined) {
+                            callBack.props[acName] = varToBind;
+                            this.log('AJAXRequest.bind: Binded property to callback "'+callBack.id+'" on the pool: ""'+pName+'.', 'warning');
+                        } else {
+                            this.log('AJAXRequest.bind: No callback with ID "'+cId+'" found on the pool on the pool: ""'+pName+'.', 'warning');
+                        }
+                    }
+                }
+            },
+            writable:false,
+            enumerable: true
+        },
         setBase:{
             /**
              * Updates the value of the base URL which is used to send AJAX requests.
