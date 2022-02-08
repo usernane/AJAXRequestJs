@@ -233,7 +233,7 @@ var id = ajax.setBeforeAjax(function() {
 ```
 ### After AJAX
 This type of callback will be executed after AJAX response is received. It will get executed regradless of response code of the server. This acts like the `finally` in a `try-catch` statement. If the developer would like to handle server response in case of error and success, he can use this callback.
-```  javascript
+``` javascript
 //Creating new instance instead of using global 'ajax' constant.
 var ajaxObj = new AJAXRequest({
     method:'get',
@@ -257,7 +257,7 @@ var id = ajaxObj.setAfterAjax(function() {
 
 ### On Success
 The on success callback is executed when the server sends a 2xx or 3xx response code.
-```  javascript
+``` javascript
 var ajaxObj = new AJAXRequest({
     method:'get',
     url:'https://api.github.com/repos/usernane/AJAXRequestJs',
@@ -360,7 +360,7 @@ var id = ajaxObj.setOnDisconnected(function() {
 ### On Error
 This type of callback will be executed only when an exception is thrown by any callback which is included in the `beforeAjax`, `afterAjax`, `onSuccess`, `onClientErr`, `onServerErr` or `onDisconnected`. Think of it as the `catch` block of the AJAX request.
 
-```  javascript
+``` javascript
 var ajaxObj = new AJAXRequest({
     method:'get',
     url:'https://api.github.com/repos/usernane/AJAXRequestJs',
@@ -537,8 +537,9 @@ When adding new callback, it can be added as a function or as an object. The lat
 ### Custom ID
 The ID is used to distinguish callbacks from each other in one pool. This means it is not possible to have two callbacks with same IDs set for a case such as `on-success`. The property that is used to set custom ID has the name `id`. 
 
-```
-// This is not allowed.
+
+``` javascript
+// This is not allowed. The second callback will not be added since one with same ID was added.
 ajax.setOnSuccess({
  id:'Update User',
  callback:function () {
@@ -556,7 +557,7 @@ ajax.setOnSuccess({
 On the other hand, it is possible to have two callbacks in two pools with same ID. This can help in grouping callbacks in different pools and enable or disable them using one ID.
 
 ``` javascript
-This is allowed.
+// This is allowed.
 
 ajax.setOnSuccess({
  id:'Update User',
