@@ -749,7 +749,7 @@ function AJAXRequest(config = {
                     if (callType === 'function') {
                         this.log('AJAXRequest.addCallback: Callback given as function.', 'info');
 
-                        this[p].push({'AJAXRequest':inst, id: id, call: true, func: callback, props: {} });
+                        this[p].push({ 'AJAXRequest': inst, id: id, call: true, func: callback, props: {} });
                         this.log('AJAXRequest.addCallback: New callback added [id = "' + id + '"].', 'info');
 
                         return id;
@@ -1382,9 +1382,13 @@ function AJAXRequest(config = {
             value: function () {
                 this.log('AJAXRequest.send: Executing bofe AJAX callbacks...', 'info');
                 for (var i = 0; i < this.onbeforeajaxpool.length; i++) {
-                    
-                    if (canCall(this.onbeforeajaxpool[i])) {
-                        this.onbeforeajaxpool[i].func();
+                    try {
+                        if (canCall(this.onbeforeajaxpool[i])) {
+                            this.onbeforeajaxpool[i].func();
+                        }
+                    } catch (e) {
+                        callOnErr(this, null, {}, e);
+                        return false;
                     }
                 }
                 this.log('AJAXRequest.send: Finished executing the before AJAX callbacks.', 'info');
