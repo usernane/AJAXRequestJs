@@ -33,7 +33,7 @@ A light weight JavaScript class library that can help in making AJAX requests mu
 ## Main features:
 * Assign multiple callbacks to execute before sending AJAX, on success, client error, server error, on disconnected or after AJAX is completed.
 * Get server response as a JSON, plain text or XML.
-* Enable and disable callbacks as needed since every callback has an ID.
+* Enable and disable callbacks as needed based on conditions.
 * Adding custom headers to the request.
 * Automatic CSRF token extraction.
 
@@ -56,7 +56,7 @@ It is possible to use the minified version of the libray by including the follow
 ## Basic Usage
 The following code sample shows the most basic usage of the library.
 ``` javascript
-// Use the global instance 'ajax'. Another option is to create new instance of the class [`AJAXRequest`](https://github.com/usernane/AJAXRequestJs/masterAJAXRequest.js)
+// Use the global instance 'ajax'. Another option is to create new instance of the class [`AJAXRequest`](https://github.com/usernane/AJAXRequestJs/blob/master/AJAXRequest.js)
 ajax.setMethod('get');
 
 //The URL that will receive the request.
@@ -65,7 +65,7 @@ ajax.setURL('https://api.github.com/repos/usernane/AJAXRequestJs');
 //enable verbose mode for development to get more informative messages in the console
 ajax.verbos = true;
 
-//Adds one call back to execute on success. We can add more.
+//Adds one callback to execute on success. We can add more.
 ajax.setOnSuccess(function(){
     //The response might be stored as JSON object
     if(this.jsonResponse){
