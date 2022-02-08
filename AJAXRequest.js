@@ -329,13 +329,11 @@ function AJAXRequest(config = {
         writable: false,
         enumerable: false
     });
-    function canCall(inst, funcObj) {
+    function canCall(funcObj) {
         var canCall = funcObj.call === true;
         var type = typeof funcObj.call;
 
         if (type === 'function') {
-            funcObj.call.AJAXRequest = inst;
-
             canCall = funcObj.call();
         }
         return canCall
@@ -347,7 +345,7 @@ function AJAXRequest(config = {
         for (var i = 0; i < inst.onerrorpool.length; i++) {
             try {
 
-                if (canCall(inst, inst.onerrorpool[i])) {
+                if (canCall(inst.onerrorpool[i])) {
                     inst.log('AJAXRequest: Callback ' + inst.onerrorpool[i].id + ' is enabled.', 'info');
                     inst.onerrorpool[i].AJAXRequest = inst;
                     inst.onerrorpool[i].e = e;
@@ -378,7 +376,6 @@ function AJAXRequest(config = {
         }
         for (var i = 0; i < inst[p].length; i++) {
 
-            inst[p][i].AJAXRequest = inst;
             inst[p][i].status = inst.status;
             inst[p][i].response = inst.responseText;
             inst[p][i].xmlResponse = inst.responseXML;
@@ -387,7 +384,7 @@ function AJAXRequest(config = {
 
             try {
 
-                if (canCall(inst, inst[p][i])) {
+                if (canCall(inst[p][i])) {
                     inst.log('AJAXRequest: Callback "' + inst[p][i].id + '" is enabled.', 'info');
                     inst[p][i].func();
                 } else {
@@ -400,9 +397,6 @@ function AJAXRequest(config = {
 
         }
         for (var i = 0; i < inst.onafterajaxpool.length; i++) {
-
-
-            inst.onafterajaxpool[i].AJAXRequest = inst;
             inst.onafterajaxpool[i].status = inst.status;
             inst.onafterajaxpool[i].response = inst.responseText;
             inst.onafterajaxpool[i].xmlResponse = inst.responseXML;
@@ -411,7 +405,7 @@ function AJAXRequest(config = {
 
             try {
 
-                if (canCall(inst, inst.onafterajaxpool[i])) {
+                if (canCall(inst.onafterajaxpool[i])) {
                     inst.log('AJAXRequest: Callback "' + inst.onafterajaxpool[i].id + '" is enabled.', 'info');
                     inst.onafterajaxpool[i].func();
                 } else {
@@ -742,7 +736,7 @@ function AJAXRequest(config = {
             * the method will return undefined.
             */
             value: function (callback, poolName) {
-
+                var inst = this;
                 var pool_name = poolName.toLowerCase();
                 this.log('AJAXRequest.addCallback: Adding new callback to the pool "' + pool_name + '"...', 'info');
 
@@ -755,7 +749,7 @@ function AJAXRequest(config = {
                     if (callType === 'function') {
                         this.log('AJAXRequest.addCallback: Callback given as function.', 'info');
 
-                        this[p].push({ id: id, call: true, func: callback, props: {} });
+                        this[p].push({'AJAXRequest':inst, id: id, call: true, func: callback, props: {} });
                         this.log('AJAXRequest.addCallback: New callback added [id = "' + id + '"].', 'info');
 
                         return id;
@@ -765,7 +759,8 @@ function AJAXRequest(config = {
                         if (typeof callback.callback === 'function') {
                             this.log('AJAXRequest.addCallback: Property "callback" is set.', 'info');
                             var toAdd = {
-                                func: callback.callback
+                                func: callback.callback,
+                                'AJAXRequest': inst
                             }
                             var typeOfId = typeof callback.id;
 
@@ -1387,8 +1382,8 @@ function AJAXRequest(config = {
             value: function () {
                 this.log('AJAXRequest.send: Executing bofe AJAX callbacks...', 'info');
                 for (var i = 0; i < this.onbeforeajaxpool.length; i++) {
-                    this.onbeforeajaxpool[i].AJAXRequest = this;
-                    if (this.onbeforeajaxpool[i].call === true) {
+                    
+                    if (canCall(this.onbeforeajaxpool[i])) {
                         this.onbeforeajaxpool[i].func();
                     }
                 }
