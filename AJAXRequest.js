@@ -1616,13 +1616,13 @@ function AJAXRequest(config = {
             instance[method](configVar);
         }
     }
-    addCalls(config.beforeAjax, instance.setBeforeAjax, instance);
-    addCalls(config.onSuccess, instance.setOnSuccess, instance);
-    addCalls(config.onClientErr, instance.setOnClientError, instance);
-    addCalls(config.onServerErr, instance.setOnServerError, instance);
-    addCalls(config.onDisconnected, instance.setOnDisconnected, instance);
-    addCalls(config.afterAjax, instance.setAfterAjax, instance);
-    addCalls(config.onErr, instance.setOnError, instance);
+    addCalls(config.beforeAjax, 'setBeforeAjax', instance);
+    addCalls(config.onSuccess, 'setOnSuccess', instance);
+    addCalls(config.onClientErr, 'setOnClientError', instance);
+    addCalls(config.onServerErr, 'setOnServerError', instance);
+    addCalls(config.onDisconnected, 'setOnDisconnected', instance);
+    addCalls(config.afterAjax, 'setAfterAjax', instance);
+    addCalls(config.onErr, 'setOnError', instance);
 
 }
 //Global AJAXRequest Instance
