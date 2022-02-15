@@ -1298,6 +1298,11 @@ function AJAXRequest(config = {
             * @returns {undefined}
             */
             value: function (url) {
+                if (url === null || url === undefined) {
+                    this.log('AJAXRequest.setURL: "null" or "undefined" is given as URL.', 'warning');
+                    return;
+                }
+                url += '';
                 while (url[0] === '/') {
                     url = url.substring(1, url.length);
                 }
@@ -1602,22 +1607,22 @@ function AJAXRequest(config = {
     }
 
     //Add callbacks
-    function addCalls(configVar, method) {
+    function addCalls(configVar, method, instance) {
         if (Array.isArray(configVar)) {
             configVar.forEach((callback) => {
-                method(callback);
+                instance[method](callback);
             });
         } else if (typeof configVar === 'function' || typeof configVar === 'object') {
-            method(configVar);
+            instance[method](configVar);
         }
     }
-    addCalls(config.beforeAjax, instance.setBeforeAjax);
-    addCalls(config.onSuccess, instance.setOnSuccess);
-    addCalls(config.onClientErr, instance.setOnClientError);
-    addCalls(config.onServerErr, instance.setOnServerError);
-    addCalls(config.onDisconnected, instance.setOnDisconnected);
-    addCalls(config.afterAjax, instance.setAfterAjax);
-    addCalls(config.onErr, instance.setOnError);
+    addCalls(config.beforeAjax, 'setBeforeAjax', instance);
+    addCalls(config.onSuccess, 'setOnSuccess', instance);
+    addCalls(config.onClientErr, 'setOnClientError', instance);
+    addCalls(config.onServerErr, 'setOnServerError', instance);
+    addCalls(config.onDisconnected, 'setOnDisconnected', instance);
+    addCalls(config.afterAjax, 'setAfterAjax', instance);
+    addCalls(config.onErr, 'setOnError', instance);
 
 }
 //Global AJAXRequest Instance
