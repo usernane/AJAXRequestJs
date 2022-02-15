@@ -1607,22 +1607,22 @@ function AJAXRequest(config = {
     }
 
     //Add callbacks
-    function addCalls(configVar, method) {
+    function addCalls(configVar, method, instance) {
         if (Array.isArray(configVar)) {
             configVar.forEach((callback) => {
-                method(callback);
+                instance.method(callback);
             });
         } else if (typeof configVar === 'function' || typeof configVar === 'object') {
-            method(configVar);
+            instance.method(configVar);
         }
     }
-    addCalls(config.beforeAjax, instance.setBeforeAjax);
-    addCalls(config.onSuccess, instance.setOnSuccess);
-    addCalls(config.onClientErr, instance.setOnClientError);
-    addCalls(config.onServerErr, instance.setOnServerError);
-    addCalls(config.onDisconnected, instance.setOnDisconnected);
-    addCalls(config.afterAjax, instance.setAfterAjax);
-    addCalls(config.onErr, instance.setOnError);
+    addCalls(config.beforeAjax, instance.setBeforeAjax, instance);
+    addCalls(config.onSuccess, instance.setOnSuccess, instance);
+    addCalls(config.onClientErr, instance.setOnClientError, instance);
+    addCalls(config.onServerErr, instance.setOnServerError, instance);
+    addCalls(config.onDisconnected, instance.setOnDisconnected, instance);
+    addCalls(config.afterAjax, instance.setAfterAjax, instance);
+    addCalls(config.onErr, instance.setOnError, instance);
 
 }
 //Global AJAXRequest Instance
