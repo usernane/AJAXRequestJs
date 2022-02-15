@@ -91,11 +91,11 @@ Object.defineProperties(AJAXRequest, {
 
 Object.defineProperties(AJAXRequest.META, {
     VERSION: {
-        value: '2.0.3',
+        value: '2.0.4',
         writable: false
     },
     REALSE_DATE: {
-        value: '2022-02-08',
+        value: '2022-02-15',
         writable: false
     },
     CONTRIBUTORS: {
@@ -771,7 +771,7 @@ function AJAXRequest(config = {
                                 this.log('AJAXRequest.addCallback: Property "id" is set.', 'info');
                                 toAdd.id = callback.id + '';
                                 if (this.getCallbacksIDs(pool_name).indexOf(toAdd.id) !== -1) {
-                                    this.log('AJAXRequest.addCallback: Can\'t Add callback. A callback with same ID was already added.', 'warning', true);
+                                    this.log('AJAXRequest.addCallback: Can\'t Add callback. A callback with ID "' + toAdd.id + '" was already added to the pool "' + poolName + '".', 'warning', true);
                                     return;
                                 }
                                 id = toAdd.id;
@@ -799,7 +799,7 @@ function AJAXRequest(config = {
                             this[p].push(toAdd);
                             this.log('AJAXRequest.addCallback: New callback added [id = "' + toAdd.id + '"].', 'info');
                         } else {
-                            this.log('AJAXRequest.addCallback: Property "callback" is not set or invalid. Callback not added.', 'warning', true);
+                            this.log('AJAXRequest.addCallback: Property "callback" is not set or invalid. Callback with ID "' + toAdd.id + '" was not added to the pool "' + poolName + '".', 'warning', true);
                         }
                     }
 
