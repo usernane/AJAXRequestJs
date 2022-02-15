@@ -1610,10 +1610,10 @@ function AJAXRequest(config = {
     function addCalls(configVar, method, instance) {
         if (Array.isArray(configVar)) {
             configVar.forEach((callback) => {
-                instance.method(callback);
+                instance[method](callback);
             });
         } else if (typeof configVar === 'function' || typeof configVar === 'object') {
-            instance.method(configVar);
+            instance[method](configVar);
         }
     }
     addCalls(config.beforeAjax, instance.setBeforeAjax, instance);
