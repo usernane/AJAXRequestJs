@@ -1298,6 +1298,11 @@ function AJAXRequest(config = {
             * @returns {undefined}
             */
             value: function (url) {
+                if (url === null || url === undefined) {
+                    this.log('AJAXRequest.setURL: "null" or "undefined" is given as URL.', 'warning');
+                    return;
+                }
+                url += '';
                 while (url[0] === '/') {
                     url = url.substring(1, url.length);
                 }
