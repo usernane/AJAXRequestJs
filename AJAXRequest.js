@@ -91,11 +91,11 @@ Object.defineProperties(AJAXRequest, {
 
 Object.defineProperties(AJAXRequest.META, {
     VERSION: {
-        value: '2.0.3',
+        value: '2.0.4',
         writable: false
     },
     REALSE_DATE: {
-        value: '2022-02-08',
+        value: '2022-02-15',
         writable: false
     },
     CONTRIBUTORS: {
