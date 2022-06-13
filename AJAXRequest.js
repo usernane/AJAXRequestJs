@@ -299,6 +299,15 @@ function AJAXRequest(config = {
             }
         }
     ];
+    this.retry = {
+        times:3,
+        passed:0,
+        wait:5,
+        pass_number:0,
+        func: function () {
+            
+        }
+    },
     Object.defineProperty(this, 'onreadystatechange', {
         value: function () {
             if (this.readyState === 0) {
@@ -312,7 +321,24 @@ function AJAXRequest(config = {
             } else if (this.readyState === 4 && this.status === 0) {
                 this.log('AJAXRequest: Ready State = 4 (DONE)', 'info');
                 this.active = false;
-                setProbsAfterAjax(this, 'connectionlost');
+                if (this.retry.times !== 0 && this.retry.pass_number < this.retry.times) {
+                    this.log('AJAXRequest: Retry after '+this.retry.wait+' seconds...', 'info');
+                    var i = this;
+                    this.retry.id = setInterval(function () {
+                        
+                        i.retry.passed++;
+                        i.retry.func(i.retry.wait - i.retry.passed);
+                        if (i.retry.passed === i.retry.wait) {
+                            clearInterval(i.retry.id);
+                            i.retry.passed = 0;
+                            i.retry.pass_number++;
+                            i.AJAXRequest.send();
+                        }
+                    }, 1000);
+                } else {
+                    this.retry.pass_number = 0;
+                    setProbsAfterAjax(this, 'connectionlost');
+                }
             } else if (this.readyState === 4 && this.status >= 200 && this.status < 300) {
                 this.log('AJAXRequest: Ready State = 4 (DONE).', 'info');
                 this.active = false;
@@ -1386,6 +1412,51 @@ function AJAXRequest(config = {
             writable: false,
             enumerable: true
         },
+        setRetry:{
+            /**
+             * Sets the callback that will be used on retry before executing
+             * connection lost callbacks.
+             * 
+             * @param {Number} times The number of times at which the callback
+             * will retry.
+             * 
+             * @param {Number} timeBetweenEachTryInSeconds Number of seconds 
+             * between each run.
+             * 
+             * @param {Function} func The callback that will be executed.
+             * 
+             * @param {Object} props Any extra parameters to have access to within
+             * the callback.
+             * 
+             * @returns {boolean} If set, the method will return true.
+             * False if not.
+             */
+            value: function (times, timeBetweenEachTryInSeconds, func, props = {}) {
+                var num = Number.parseInt(times);
+                if (Number.isNaN(num) || num < 0) {
+                    return false;
+                }
+                var time = Number.parseInt(timeBetweenEachTryInSeconds);
+                if (Number.isNaN(time) || time < 1) {
+                    return false;
+                }
+                if (!(typeof func === 'function')) {
+                    return false;
+                }
+                var xprops = typeof props === 'object' ? props : {};
+                this.retry = {
+                    times:num,
+                    passed:0,
+                    wait:time,
+                    pass_number:0,
+                    func: func,
+                    props:xprops
+                };
+                return true;
+            },
+            writable: false,
+            enumerable: true
+        },
         send: {
             /**
             * Send AJAX request to the server.
@@ -1423,6 +1494,8 @@ function AJAXRequest(config = {
                     var nonActiveXhr = this.getNonSendXhr();
                     nonActiveXhr.active = true;
                     nonActiveXhr.log = this.log;
+                    nonActiveXhr.AJAXRequest = this;
+                    nonActiveXhr.retry = this.retry;
                     nonActiveXhr.onreadystatechange = this.onreadystatechange;
                     nonActiveXhr.onload = this.onload;
                     nonActiveXhr.onprogress = this.onprogress;
