@@ -35,7 +35,9 @@ Object.defineProperties(AJAXRequest, {
         value: function createXhr() {
             for (var i = 0; i < AJAXRequest.XMLHttpFactories.length; i++) {
                 try {
-                    return AJAXRequest.XMLHttpFactories[i]();
+                    var instance = AJAXRequest.XMLHttpFactories[i]();
+                    instance.active = false;
+                    return instance;
                 }
                 catch (e) {
 
@@ -309,20 +311,26 @@ function AJAXRequest(config = {
                 this.log('AJAXRequest: Ready State = 3 (LOADING)', 'info');
             } else if (this.readyState === 4 && this.status === 0) {
                 this.log('AJAXRequest: Ready State = 4 (DONE)', 'info');
+                this.active = false;
                 setProbsAfterAjax(this, 'connectionlost');
             } else if (this.readyState === 4 && this.status >= 200 && this.status < 300) {
                 this.log('AJAXRequest: Ready State = 4 (DONE).', 'info');
+                this.active = false;
                 setProbsAfterAjax(this, 'success');
             } else if (this.readyState === 4 && this.status >= 400 && this.status < 500) {
                 this.log('AJAXRequest: Ready State = 4 (DONE).', 'info');
+                this.active = false;
                 setProbsAfterAjax(this, 'clienterror');
             } else if (this.readyState === 4 && this.status >= 300 && this.status < 400) {
                 this.log('AJAXRequest: Ready State = 4 (DONE).', 'info');
+                this.active = false;
                 this.log('Redirect', 'info', true);
             } else if (this.readyState === 4 && this.status >= 500 && this.status < 600) {
                 this.log('AJAXRequest: Ready State = 4 (DONE).', 'info');
+                this.active = false;
                 setProbsAfterAjax(this, 'servererror');
             } else if (this.readyState === 4) {
+                this.active = false;
                 this.log('Status: ' + this.status, 'info');
             }
         },
@@ -1385,7 +1393,7 @@ function AJAXRequest(config = {
             * else, it will return false.
             */
             value: function () {
-                this.log('AJAXRequest.send: Executing bofe AJAX callbacks...', 'info');
+                this.log('AJAXRequest.send: Executing before AJAX callbacks...', 'info');
                 for (var i = 0; i < this.onbeforeajaxpool.length; i++) {
                     try {
                         if (canCall(this.onbeforeajaxpool[i])) {
@@ -1411,18 +1419,20 @@ function AJAXRequest(config = {
                     this.log('AJAXRequest.send: Base: ' + base, 'info');
                     this.log('AJAXRequest.send: URL: ' + url, 'info');
                     this.log('AJAXRequest.send: Request URL: ' + requestUrl, 'info');
-
-                    this.xhr.log = this.log;
-                    this.xhr.onreadystatechange = this.onreadystatechange;
-                    this.xhr.onload = this.onload;
-                    this.xhr.onprogress = this.onprogress;
-                    this.xhr.onsuccesspool = this.onsuccesspool;
-                    this.xhr.onservererrorpool = this.onservererrorpool;
-                    this.xhr.onclienterrorpool = this.onclienterrorpool;
-                    this.xhr.onconnectionlostpool = this.onconnectionlostpool;
-                    this.xhr.onafterajaxpool = this.onafterajaxpool;
-                    this.xhr.onerrorpool = this.onerrorpool;
-                    this.xhr.verbose = this.verbose;
+                    
+                    var nonActiveXhr = this.getNonSendXhr();
+                    nonActiveXhr.active = true;
+                    nonActiveXhr.log = this.log;
+                    nonActiveXhr.onreadystatechange = this.onreadystatechange;
+                    nonActiveXhr.onload = this.onload;
+                    nonActiveXhr.onprogress = this.onprogress;
+                    nonActiveXhr.onsuccesspool = this.onsuccesspool;
+                    nonActiveXhr.onservererrorpool = this.onservererrorpool;
+                    nonActiveXhr.onclienterrorpool = this.onclienterrorpool;
+                    nonActiveXhr.onconnectionlostpool = this.onconnectionlostpool;
+                    nonActiveXhr.onafterajaxpool = this.onafterajaxpool;
+                    nonActiveXhr.onerrorpool = this.onerrorpool;
+                    nonActiveXhr.verbose = this.verbose;
                     this.log('AJAXRequest.send: Checking parameters type...', 'info');
                     if (typeof this.params === 'object' && this.params.toString() !== '[object FormData]') {
                         this.log('AJAXRequest.send: An object is given. Extracting values...', 'info');
@@ -1486,15 +1496,15 @@ function AJAXRequest(config = {
 
                     if (method === 'GET' || method === 'DELETE') {
                         if (localParams !== undefined && localParams !== null && localParams !== '') {
-                            this.xhr.open(method, requestUrl + '?' + localParams);
+                            nonActiveXhr.open(method, requestUrl + '?' + localParams);
                         } else {
-                            this.xhr.open(method, requestUrl);
+                            nonActiveXhr.open(method, requestUrl);
                         }
                         if (method === 'DELETE') {
                             //Add CSRF token.
                             var csrfTok = this.getCsrfToken();
                             if (csrfTok) {
-                                this.xhr.setRequestHeader('X-CSRF-TOKEN', csrfTok);
+                                nonActiveXhr.setRequestHeader('X-CSRF-TOKEN', csrfTok);
                             }
                         }
                         var customHeadersKeys = Object.keys(this.customHeaders);
@@ -1502,20 +1512,20 @@ function AJAXRequest(config = {
                             this.log('AJAXRequest.send: Adding custom headers to request..', 'info');
                         }
                         for (var x = 0; x < customHeadersKeys.length; x++) {
-                            this.xhr.setRequestHeader(customHeadersKeys[x], this.customHeaders[customHeadersKeys[x]]);
+                            nonActiveXhr.setRequestHeader(customHeadersKeys[x], this.customHeaders[customHeadersKeys[x]]);
                         }
-                        this.xhr.send();
+                        nonActiveXhr.send();
                         return true;
                     } else if (method === 'POST' || method === 'PUT') {
-                        this.xhr.open(method, requestUrl);
+                        nonActiveXhr.open(method, requestUrl);
 
                         //Add CSRF token.
                         var csrfTok = this.getCsrfToken();
                         if (csrfTok) {
-                            this.xhr.setRequestHeader('X-CSRF-TOKEN', csrfTok);
+                            nonActiveXhr.setRequestHeader('X-CSRF-TOKEN', csrfTok);
                         }
                         if (localParams.toString() !== '[object FormData]') {
-                            this.xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                            nonActiveXhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
                             this.log('AJAXRequest.send: Setting header \'Content-Type\' to \'application/x-www-form-urlencoded\'.', 'info');
                         }
                         var customHeadersKeys = Object.keys(this.customHeaders);
@@ -1523,13 +1533,13 @@ function AJAXRequest(config = {
                             this.log('AJAXRequest.send: Adding custom headers to request..', 'info');
                         }
                         for (var x = 0; x < customHeadersKeys.length; x++) {
-                            this.xhr.setRequestHeader(customHeadersKeys[x], this.customHeaders[customHeadersKeys[x]]);
+                            nonActiveXhr.setRequestHeader(customHeadersKeys[x], this.customHeaders[customHeadersKeys[x]]);
                         }
-                        this.xhr.send(localParams);
+                        nonActiveXhr.send(localParams);
                         return true;
                     } else {
-                        this.xhr.open(method, requestUrl);
-                        this.xhr.send();
+                        nonActiveXhr.open(method, requestUrl);
+                        nonActiveXhr.send();
                     }
                 } else {
                     this.log('AJAXRequest.send: AJAX is disabled.', 'info', true);
@@ -1561,31 +1571,38 @@ function AJAXRequest(config = {
             writable: false,
             enumerable: true
         },
-        xhr: {
-            /**
-            * The XMLHttpRequest object that is used to send AJAX.
-            */
-            value: AJAXRequest.createXhr(),
-            writable: false,
+        xhr_pool:{
+            value:[
+                AJAXRequest.createXhr(),
+            ],
+            writable:false,
+            enumerable: true
+        },
+        getNonSendXhr:{
+            value:function () {
+                for (var x = 0 ; x < this.xhr_pool.length ; x++) {
+                    if (!this.xhr_pool[x].active) {
+                        return this.xhr_pool[x];
+                    }
+                }
+                var newXhr = AJAXRequest.createXhr();
+                if (newXhr === false || newXhr === undefined || newXhr === null) {
+                    this.log('AJAXRequest: Unable to creeate xhr object! Browser does not support it.', 'error', true);
+                    return;
+                }
+                this.xhr_pool.push(newXhr);
+                return newXhr;
+            },
+            writable:false,
             enumerable: true
         }
     });
-    //configuration 
-    if (this.xhr === false || this.xhr === undefined || this.xhr === null) {
-        this.log('AJAXRequest: Unable to creeate xhr object! Browser does not support it.', 'error', true);
-        return;
-    }
+    
     var instance = this;
-    var a = function () {
-        instance.setResponse(instance.xhr.responseText);
-    };
     this.verbose = config.verbose;
     if (this.verbose === true) {
         this.log('AJAXRequest: Verbose mode is enabled. More messages will be shown in the console.');
     }
-    this.setOnSuccess(a);
-    this.setOnServerError(a);
-    this.setOnClientError(a);
     this.setReqMethod(config.method);
     this.setURL(config.url);
     this.setEnabled(config.enabled);
