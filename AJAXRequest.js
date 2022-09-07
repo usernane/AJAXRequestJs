@@ -409,7 +409,7 @@ function AJAXRequest(config = {
             var jsonResponse = null;
         }
         for (var i = 0; i < inst[p].length; i++) {
-
+            inst[p][i].url = inst.url;
             inst[p][i].status = inst.status;
             inst[p][i].response = inst.responseText;
             inst[p][i].xmlResponse = inst.responseXML;
@@ -1497,6 +1497,7 @@ function AJAXRequest(config = {
                     nonActiveXhr.AJAXRequest = this;
                     nonActiveXhr.retry = this.retry;
                     nonActiveXhr.onreadystatechange = this.onreadystatechange;
+                    nonActiveXhr.url = requestUrl;
                     nonActiveXhr.onload = this.onload;
                     nonActiveXhr.onprogress = this.onprogress;
                     nonActiveXhr.onsuccesspool = this.onsuccesspool;
