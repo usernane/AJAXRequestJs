@@ -93,11 +93,11 @@ Object.defineProperties(AJAXRequest, {
 
 Object.defineProperties(AJAXRequest.META, {
     VERSION: {
-        value: '2.0.5',
+        value: '2.1.1',
         writable: false
     },
     REALSE_DATE: {
-        value: '2022-02-15',
+        value: '2022-09-07',
         writable: false
     },
     CONTRIBUTORS: {
@@ -399,6 +399,8 @@ function AJAXRequest(config = {
         }
     }
     function setProbsAfterAjax(inst, pool_name) {
+        //inst is of type XMLHTTPRequest
+        console.log(inst.url);
         var headers = getResponseHeadersObj(inst);
         var p = 'on' + pool_name + 'pool';
         try {
@@ -410,6 +412,8 @@ function AJAXRequest(config = {
         }
         for (var i = 0; i < inst[p].length; i++) {
             inst[p][i].url = inst.url;
+            inst[p][i].base = inst.base;
+            inst[p][i].requestUrl = inst.requestUrl;
             inst[p][i].status = inst.status;
             inst[p][i].response = inst.responseText;
             inst[p][i].xmlResponse = inst.responseXML;
@@ -1497,7 +1501,9 @@ function AJAXRequest(config = {
                     nonActiveXhr.AJAXRequest = this;
                     nonActiveXhr.retry = this.retry;
                     nonActiveXhr.onreadystatechange = this.onreadystatechange;
-                    nonActiveXhr.url = requestUrl;
+                    nonActiveXhr.url = url;
+                    nonActiveXhr.requestUrl = requestUrl;
+                    nonActiveXhr.base = base;
                     nonActiveXhr.onload = this.onload;
                     nonActiveXhr.onprogress = this.onprogress;
                     nonActiveXhr.onsuccesspool = this.onsuccesspool;
