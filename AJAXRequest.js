@@ -327,7 +327,7 @@ function AJAXRequest(config = {
                     this.retry.id = setInterval(function () {
                         
                         i.retry.passed++;
-                        i.retry.func(i.retry.wait - i.retry.passed);
+                        i.retry.func(i.retry.wait - i.retry.passed, i.retry.pass_number);
                         if (i.retry.passed === i.retry.wait) {
                             clearInterval(i.retry.id);
                             i.retry.passed = 0;
