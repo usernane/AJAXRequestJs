@@ -93,11 +93,11 @@ Object.defineProperties(AJAXRequest, {
 
 Object.defineProperties(AJAXRequest.META, {
     VERSION: {
-        value: '2.1.1',
+        value: '2.1.2',
         writable: false
     },
     REALSE_DATE: {
-        value: '2022-09-07',
+        value: '2022-09-14',
         writable: false
     },
     CONTRIBUTORS: {
@@ -320,7 +320,7 @@ function AJAXRequest(config = {
                 this.log('AJAXRequest: Ready State = 3 (LOADING)', 'info');
             } else if (this.readyState === 4 && this.status === 0) {
                 this.log('AJAXRequest: Ready State = 4 (DONE)', 'info');
-                this.active = false;
+                
                 if (this.retry.times !== 0 && this.retry.pass_number < this.retry.times) {
                     this.log('AJAXRequest: Retry after '+this.retry.wait+' seconds...', 'info');
                     var i = this;
@@ -341,19 +341,15 @@ function AJAXRequest(config = {
                 }
             } else if (this.readyState === 4 && this.status >= 200 && this.status < 300) {
                 this.log('AJAXRequest: Ready State = 4 (DONE).', 'info');
-                this.active = false;
                 setProbsAfterAjax(this, 'success');
             } else if (this.readyState === 4 && this.status >= 400 && this.status < 500) {
                 this.log('AJAXRequest: Ready State = 4 (DONE).', 'info');
-                this.active = false;
                 setProbsAfterAjax(this, 'clienterror');
             } else if (this.readyState === 4 && this.status >= 300 && this.status < 400) {
                 this.log('AJAXRequest: Ready State = 4 (DONE).', 'info');
-                this.active = false;
                 this.log('Redirect', 'info', true);
             } else if (this.readyState === 4 && this.status >= 500 && this.status < 600) {
                 this.log('AJAXRequest: Ready State = 4 (DONE).', 'info');
-                this.active = false;
                 setProbsAfterAjax(this, 'servererror');
             } else if (this.readyState === 4) {
                 this.active = false;
@@ -400,7 +396,6 @@ function AJAXRequest(config = {
     }
     function setProbsAfterAjax(inst, pool_name) {
         //inst is of type XMLHTTPRequest
-        console.log(inst.url);
         var headers = getResponseHeadersObj(inst);
         var p = 'on' + pool_name + 'pool';
         try {
@@ -453,6 +448,7 @@ function AJAXRequest(config = {
                 callOnErr(inst, jsonResponse, headers, e);
             }
         }
+        inst.active = false;
         inst.log('AJAXRequest: Finished AJAX Request.', 'info');
     }
     /**
