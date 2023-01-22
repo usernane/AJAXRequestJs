@@ -93,11 +93,11 @@ Object.defineProperties(AJAXRequest, {
 
 Object.defineProperties(AJAXRequest.META, {
     VERSION: {
-        value: '2.1.2',
+        value: '2.1.4',
         writable: false
     },
     REALSE_DATE: {
-        value: '2022-09-14',
+        value: '2023-01-22',
         writable: false
     },
     CONTRIBUTORS: {
@@ -316,7 +316,7 @@ function AJAXRequest(config = {
                     this.retry.id = setInterval(function () {
                         
                         i.retry.passed++;
-                        i.retry.func(i.retry.wait - i.retry.passed);
+                        i.retry.func(i.retry.wait - i.retry.passed, i.retry.pass_number);
                         if (i.retry.passed === i.retry.wait) {
                             clearInterval(i.retry.id);
                             i.retry.passed = 0;
@@ -332,6 +332,7 @@ function AJAXRequest(config = {
                 setProbsAfterAjax(this, 'success');
             } else if (this.readyState === 4 && this.status >= 400 && this.status < 500) {
                 setProbsAfterAjax(this, 'clienterror');
+                setProbsAfterAjax(this, 'success');
             } else if (this.readyState === 4 && this.status >= 500 && this.status < 600) {
                 setProbsAfterAjax(this, 'servererror');
             } else if (this.readyState === 4) {
@@ -375,6 +376,7 @@ function AJAXRequest(config = {
     }
     function setProbsAfterAjax(inst, pool_name) {
         
+        inst.received = true;
         var headers = getResponseHeadersObj(inst);
         var p = 'on' + pool_name + 'pool';
         try {
@@ -1357,6 +1359,7 @@ function AJAXRequest(config = {
                     var requestUrl = this.getRequestURL();
                     
                     var nonActiveXhr = this.getNonSendXhr();
+                    nonActiveXhr.received = false;
                     nonActiveXhr.active = true;
                     nonActiveXhr.log = this.log;
                     nonActiveXhr.AJAXRequest = this;
@@ -1512,6 +1515,18 @@ function AJAXRequest(config = {
                 }
                 this.xhr_pool.push(newXhr);
                 return newXhr;
+            },
+            writable:false,
+            enumerable: true
+        },
+        hasNonReceivedRequest:{
+            value:function () {
+                for (var x = 0 ; x < this.xhr_pool.length ; x++) {
+                    if (!this.xhr_pool[x].received) {
+                        return true;
+                    }
+                }
+                return false;
             },
             writable:false,
             enumerable: true
