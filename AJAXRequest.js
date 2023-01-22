@@ -93,7 +93,7 @@ Object.defineProperties(AJAXRequest, {
 
 Object.defineProperties(AJAXRequest.META, {
     VERSION: {
-        value: '2.1.3',
+        value: '2.1.4',
         writable: false
     },
     REALSE_DATE: {
@@ -348,6 +348,7 @@ function AJAXRequest(config = {
             } else if (this.readyState === 4 && this.status >= 300 && this.status < 400) {
                 this.log('AJAXRequest: Ready State = 4 (DONE).', 'info');
                 this.log('Redirect', 'info', true);
+                setProbsAfterAjax(this, 'success');
             } else if (this.readyState === 4 && this.status >= 500 && this.status < 600) {
                 this.log('AJAXRequest: Ready State = 4 (DONE).', 'info');
                 setProbsAfterAjax(this, 'servererror');
@@ -396,6 +397,7 @@ function AJAXRequest(config = {
     }
     function setProbsAfterAjax(inst, pool_name) {
         //inst is of type XMLHTTPRequest
+        inst.received = true;
         var headers = getResponseHeadersObj(inst);
         var p = 'on' + pool_name + 'pool';
         try {
@@ -1492,6 +1494,7 @@ function AJAXRequest(config = {
                     this.log('AJAXRequest.send: Request URL: ' + requestUrl, 'info');
                     
                     var nonActiveXhr = this.getNonSendXhr();
+                    nonActiveXhr.received = false;
                     nonActiveXhr.active = true;
                     nonActiveXhr.log = this.log;
                     nonActiveXhr.AJAXRequest = this;
@@ -1672,10 +1675,10 @@ function AJAXRequest(config = {
             writable:false,
             enumerable: true
         },
-        hasActiveRequest:{
+        hasNonReceivedRequest:{
             value:function () {
                 for (var x = 0 ; x < this.xhr_pool.length ; x++) {
-                    if (this.xhr_pool[x].active) {
+                    if (!this.xhr_pool[x].received) {
                         return true;
                     }
                 }
