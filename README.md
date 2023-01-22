@@ -25,6 +25,7 @@ A light weight JavaScript class library that can help in making AJAX requests mu
   * <a href="#custom-id">Custom ID</a>
   * <a href="#enabling-or-disabling">Enabling or Disabling</a>
   * <a href="#binding-properties">Binding Properties</a>
+* <a href="#retry">Retry</a>
 * <a href="#verbose-mode">Verbose Mode</a>
 * <a href="#api-reference">API Docs</a>
 * <a href="#usage-examples">Usage Examples</a>
@@ -639,6 +640,21 @@ ajax.bind(o1, null, 'success');
 
 //Bind with all callback with ID = 'AJAX Success' on the pool 'success'.
 ajax.bind(o1, 'AJAX Success', 'success');
+```
+## Retry
+One of the features of the library is to have it retry to send AJAX request in case there was no internet connection. The developer can use the method `AJAXRequest.setRetry()` to specify retry attributes. The method has 4 parameters, `times`, `timeBetweenEachTryInSeconds`, `func` and , `props`. The parameter `times` represents how many times to attempt AJAX request before stopping. The parameter `timeBetweenEachTryInSeconds` represents number of seconds to wait before attemting to send the request again. The `func` is a callback to execute in case of retry event. The last parameter is an object that holds extra parameters to pass to the callback.
+
+The callback will have two parameters, first one is number of seconds remaining before retrying and, second one is pass number (current retry attempt number).
+
+The following code sample shows basic use case for this functionality.
+
+``` javascript
+
+ajax.setRetry(4, 14, function (remainingSec, passNum) {
+  console.log('Pass number: '+passNum);
+  console.log('Retry after '+remainingSec);
+});
+
 ```
 
 ## Verbose Mode
