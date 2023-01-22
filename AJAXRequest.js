@@ -93,11 +93,11 @@ Object.defineProperties(AJAXRequest, {
 
 Object.defineProperties(AJAXRequest.META, {
     VERSION: {
-        value: '2.1.2',
+        value: '2.1.3',
         writable: false
     },
     REALSE_DATE: {
-        value: '2022-09-14',
+        value: '2023-01-22',
         writable: false
     },
     CONTRIBUTORS: {
@@ -1668,6 +1668,18 @@ function AJAXRequest(config = {
                 }
                 this.xhr_pool.push(newXhr);
                 return newXhr;
+            },
+            writable:false,
+            enumerable: true
+        },
+        hasActiveRequest:{
+            value:function () {
+                for (var x = 0 ; x < this.xhr_pool.length ; x++) {
+                    if (this.xhr_pool[x].active) {
+                        return true;
+                    }
+                }
+                return false;
             },
             writable:false,
             enumerable: true
