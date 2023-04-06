@@ -373,6 +373,20 @@ function AJAXRequest(config = {
         }
         return canCall
     }
+    function bindParams(funcObj, inst) {
+        var bindObj = {};
+        for (var x = 0 ; x < inst.bindParams.length ; x++) {
+            var objProps = inst.bindParams[x];
+            
+            if (objProps.pools.indexOf(funcObj.pool) !== -1) {
+                var keys = Object.keys(objProps.params);
+                for (var y = 0 ; y < keys.length ; y++) {
+                    bindObj[keys[y]] = objProps.params[keys[y]];
+                }
+            }
+        }
+        funcObj.props = bindObj;
+    }
     function callOnErr(inst, jsonResponse, headers, e) {
         inst.log('AJAXRequest: An error occurred while executing the callback at "' + e.fileName + '" line ' + e.lineNumber + '. Check Below for more details.', 'error', true);
         inst.log(e, 'error', true);
@@ -594,7 +608,8 @@ function AJAXRequest(config = {
 
                 this.log('AJAXRequest.bind: Callback ID = "' + callbackId + '"', 'info');
                 this.log('AJAXRequest.bind: Pool = "' + poolName + '"', 'info');
-
+                var applicablePools = [];
+                
                 if (callbackId === null || callbackId === undefined) {
                     this.log('AJAXRequest.bind: The binding will be for all callbacks.', 'warning');
                     var cId = 'ALL';
@@ -605,17 +620,17 @@ function AJAXRequest(config = {
 
                 if (poolName === null || poolName === undefined) {
                     this.log('AJAXRequest.bind: The binding will be for all pools.', 'warning');
-                    var pName = 'ALL';
+                    applicablePools = AJAXRequest.CALLBACK_POOLS;
                 } else {
                     if (AJAXRequest.CALLBACK_POOLS.indexOf(poolName) === -1) {
                         this.log('AJAXRequest.bind: No such pool: ""' + poolName + '.', 'warning');
                         return;
                     }
                     this.log('AJAXRequest.bind: The binding will be for callbacks in the specified pool.', 'info');
-                    var pName = poolName;
+                    applicablePools.push(poolName);
                 }
                 this.bindParams.push({
-                    pool:pName,
+                    pools:applicablePools,
                     callbackId:callbackId,
                     params:obj
                 });
@@ -793,7 +808,7 @@ function AJAXRequest(config = {
                     if (callType === 'function') {
                         this.log('AJAXRequest.addCallback: Callback given as function.', 'info');
 
-                        this[p].push({ 'AJAXRequest': inst, id: id, call: true, func: callback, props: {} });
+                        this[p].push({ AJAXRequest: inst, id: id, call: true, func: callback, pool:p });
                         this.log('AJAXRequest.addCallback: New callback added [id = "' + id + '"].', 'info');
 
                         return id;
@@ -804,7 +819,8 @@ function AJAXRequest(config = {
                             this.log('AJAXRequest.addCallback: Property "callback" is set.', 'info');
                             var toAdd = {
                                 func: callback.callback,
-                                'AJAXRequest': inst
+                                AJAXRequest: inst,
+                                pool:p,
                             }
                             var typeOfId = typeof callback.id;
 
@@ -821,13 +837,6 @@ function AJAXRequest(config = {
                                 id = toAdd.id;
                             }
 
-                            if (typeof callback.props === 'object') {
-                                this.log('AJAXRequest.addCallback: Property "props" is set as an object.', 'info');
-                                toAdd.props = callback.props;
-                            } else {
-                                this.log('AJAXRequest.addCallback: Property "props" is not an object.', 'warning');
-                                toAdd.props = {};
-                            }
 
                             if (typeof callback.call === 'boolean') {
                                 this.log('AJAXRequest.addCallback: Property "call" is set as a boolean.', 'info');
