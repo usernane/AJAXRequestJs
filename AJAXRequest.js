@@ -172,6 +172,10 @@ function AJAXRequest(config = {
      */
     this.method = 'GET';
     /**
+     * An array that holds objects which will be binded with callbacks.
+     */
+    this.bindParams = [];
+    /**
      * The URL of AJAX request
      */
     this.url = '';
@@ -610,7 +614,11 @@ function AJAXRequest(config = {
                     this.log('AJAXRequest.bind: The binding will be for callbacks in the specified pool.', 'info');
                     var pName = poolName;
                 }
-
+                this.bindParams.push({
+                    pool:pName,
+                    callbackId:callbackId,
+                    params:obj
+                });
                 if (pName === 'ALL') {
                     for (var x = 0; x < AJAXRequest.CALLBACK_POOLS.length; x++) {
                         var p = 'on' + AJAXRequest.CALLBACK_POOLS[x] + 'pool';
