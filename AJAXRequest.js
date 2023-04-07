@@ -217,7 +217,7 @@ function AJAXRequest(config = {
         {
             id: '0',
             call: true,
-            props: {},
+            pool:'connectionlost',
             func: function () {
                 console.info('AJAXRequest: Connection lost. Status: ' + this.status);
             }
@@ -230,7 +230,7 @@ function AJAXRequest(config = {
         {
             id: '0',
             call: true,
-            props: {},
+            pool:'beforeajax',
             func: function () {
                 console.info('AJAXRequest: Executing Before AJAX callbacks.');
             }
@@ -244,7 +244,7 @@ function AJAXRequest(config = {
         {
             id: '0',
             call: true,
-            props: {},
+            pool:'afterajax',
             func: function () {
                 console.info('AJAXRequest: After AJAX ' + this.status);
             }
@@ -258,7 +258,7 @@ function AJAXRequest(config = {
         {
             id: '0',
             call: true,
-            props: {},
+            pool:'error',
             func: function () {
                 console.info('AJAXRequest: Error in one of the callbacks.');
             }
@@ -271,7 +271,7 @@ function AJAXRequest(config = {
         {
             id: '0',
             call: true,
-            props: {},
+            pool:'success',
             func: function () {
                 console.info('AJAXRequest: Success ' + this.status);
             }
@@ -284,7 +284,7 @@ function AJAXRequest(config = {
         {
             id: '0',
             call: true,
-            props: {},
+            pool:'ervererror',
             func: function () {
                 console.info('AJAXRequest: Server Error ' + this.status);
             }
@@ -297,7 +297,7 @@ function AJAXRequest(config = {
         {
             id: '0',
             call: true,
-            props: {},
+            pool:'clienterror',
             func: function () {
                 console.info('AJAXRequest: Client Error ' + this.status);
             }
@@ -371,12 +371,12 @@ function AJAXRequest(config = {
         if (type === 'function') {
             canCall = funcObj.call();
         }
-        return canCall
+        return canCall;
     }
-    function bindParams(funcObj, inst) {
+    function bindParams(funcObj, ajaxRequest) {
         var bindObj = {};
-        for (var x = 0 ; x < inst.bindParams.length ; x++) {
-            var objProps = inst.bindParams[x];
+        for (var x = 0 ; x < ajaxRequest.bindParams.length ; x++) {
+            var objProps = ajaxRequest.bindParams[x];
             
             if (objProps.pools.indexOf(funcObj.pool) !== -1) {
                 var keys = Object.keys(objProps.params);
@@ -403,6 +403,7 @@ function AJAXRequest(config = {
                     inst.onerrorpool[i].xmlResponse = inst.responseXML;
                     inst.onerrorpool[i].jsonResponse = jsonResponse;
                     inst.onerrorpool[i].responseHeaders = headers;
+                    bindParams(inst.onerrorpool[i], inst);
                     inst.onerrorpool[i].func();
                 } else {
                     inst.log('AJAXRequest: Callback "' + inst.onerrorpool[i].id + '" is disabled.', 'warning');
@@ -413,63 +414,65 @@ function AJAXRequest(config = {
             }
         }
     }
-    function setProbsAfterAjax(inst, pool_name) {
-        //inst is of type XMLHTTPRequest
-        inst.received = true;
-        var headers = getResponseHeadersObj(inst);
+    function setProbsAfterAjax(xhr, pool_name) {
+        //xhr is of type XMLHTTPRequest
+        xhr.received = true;
+        var headers = getResponseHeadersObj(xhr);
         var p = 'on' + pool_name + 'pool';
         try {
-            var jsonResponse = JSON.parse(inst.responseText);
+            var jsonResponse = JSON.parse(xhr.responseText);
         } catch (e) {
-            inst.log('AJAXRequest: Unable to convert response into JSON object.', 'warning', true);
-            inst.log('AJAXRequest: "jsonResponse" is set to \'null\'.', 'warning', true);
+            xhr.log('AJAXRequest: Unable to convert response into JSON object.', 'warning', true);
+            xhr.log('AJAXRequest: "jsonResponse" is set to \'null\'.', 'warning', true);
             var jsonResponse = null;
         }
-        for (var i = 0; i < inst[p].length; i++) {
-            inst[p][i].url = inst.url;
-            inst[p][i].base = inst.base;
-            inst[p][i].requestUrl = inst.requestUrl;
-            inst[p][i].status = inst.status;
-            inst[p][i].response = inst.responseText;
-            inst[p][i].xmlResponse = inst.responseXML;
-            inst[p][i].jsonResponse = jsonResponse;
-            inst[p][i].responseHeaders = getResponseHeadersObj(inst);
+        for (var i = 0; i < xhr[p].length; i++) {
+            xhr[p][i].url = xhr.url;
+            xhr[p][i].base = xhr.base;
+            xhr[p][i].requestUrl = xhr.requestUrl;
+            xhr[p][i].status = xhr.status;
+            xhr[p][i].response = xhr.responseText;
+            xhr[p][i].xmlResponse = xhr.responseXML;
+            xhr[p][i].jsonResponse = jsonResponse;
+            xhr[p][i].responseHeaders = getResponseHeadersObj(xhr);
 
             try {
 
-                if (canCall(inst[p][i])) {
-                    inst.log('AJAXRequest: Callback "' + inst[p][i].id + '" is enabled.', 'info');
-                    inst[p][i].func();
+                if (canCall(xhr[p][i])) {
+                    xhr.log('AJAXRequest: Callback "' + xhr[p][i].id + '" is enabled.', 'info');
+                    bindParams(xhr[p][i], xhr.AJAXRequest);
+                    xhr[p][i].func();
                 } else {
-                    inst.log('AJAXRequest: Callback "' + inst[p][i].id + '" is disabled.', 'warning');
+                    xhr.log('AJAXRequest: Callback "' + xhr[p][i].id + '" is disabled.', 'warning');
                 }
             } catch (e) {
-                callOnErr(inst, jsonResponse, headers, e);
+                callOnErr(xhr, jsonResponse, headers, e);
             }
 
 
         }
-        for (var i = 0; i < inst.onafterajaxpool.length; i++) {
-            inst.onafterajaxpool[i].status = inst.status;
-            inst.onafterajaxpool[i].response = inst.responseText;
-            inst.onafterajaxpool[i].xmlResponse = inst.responseXML;
-            inst.onafterajaxpool[i].jsonResponse = jsonResponse;
-            inst.onafterajaxpool[i].responseHeaders = headers;
+        for (var i = 0; i < xhr.onafterajaxpool.length; i++) {
+            xhr.onafterajaxpool[i].status = xhr.status;
+            xhr.onafterajaxpool[i].response = xhr.responseText;
+            xhr.onafterajaxpool[i].xmlResponse = xhr.responseXML;
+            xhr.onafterajaxpool[i].jsonResponse = jsonResponse;
+            xhr.onafterajaxpool[i].responseHeaders = headers;
 
             try {
 
-                if (canCall(inst.onafterajaxpool[i])) {
-                    inst.log('AJAXRequest: Callback "' + inst.onafterajaxpool[i].id + '" is enabled.', 'info');
-                    inst.onafterajaxpool[i].func();
+                if (canCall(xhr.onafterajaxpool[i])) {
+                    xhr.log('AJAXRequest: Callback "' + xhr.onafterajaxpool[i].id + '" is enabled.', 'info');
+                    bindParams(xhr.onafterajaxpool[i], xhr.AJAXRequest);
+                    xhr.onafterajaxpool[i].func();
                 } else {
-                    inst.log('AJAXRequest: Callback "' + inst.onafterajaxpool[i].id + '" is disabled.', 'warning');
+                    xhr.log('AJAXRequest: Callback "' + xhr.onafterajaxpool[i].id + '" is disabled.', 'warning');
                 }
             } catch (e) {
-                callOnErr(inst, jsonResponse, headers, e);
+                callOnErr(xhr, jsonResponse, headers, e);
             }
         }
-        inst.active = false;
-        inst.log('AJAXRequest: Finished AJAX Request.', 'info');
+        xhr.active = false;
+        xhr.log('AJAXRequest: Finished AJAX Request.', 'info');
     }
     /**
      * This function will extract response headers from the response.
@@ -563,7 +566,7 @@ function AJAXRequest(config = {
                 }
 
 
-                return retVal
+                return retVal;
             },
             writable: false,
             enumerable: true
@@ -634,47 +637,6 @@ function AJAXRequest(config = {
                     callbackId:callbackId,
                     params:obj
                 });
-                if (pName === 'ALL') {
-                    for (var x = 0; x < AJAXRequest.CALLBACK_POOLS.length; x++) {
-                        var p = 'on' + AJAXRequest.CALLBACK_POOLS[x] + 'pool';
-
-                        if (cId === 'ALL') {
-                            for (var y = 0; y < this[p].length; y++) {
-                                this[p][y].props = obj;
-                                this.log('AJAXRequest.bind: Binded property to callback "' + this[p][y].id + '" on the pool: "' + p + '".', 'info');
-                            }
-                        } else {
-                            var callBack = this.getCallBack(AJAXRequest.CALLBACK_POOLS[x], cId);
-
-                            if (callBack !== undefined) {
-                                callBack.props = obj;
-
-                                this.log('AJAXRequest.bind: Binded property to callback "' + callBack.id + '" on the pool: "' + p + '".', 'info');
-                            } else {
-                                this.log('AJAXRequest.bind: No callback with ID "' + cId + '" found on the pool on the pool: "' + p + '".', 'warning');
-                            }
-                        }
-                    }
-                } else {
-                    var p = 'on' + pName + 'pool';
-
-                    if (cId === 'ALL') {
-                        for (var y = 0; y < this[p].length; y++) {
-                            this[p][y].prop = obj;
-
-                            this.log('AJAXRequest.bind: Binded property to callback "' + this[p][y].id + '" on the pool: "' + pName + '".', 'info');
-                        }
-                    } else {
-                        var callBack = this.getCallBack(pName, cId);
-
-                        if (callBack !== undefined) {
-                            callBack.props = obj;
-                            this.log('AJAXRequest.bind: Binded property to callback "' + callBack.id + '" on the pool: "' + pName + '".', 'info');
-                        } else {
-                            this.log('AJAXRequest.bind: No callback with ID "' + cId + '" found on the pool on the pool: "' + pName + '".', 'warning');
-                        }
-                    }
-                }
             },
             writable: false,
             enumerable: true
@@ -808,7 +770,7 @@ function AJAXRequest(config = {
                     if (callType === 'function') {
                         this.log('AJAXRequest.addCallback: Callback given as function.', 'info');
 
-                        this[p].push({ AJAXRequest: inst, id: id, call: true, func: callback, pool:p });
+                        this[p].push({ AJAXRequest: inst, id: id, call: true, func: callback, pool:poolName });
                         this.log('AJAXRequest.addCallback: New callback added [id = "' + id + '"].', 'info');
 
                         return id;
@@ -820,7 +782,7 @@ function AJAXRequest(config = {
                             var toAdd = {
                                 func: callback.callback,
                                 AJAXRequest: inst,
-                                pool:p,
+                                pool:poolName,
                             }
                             var typeOfId = typeof callback.id;
 
@@ -1487,6 +1449,7 @@ function AJAXRequest(config = {
                 for (var i = 0; i < this.onbeforeajaxpool.length; i++) {
                     try {
                         if (canCall(this.onbeforeajaxpool[i])) {
+                            bindParams(this.onbeforeajaxpool[i], this);
                             this.onbeforeajaxpool[i].func();
                         }
                     } catch (e) {
