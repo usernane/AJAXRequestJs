@@ -1332,6 +1332,7 @@ function AJAXRequest(config = {
                 for (var i = 0; i < this.onbeforeajaxpool.length; i++) {
                     try {
                         if (canCall(this.onbeforeajaxpool[i])) {
+                            bindParams(this.onbeforeajaxpool[i], this);
                             this.onbeforeajaxpool[i].func();
                         }
                     } catch (e) {
