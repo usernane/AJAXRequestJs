@@ -354,6 +354,20 @@ function AJAXRequest(config = {
         }
         return canCall;
     }
+    function bindParams(funcObj, ajaxRequest) {
+        var bindObj = {};
+        for (var x = 0 ; x < ajaxRequest.bindParams.length ; x++) {
+            var objProps = ajaxRequest.bindParams[x];
+            
+            if (objProps.pools.indexOf(funcObj.pool) !== -1) {
+                var keys = Object.keys(objProps.params);
+                for (var y = 0 ; y < keys.length ; y++) {
+                    bindObj[keys[y]] = objProps.params[keys[y]];
+                }
+            }
+        }
+        funcObj.props = bindObj;
+    }
     function callOnErr(inst, jsonResponse, headers, e) {
         inst.log('AJAXRequest: An error occurred while executing the callback at "' + e.fileName + '" line ' + e.lineNumber + '. Check Below for more details.', 'error', true);
         inst.log(e, 'error', true);
