@@ -93,7 +93,7 @@ Object.defineProperties(AJAXRequest, {
 
 Object.defineProperties(AJAXRequest.META, {
     VERSION: {
-        value: '2.1.5',
+        value: '2.1.6',
         writable: false
     },
     REALSE_DATE: {
@@ -335,7 +335,6 @@ function AJAXRequest(config = {
                 setProbsAfterAjax(this, 'success');
             } else if (this.readyState === 4 && this.status >= 400 && this.status < 500) {
                 setProbsAfterAjax(this, 'clienterror');
-                setProbsAfterAjax(this, 'success');
             } else if (this.readyState === 4 && this.status >= 500 && this.status < 600) {
                 setProbsAfterAjax(this, 'servererror');
             } else if (this.readyState === 4) {
