@@ -314,7 +314,6 @@ function AJAXRequest(config = {
         value: function () {
             if (this.readyState === 4 && this.status === 0) {
                 
-                
                 if (this.retry.times !== 0 && this.retry.pass_number < this.retry.times) {
                     var i = this;
                     this.retry.id = setInterval(function () {
