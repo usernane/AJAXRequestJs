@@ -578,41 +578,6 @@ function AJAXRequest(config = {
                     if (AJAXRequest.CALLBACK_POOLS.indexOf(poolName) === -1) {
                         return;
                     }
-                    var pName = poolName;
-                }
-
-                if (pName === 'ALL') {
-                    for (var x = 0; x < AJAXRequest.CALLBACK_POOLS.length; x++) {
-                        var p = 'on' + AJAXRequest.CALLBACK_POOLS[x] + 'pool';
-
-                        if (cId === 'ALL') {
-                            for (var y = 0; y < this[p].length; y++) {
-                                this[p][y].props = obj;
-                            }
-                        } else {
-                            var callBack = this.getCallBack(AJAXRequest.CALLBACK_POOLS[x], cId);
-
-                            if (callBack !== undefined) {
-                                callBack.props = obj;
-
-                            }
-                        }
-                    }
-                } else {
-                    var p = 'on' + pName + 'pool';
-
-                    if (cId === 'ALL') {
-                        for (var y = 0; y < this[p].length; y++) {
-                            this[p][y].prop = obj;
-
-                        }
-                    } else {
-                        var callBack = this.getCallBack(pName, cId);
-
-                        if (callBack !== undefined) {
-                            callBack.props = obj;
-                        }
-                    }
                     applicablePools.push(poolName);
                 }
                 this.bindParams.push({
