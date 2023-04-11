@@ -93,11 +93,11 @@ Object.defineProperties(AJAXRequest, {
 
 Object.defineProperties(AJAXRequest.META, {
     VERSION: {
-        value: '2.1.4',
+        value: '2.1.5',
         writable: false
     },
     REALSE_DATE: {
-        value: '2023-01-22',
+        value: '2023-04-11',
         writable: false
     },
     CONTRIBUTORS: {
@@ -172,6 +172,10 @@ function AJAXRequest(config = {
      */
     this.method = 'GET';
     /**
+     * An array that holds objects which will be binded with callbacks.
+     */
+    this.bindParams = [];
+    /**
      * The URL of AJAX request
      */
     this.url = '';
@@ -211,7 +215,7 @@ function AJAXRequest(config = {
         {
             id: '0',
             call: true,
-            props: {},
+            pool:'connectionlost',
             func: function () {
                 
             }
@@ -224,7 +228,7 @@ function AJAXRequest(config = {
         {
             id: '0',
             call: true,
-            props: {},
+            pool:'beforeajax',
             func: function () {
                 
             }
@@ -238,7 +242,7 @@ function AJAXRequest(config = {
         {
             id: '0',
             call: true,
-            props: {},
+            pool:'afterajax',
             func: function () {
                 
             }
@@ -252,7 +256,7 @@ function AJAXRequest(config = {
         {
             id: '0',
             call: true,
-            props: {},
+            pool:'error',
             func: function () {
                 
             }
@@ -265,7 +269,7 @@ function AJAXRequest(config = {
         {
             id: '0',
             call: true,
-            props: {},
+            pool:'success',
             func: function () {
                 
             }
@@ -278,7 +282,7 @@ function AJAXRequest(config = {
         {
             id: '0',
             call: true,
-            props: {},
+            pool:'ervererror',
             func: function () {
                 
             }
@@ -291,7 +295,7 @@ function AJAXRequest(config = {
         {
             id: '0',
             call: true,
-            props: {},
+            pool:'clienterror',
             func: function () {
                 
             }
@@ -349,7 +353,7 @@ function AJAXRequest(config = {
         if (type === 'function') {
             canCall = funcObj.call();
         }
-        return canCall
+        return canCall;
     }
     function callOnErr(inst, jsonResponse, headers, e) {
         inst.log('AJAXRequest: An error occurred while executing the callback at "' + e.fileName + '" line ' + e.lineNumber + '. Check Below for more details.', 'error', true);
@@ -366,6 +370,7 @@ function AJAXRequest(config = {
                     inst.onerrorpool[i].xmlResponse = inst.responseXML;
                     inst.onerrorpool[i].jsonResponse = jsonResponse;
                     inst.onerrorpool[i].responseHeaders = headers;
+                    bindParams(inst.onerrorpool[i], inst);
                     inst.onerrorpool[i].func();
                 }
             } catch (e) {
@@ -374,54 +379,56 @@ function AJAXRequest(config = {
             }
         }
     }
-    function setProbsAfterAjax(inst, pool_name) {
-        
-        inst.received = true;
-        var headers = getResponseHeadersObj(inst);
+    function setProbsAfterAjax(xhr, pool_name) {
+        //xhr is of type XMLHTTPRequest
+        xhr.received = true;
+        var headers = getResponseHeadersObj(xhr);
         var p = 'on' + pool_name + 'pool';
         try {
-            var jsonResponse = JSON.parse(inst.responseText);
+            var jsonResponse = JSON.parse(xhr.responseText);
         } catch (e) {
             var jsonResponse = null;
         }
-        for (var i = 0; i < inst[p].length; i++) {
-            inst[p][i].url = inst.url;
-            inst[p][i].base = inst.base;
-            inst[p][i].requestUrl = inst.requestUrl;
-            inst[p][i].status = inst.status;
-            inst[p][i].response = inst.responseText;
-            inst[p][i].xmlResponse = inst.responseXML;
-            inst[p][i].jsonResponse = jsonResponse;
-            inst[p][i].responseHeaders = getResponseHeadersObj(inst);
+        for (var i = 0; i < xhr[p].length; i++) {
+            xhr[p][i].url = xhr.url;
+            xhr[p][i].base = xhr.base;
+            xhr[p][i].requestUrl = xhr.requestUrl;
+            xhr[p][i].status = xhr.status;
+            xhr[p][i].response = xhr.responseText;
+            xhr[p][i].xmlResponse = xhr.responseXML;
+            xhr[p][i].jsonResponse = jsonResponse;
+            xhr[p][i].responseHeaders = getResponseHeadersObj(xhr);
 
             try {
 
-                if (canCall(inst[p][i])) {
-                    inst[p][i].func();
+                if (canCall(xhr[p][i])) {
+                    bindParams(xhr[p][i], xhr.AJAXRequest);
+                    xhr[p][i].func();
                 }
             } catch (e) {
-                callOnErr(inst, jsonResponse, headers, e);
+                callOnErr(xhr, jsonResponse, headers, e);
             }
 
 
         }
-        for (var i = 0; i < inst.onafterajaxpool.length; i++) {
-            inst.onafterajaxpool[i].status = inst.status;
-            inst.onafterajaxpool[i].response = inst.responseText;
-            inst.onafterajaxpool[i].xmlResponse = inst.responseXML;
-            inst.onafterajaxpool[i].jsonResponse = jsonResponse;
-            inst.onafterajaxpool[i].responseHeaders = headers;
+        for (var i = 0; i < xhr.onafterajaxpool.length; i++) {
+            xhr.onafterajaxpool[i].status = xhr.status;
+            xhr.onafterajaxpool[i].response = xhr.responseText;
+            xhr.onafterajaxpool[i].xmlResponse = xhr.responseXML;
+            xhr.onafterajaxpool[i].jsonResponse = jsonResponse;
+            xhr.onafterajaxpool[i].responseHeaders = headers;
 
             try {
 
-                if (canCall(inst.onafterajaxpool[i])) {
-                    inst.onafterajaxpool[i].func();
+                if (canCall(xhr.onafterajaxpool[i])) {
+                    bindParams(xhr.onafterajaxpool[i], xhr.AJAXRequest);
+                    xhr.onafterajaxpool[i].func();
                 }
             } catch (e) {
-                callOnErr(inst, jsonResponse, headers, e);
+                callOnErr(xhr, jsonResponse, headers, e);
             }
         }
-        inst.active = false;
+        xhr.active = false;
     }
     /**
      * This function will extract response headers from the response.
@@ -515,7 +522,7 @@ function AJAXRequest(config = {
                 }
 
 
-                return retVal
+                return retVal;
             },
             writable: false,
             enumerable: true
@@ -557,6 +564,8 @@ function AJAXRequest(config = {
                     return;
                 }
 
+                var applicablePools = [];
+                
                 if (callbackId === null || callbackId === undefined) {
                     var cId = 'ALL';
                 } else {
@@ -564,7 +573,7 @@ function AJAXRequest(config = {
                 }
 
                 if (poolName === null || poolName === undefined) {
-                    var pName = 'ALL';
+                    applicablePools = AJAXRequest.CALLBACK_POOLS;
                 } else {
                     if (AJAXRequest.CALLBACK_POOLS.indexOf(poolName) === -1) {
                         return;
@@ -604,7 +613,13 @@ function AJAXRequest(config = {
                             callBack.props = obj;
                         }
                     }
+                    applicablePools.push(poolName);
                 }
+                this.bindParams.push({
+                    pools:applicablePools,
+                    callbackId:callbackId,
+                    params:obj
+                });
             },
             writable: false,
             enumerable: true
@@ -730,15 +745,16 @@ function AJAXRequest(config = {
                     var id = this[p].length + '';
 
                     if (callType === 'function') {
-                        this[p].push({ 'AJAXRequest': inst, id: id, call: true, func: callback, props: {} });
-
+                        this[p].push({ AJAXRequest: inst, id: id, call: true, func: callback, pool:poolName });
+                        
                         return id;
                     } else if (callType === 'object') {
 
                         if (typeof callback.callback === 'function') {
                             var toAdd = {
                                 func: callback.callback,
-                                'AJAXRequest': inst
+                                AJAXRequest: inst,
+                                pool:poolName,
                             }
                             var typeOfId = typeof callback.id;
 
@@ -752,11 +768,6 @@ function AJAXRequest(config = {
                                 id = toAdd.id;
                             }
 
-                            if (typeof callback.props === 'object') {
-                                toAdd.props = callback.props;
-                            } else {
-                                toAdd.props = {};
-                            }
 
                             if (typeof callback.call === 'boolean') {
                                 toAdd.call = callback.call;
@@ -769,7 +780,6 @@ function AJAXRequest(config = {
                             this[p].push(toAdd);
                         }
                     }
-
                 }
             },
             writable: false,
