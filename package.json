@@ -1,8 +1,10 @@
 {
     "name": "AJAXRequest.js",
     "version": "2.1.8",
+    "description":"A JavaScript class library that can help in managing AJAX requests.",
     "keywords": ["util", "ajax", "client", "browser"],
-    "author": "Ibrahim BinAlshikh",
+    "author": "Ibrahim BinAlshikh <ibrahim@webfiori.com>",
+    "license":"MIT",
     "contributors": [],
     "dependencies": {}
 }
