@@ -92,12 +92,12 @@ Object.defineProperties(AJAXRequest, {
 });
 
 Object.defineProperties(AJAXRequest.META, {
-    ERSION: {
-        value: '2.1.8',
+    VERSION: {
+        value: '2.1.9',
         writable: false
     },
     REALSE_DATE: {
-        value: '2023-07-09',
+        value: '2023-07-19',
         writable: false
     },
     CONTRIBUTORS: {
@@ -393,7 +393,7 @@ function AJAXRequest(config = {
 
         for (var i = 0; i < inst.onerrorpool.length; i++) {
             try {
-
+                bindParams(inst.onerrorpool[i], inst);
                 if (canCall(inst.onerrorpool[i])) {
                     inst.log('AJAXRequest: Callback ' + inst.onerrorpool[i].id + ' is enabled.', 'info');
                     inst.onerrorpool[i].AJAXRequest = inst;
@@ -403,7 +403,7 @@ function AJAXRequest(config = {
                     inst.onerrorpool[i].xmlResponse = inst.responseXML;
                     inst.onerrorpool[i].jsonResponse = jsonResponse;
                     inst.onerrorpool[i].responseHeaders = headers;
-                    bindParams(inst.onerrorpool[i], inst);
+                    
                     inst.onerrorpool[i].func();
                 } else {
                     inst.log('AJAXRequest: Callback "' + inst.onerrorpool[i].id + '" is disabled.', 'warning');
@@ -437,10 +437,9 @@ function AJAXRequest(config = {
             xhr[p][i].responseHeaders = getResponseHeadersObj(xhr);
 
             try {
-
+                bindParams(xhr[p][i], xhr.AJAXRequest);
                 if (canCall(xhr[p][i])) {
                     xhr.log('AJAXRequest: Callback "' + xhr[p][i].id + '" is enabled.', 'info');
-                    bindParams(xhr[p][i], xhr.AJAXRequest);
                     xhr[p][i].func();
                 } else {
                     xhr.log('AJAXRequest: Callback "' + xhr[p][i].id + '" is disabled.', 'warning');
@@ -1448,8 +1447,10 @@ function AJAXRequest(config = {
                 this.log('AJAXRequest.send: Executing before AJAX callbacks...', 'info');
                 for (var i = 0; i < this.onbeforeajaxpool.length; i++) {
                     try {
+                        bindParams(this.onbeforeajaxpool[i], this);
+                        
                         if (canCall(this.onbeforeajaxpool[i])) {
-                            bindParams(this.onbeforeajaxpool[i], this);
+                            
                             this.onbeforeajaxpool[i].func();
                         }
                     } catch (e) {
