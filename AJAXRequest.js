@@ -458,10 +458,10 @@ function AJAXRequest(config = {
             xhr.onafterajaxpool[i].responseHeaders = headers;
 
             try {
-
+                bindParams(xhr.onafterajaxpool[i], xhr.AJAXRequest);
                 if (canCall(xhr.onafterajaxpool[i])) {
                     xhr.log('AJAXRequest: Callback "' + xhr.onafterajaxpool[i].id + '" is enabled.', 'info');
-                    bindParams(xhr.onafterajaxpool[i], xhr.AJAXRequest);
+                    
                     xhr.onafterajaxpool[i].func();
                 } else {
                     xhr.log('AJAXRequest: Callback "' + xhr.onafterajaxpool[i].id + '" is disabled.', 'warning');
