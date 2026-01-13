@@ -14,18 +14,6 @@ Object.defineProperties(AJAXRequest, {
         value: ['servererror', 'clienterror', 'success', 'connectionlost', 'afterajax', 'beforeajax', 'error'],
         writable: false
     },
-    XMLHttpFactories: {
-        /**
-        * Array of functions used to create XMLHttpRequest object.
-        * @type Array
-        */
-        value: [
-            function () { return new XMLHttpRequest(); },
-            function () { return new ActiveXObject("Microsoft.XMLHTTP"); },
-            function () { return new ActiveXObject("MSXML2.XMLHTTP.3.0"); }
-        ],
-        writable: false
-    },
     createXhr: {
         /**
         * A factory function used to create XHR object for diffrent browsers.
@@ -33,17 +21,9 @@ Object.defineProperties(AJAXRequest, {
         * return XHR object that can be used to send AJAX.
         */
         value: function createXhr() {
-            for (var i = 0; i < AJAXRequest.XMLHttpFactories.length; i++) {
-                try {
-                    var instance = AJAXRequest.XMLHttpFactories[i]();
-                    instance.active = false;
-                    return instance;
-                }
-                catch (e) {
-
-                }
-            }
-            return false;
+            var instance = new XMLHttpRequest();
+            instance.active = false;
+            return instance;
         },
         wriable: false
     },
