@@ -6,6 +6,8 @@
     "keywords": ["util", "ajax", "client", "browser"],
     "author": "Ibrahim BinAlshikh <ibrahim@webfiori.com>",
     "license":"MIT",
+    "main": "AJAXRequest.js",
+    "types": "AJAXRequest.d.ts",
     "contributors": [],
     "dependencies": {}
 }
