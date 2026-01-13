@@ -76,7 +76,7 @@ Object.defineProperties(AJAXRequest.META, {
         value: '2.1.9',
         writable: false
     },
-    REALSE_DATE: {
+    RELEASE_DATE: {
         value: '2023-07-19',
         writable: false
     },
@@ -264,7 +264,7 @@ function AJAXRequest(config = {
         {
             id: '0',
             call: true,
-            pool:'ervererror',
+            pool:'servererror',
             func: function () {
                 console.info('AJAXRequest: Server Error ' + this.status);
             }
