@@ -9,14 +9,13 @@ let cachedContext = null;
 
 /**
  * Loads AJAXRequest.js and returns the AJAXRequest constructor.
- * Results are cached for performance.
  * 
+ * @param {Object} options - Options for loading
+ * @param {Object} options.mocks - Objects to override in the context (e.g., XMLHttpRequest)
  * @returns {Function} AJAXRequest constructor
  */
-function loadAJAXRequest() {
-  if (cachedContext) {
-    return cachedContext.AJAXRequest;
-  }
+function loadAJAXRequest(options = {}) {
+  const { mocks = {} } = options;
 
   const sourceCode = fs.readFileSync(
     path.join(__dirname, '..', '..', 'AJAXRequest.js'),
@@ -27,9 +26,10 @@ function loadAJAXRequest() {
     ...global,
     window: global,
     document: global.document,
-    XMLHttpRequest: global.XMLHttpRequest,
-    FormData: global.FormData,
-    console: console
+    XMLHttpRequest: mocks.XMLHttpRequest || global.XMLHttpRequest,
+    FormData: mocks.FormData || global.FormData,
+    console: mocks.console || console,
+    ...mocks
   });
 
   vm.runInContext(sourceCode, context);
@@ -50,6 +50,14 @@ function getGlobalAjax() {
 }
 
 /**
+ * Gets the current context
+ * @returns {Object} VM context
+ */
+function getContext() {
+  return cachedContext;
+}
+
+/**
  * Clears the cached context (useful for isolation between test suites)
  */
 function resetContext() {
@@ -59,5 +67,6 @@ function resetContext() {
 module.exports = {
   loadAJAXRequest,
   getGlobalAjax,
+  getContext,
   resetContext
 };
