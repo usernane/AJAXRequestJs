@@ -14,10 +14,17 @@
     "contributors": [],
     "scripts": {
         "test": "jest",
-        "test:coverage": "jest --coverage"
+        "test:coverage": "jest --coverage",
+        "lint": "eslint .",
+        "lint:fix": "eslint . --fix",
+        "build": "rollup -c"
     },
     "devDependencies": {
+        "@eslint/js": "^10.0.1",
+        "@rollup/plugin-terser": "^1.0.0",
+        "eslint": "^10.9.0",
         "jest": "^30.4.2",
-        "jest-environment-jsdom": "^30.4.1"
+        "jest-environment-jsdom": "^30.4.1",
+        "rollup": "^4.62.5"
     }
 }

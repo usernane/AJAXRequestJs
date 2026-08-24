@@ -9,33 +9,33 @@ let cachedContext = null;
 
 /**
  * Loads AJAXRequest.js and returns the AJAXRequest constructor.
- * Results are cached for performance.
- * 
+ *
+ * @param {Object} options - Options for loading
+ * @param {Object} options.mocks - Objects to override in the context (e.g., XMLHttpRequest)
  * @returns {Function} AJAXRequest constructor
  */
-function loadAJAXRequest() {
-  if (cachedContext) {
-    return cachedContext.AJAXRequest;
-  }
+function loadAJAXRequest(options = {}) {
+    const { mocks = {} } = options;
 
-  const sourceCode = fs.readFileSync(
-    path.join(__dirname, '..', '..', 'AJAXRequest.js'),
-    'utf8'
-  );
+    const sourceCode = fs.readFileSync(
+        path.join(__dirname, '..', '..', 'AJAXRequest.js'),
+        'utf8'
+    );
 
-  const context = vm.createContext({
-    ...global,
-    window: global,
-    document: global.document,
-    XMLHttpRequest: global.XMLHttpRequest,
-    FormData: global.FormData,
-    console: console
-  });
+    const context = vm.createContext({
+        ...global,
+        window: global,
+        document: global.document,
+        XMLHttpRequest: mocks.XMLHttpRequest || global.XMLHttpRequest,
+        FormData: mocks.FormData || global.FormData,
+        console: mocks.console || console,
+        ...mocks
+    });
 
-  vm.runInContext(sourceCode, context);
-  cachedContext = context;
+    vm.runInContext(sourceCode, context);
+    cachedContext = context;
 
-  return context.AJAXRequest;
+    return context.AJAXRequest;
 }
 
 /**
@@ -43,21 +43,30 @@ function loadAJAXRequest() {
  * @returns {Object} Global ajax instance
  */
 function getGlobalAjax() {
-  if (!cachedContext) {
-    loadAJAXRequest();
-  }
-  return cachedContext.ajax;
+    if (!cachedContext) {
+        loadAJAXRequest();
+    }
+    return cachedContext.ajax;
+}
+
+/**
+ * Gets the current context
+ * @returns {Object} VM context
+ */
+function getContext() {
+    return cachedContext;
 }
 
 /**
  * Clears the cached context (useful for isolation between test suites)
  */
 function resetContext() {
-  cachedContext = null;
+    cachedContext = null;
 }
 
 module.exports = {
-  loadAJAXRequest,
-  getGlobalAjax,
-  resetContext
+    loadAJAXRequest,
+    getGlobalAjax,
+    getContext,
+    resetContext
 };

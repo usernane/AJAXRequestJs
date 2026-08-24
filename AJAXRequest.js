@@ -1,5 +1,5 @@
 
-"use strict";
+'use strict';
 
 Object.defineProperties(AJAXRequest, {
     META: {
@@ -17,7 +17,7 @@ Object.defineProperties(AJAXRequest, {
     createXhr: {
         /**
         * A factory function used to create XHR object for diffrent browsers.
-        * @returns {Mixed} False in case of failure. Other than that, it will 
+        * @returns {Mixed} False in case of failure. Other than that, it will
         * return XHR object that can be used to send AJAX.
         */
         value: function createXhr() {
@@ -30,7 +30,7 @@ Object.defineProperties(AJAXRequest, {
     extractBase: {
         /**
          * Extract the value of the attribute 'href' of the 'base' tag.
-         * 
+         *
          * @returns {String|null} If the tag 'base' and the attribute 'base' is set,
          * the method will return its value. Other than that, the method will return
          * null.
@@ -53,9 +53,9 @@ Object.defineProperties(AJAXRequest, {
     isValidURL: {
         /**
          * Checks if given string represents a valid URL or not.
-         * 
+         *
          * @param {String} url The string that will be validated.
-         * 
+         *
          * @returns {Boolean} If the given string is a valid URL, the method will return true.
          * Other than that, the method will return false.
          */
@@ -98,32 +98,32 @@ Object.defineProperties(AJAXRequest.META, {
  * A class that can be used to simplfy AJAX requests.
  * @author Ibrahim BinAlshikh <ibinshikh@hotmail.com>
  * @constructor
- * @param {Object} config AJAX configuration. The object can have the 
+ * @param {Object} config AJAX configuration. The object can have the
  * following properties:
  * <ul>
  * <li><b>method</b>: Request method such as GET or POST.</li>
- * <li><b>url</b>: The URL at which AJAX request will be sent 
+ * <li><b>url</b>: The URL at which AJAX request will be sent
  * to.</li>
- * <li><b>params</b>: A parameters which will be sent with the request. 
+ * <li><b>params</b>: A parameters which will be sent with the request.
  * It can be an object, a FormData or a query string.</li>
- * <li><b>verbose</b>:A boolean Used for development. If set to true, more 
+ * <li><b>verbose</b>:A boolean Used for development. If set to true, more
  * informative messages will appear in the console.</li>
- * <li><b>headers</b>: An object that can hold custom headers that will be 
+ * <li><b>headers</b>: An object that can hold custom headers that will be
  * sent with the request.</li>
  * <li><b>enabled</b>: A boolean to enable or disable AJAX.</li>
- * <li><b>beforeAjax</b>: An array that contains one or more callbacks which 
- * will be executed before AJAX request is sent. The callbacks can 
- * be used to collect user inputs and do final configuration before sending 
+ * <li><b>beforeAjax</b>: An array that contains one or more callbacks which
+ * will be executed before AJAX request is sent. The callbacks can
+ * be used to collect user inputs and do final configuration before sending
  * the request to the server.</li>
- * <li><b>onSuccess</b>: An array that contains one or more callbacks which 
+ * <li><b>onSuccess</b>: An array that contains one or more callbacks which
  * will be executed when server sends the response code 2xx.</li>
- * <li><b>onClientErr</b>: An array that contains one or more callbacks which 
+ * <li><b>onClientErr</b>: An array that contains one or more callbacks which
  * will be executed when server sends the response code 4xx.</li>
- * <li><b>onServerErr</b>: An array that contains one or more callbacks which 
+ * <li><b>onServerErr</b>: An array that contains one or more callbacks which
  * will be executed when server sends the response code 5xx.</li>
- * <li><b>onDisconnected</b>: An array that contains one or more callbacks which 
+ * <li><b>onDisconnected</b>: An array that contains one or more callbacks which
  * will be executed when there is no internet connection.</li>
- * <li><b>afterAjax</b>: An array that contains one or more callbacks which 
+ * <li><b>afterAjax</b>: An array that contains one or more callbacks which
  * will be executed after AJAX request is finishhed regrardless of status code.</li>
  * </ul>
  * @returns {AJAXRequest}
@@ -176,7 +176,7 @@ function AJAXRequest(config = {
      */
     this.serverResponse = null;
     /**
-     * A callback function to call in case of file upload is completed. 
+     * A callback function to call in case of file upload is completed.
      * Similar to onreadystatechange.
      * @returns {undefined}
      */
@@ -217,7 +217,7 @@ function AJAXRequest(config = {
         }
     ];
     /**
-     * A pool of functions to call after ajax has finished with regards of the 
+     * A pool of functions to call after ajax has finished with regards of the
      * final state.
      */
     this.onafterajaxpool = [
@@ -231,7 +231,7 @@ function AJAXRequest(config = {
         }
     ];
     /**
-     * A pool of functions to call in case one of the functions in the 
+     * A pool of functions to call in case one of the functions in the
      * instance thrown an exception.
      */
     this.onerrorpool = [
@@ -289,7 +289,7 @@ function AJAXRequest(config = {
         wait:5,
         pass_number:0,
         func: function () {
-            
+
         }
     },
     Object.defineProperty(this, 'onreadystatechange', {
@@ -304,12 +304,12 @@ function AJAXRequest(config = {
                 this.log('AJAXRequest: Ready State = 3 (LOADING)', 'info');
             } else if (this.readyState === 4 && this.status === 0) {
                 this.log('AJAXRequest: Ready State = 4 (DONE)', 'info');
-                
+
                 if (this.retry.times !== 0 && this.retry.pass_number < this.retry.times) {
                     this.log('AJAXRequest: Retry after '+this.retry.wait+' seconds...', 'info');
                     var i = this;
                     this.retry.id = setInterval(function () {
-                        
+
                         i.retry.passed++;
                         i.retry.func(i.retry.wait - i.retry.passed, i.retry.pass_number);
                         if (i.retry.passed === i.retry.wait) {
@@ -357,7 +357,7 @@ function AJAXRequest(config = {
         var bindObj = {};
         for (var x = 0 ; x < ajaxRequest.bindParams.length ; x++) {
             var objProps = ajaxRequest.bindParams[x];
-            
+
             if (objProps.pools.indexOf(funcObj.pool) !== -1) {
                 var keys = Object.keys(objProps.params);
                 for (var y = 0 ; y < keys.length ; y++) {
@@ -383,7 +383,7 @@ function AJAXRequest(config = {
                     inst.onerrorpool[i].xmlResponse = inst.responseXML;
                     inst.onerrorpool[i].jsonResponse = jsonResponse;
                     inst.onerrorpool[i].responseHeaders = headers;
-                    
+
                     inst.onerrorpool[i].func();
                 } else {
                     inst.log('AJAXRequest: Callback "' + inst.onerrorpool[i].id + '" is disabled.', 'warning');
@@ -441,7 +441,7 @@ function AJAXRequest(config = {
                 bindParams(xhr.onafterajaxpool[i], xhr.AJAXRequest);
                 if (canCall(xhr.onafterajaxpool[i])) {
                     xhr.log('AJAXRequest: Callback "' + xhr.onafterajaxpool[i].id + '" is enabled.', 'info');
-                    
+
                     xhr.onafterajaxpool[i].func();
                 } else {
                     xhr.log('AJAXRequest: Callback "' + xhr.onafterajaxpool[i].id + '" is disabled.', 'warning');
@@ -455,14 +455,14 @@ function AJAXRequest(config = {
     }
     /**
      * This function will extract response headers from the response.
-     * @returns {Object} The function will return response headers as an object. 
+     * @returns {Object} The function will return response headers as an object.
      * The keys of the object are headers names and the values are headers values.
-     * @param {Object} xhr The XMLHttpRequest object that the headers will be 
+     * @param {Object} xhr The XMLHttpRequest object that the headers will be
      * extracted from.
      */
     function getResponseHeadersObj(xhr) {
         var retVal = {};
-        var headersArr = xhr.getAllResponseHeaders().split("\r\n");
+        var headersArr = xhr.getAllResponseHeaders().split('\r\n');
         for (var x = 0; x < headersArr.length; x++) {
             var fullHeader = headersArr[x];
             var key = fullHeader.substring(0, fullHeader.indexOf(':'));
@@ -473,7 +473,7 @@ function AJAXRequest(config = {
         return retVal;
     }
     /**
-     * A utility function used to show warning in the console about the existance 
+     * A utility function used to show warning in the console about the existance
      * of events pool.
      * @param {String} p_name The name of the pool.
      * @returns {undefined}
@@ -509,10 +509,10 @@ function AJAXRequest(config = {
         getCallbacksIDs: {
             /**
              * Returns the IDs of all added callbacks.
-             * 
+             *
              * @param {String} poolName If specified, only the IDs of callbacks in the selected pool will be
              * returned.
-             * 
+             *
              * @returns {Object|Array} If the pool name is not provided, the method will return an object. The
              * properties of the object are pools names and the value of each property is an array that
              * contains the IDs of callbacks in the pool. If pool name is given, the method will return an
@@ -553,9 +553,9 @@ function AJAXRequest(config = {
         getBase: {
             /**
              * Returns the value of the base URL which is used to send AJAX requests.
-             * 
+             *
              * @returns {String|null} If the base is set, the method will return its value.
-             * If not, the method will return the value of the attribute 'href' of the 
+             * If not, the method will return the value of the attribute 'href' of the
              * 'base' tag. Other than that, null is returned.
              */
             value: function () {
@@ -567,19 +567,19 @@ function AJAXRequest(config = {
         bind: {
             /**
              * Binds a variable to a callback.
-             * 
+             *
              * Note that this method will override any existing bindings and bind with the
              * new provided object.
-             * 
+             *
              * @param {Object} obj An object that contains the variables that will be binded.
-             * 
+             *
              * @param {String|null} callbackId Optional callback ID. If Specified, the variable will
              * only binded with callbacks having provided ID.
-             * 
+             *
              * @param {String|null} poolName An optional pool name. If specified, the variable will
              * only be binded to the callbacks in the given pool. Possible values for the parameter
              * must be taken from the array AJAXRequest.CALLBACK_POOLS.
-             * 
+             *
              * @returns {undefined}
              */
             value: function (obj, callbackId = null, poolName = null) {
@@ -591,7 +591,7 @@ function AJAXRequest(config = {
                 this.log('AJAXRequest.bind: Callback ID = "' + callbackId + '"', 'info');
                 this.log('AJAXRequest.bind: Pool = "' + poolName + '"', 'info');
                 var applicablePools = [];
-                
+
                 if (callbackId === null || callbackId === undefined) {
                     this.log('AJAXRequest.bind: The binding will be for all callbacks.', 'warning');
                     var cId = 'ALL';
@@ -623,7 +623,7 @@ function AJAXRequest(config = {
         setBase: {
             /**
              * Updates the value of the base URL which is used to send AJAX requests.
-             * 
+             *
              * @param {String|null} base The value of the new base URL. Only set if given URL is
              * valid.
              */
@@ -653,9 +653,9 @@ function AJAXRequest(config = {
             /**
              * Shows a message in the browser's console.
              * @param {String} message The message to display.
-             * @param {String} type The type of the message. It can be 'info',  
-             * 'error' or 'warning'. 
-             * @param {boolean} force If set to true, the message will be shown 
+             * @param {String} type The type of the message. It can be 'info',
+             * 'error' or 'warning'.
+             * @param {boolean} force If set to true, the message will be shown
              * even if the logging is disabled.
              */
             value: function (message, type = '', force = false) {
@@ -676,7 +676,7 @@ function AJAXRequest(config = {
         },
         setResponse: {
             /**
-            * Sets the value of the property serverResponse. Do not call this function 
+            * Sets the value of the property serverResponse. Do not call this function
             * manually.
             * @param {String} response
             * @returns {undefined}
@@ -690,7 +690,7 @@ function AJAXRequest(config = {
         },
         getServerResponse: {
             /**
-            * Return the value of the property serverResponse. Call this function after 
+            * Return the value of the property serverResponse. Call this function after
             * any complete AJAX request to get response load in case there is a load.
             * @returns {String}
             */
@@ -702,8 +702,8 @@ function AJAXRequest(config = {
         },
         responseAsJSON: {
             /**
-            * Return a JSON representation of response payload in case it can be convirted 
-            * into JSON object. Else, in case the payload cannot be convirted, it returns 
+            * Return a JSON representation of response payload in case it can be convirted
+            * into JSON object. Else, in case the payload cannot be convirted, it returns
             * undefined.
             * @returns {Object|undefined}
             */
@@ -720,19 +720,19 @@ function AJAXRequest(config = {
         },
         addCallback: {
             /**
-            * 
+            *
             * @param {Function|Object} callback A function to call. This also can be an object.
             * The object can have following properties, 'callback' The function that will be executed.
             * 'id': A unique itentifier for the callback.
-            * 'call': a boolean or function that evaluate to a boolean. Used to decide if the 
+            * 'call': a boolean or function that evaluate to a boolean. Used to decide if the
             * callback will be executed or not. 'props' Extra properties that the developer would like
             * to have passed in the callback. Accessed using the keyword 'this' in the body of the
             * callback.
-            * 
+            *
             * @param {String} poolName The name of the pool at which the callback will be added to.
             * Must be a value from the array AJAXRequest.CALLBACK_POOLS.
-            * 
-            * @returns {undefined|String} Returns an ID for the function. If not added, 
+            *
+            * @returns {undefined|String} Returns an ID for the function. If not added,
             * the method will return undefined.
             */
             value: function (callback, poolName) {
@@ -762,7 +762,7 @@ function AJAXRequest(config = {
                                 func: callback.callback,
                                 AJAXRequest: inst,
                                 pool:poolName,
-                            }
+                            };
                             var typeOfId = typeof callback.id;
 
                             if (typeOfId === 'undefined' || callback.id === null) {
@@ -806,18 +806,18 @@ function AJAXRequest(config = {
         },
         setOnServerError: {
             /**
-            * Append a function to the pool of functions that will be called in case of 
-            * server error (code 5xx). 
-            * 
+            * Append a function to the pool of functions that will be called in case of
+            * server error (code 5xx).
+            *
             * @param {Function|Object} callback A function to call. This also can be an object.
             * The object can have following properties, 'callback' The function that will be executed.
             * 'id': A unique itentifier for the callback.
-            * 'call': a boolean or function that evaluate to a boolean. Used to decide if the 
+            * 'call': a boolean or function that evaluate to a boolean. Used to decide if the
             * callback will be executed or not. 'props' Extra properties that the developer would like
             * to have passed in the callback. Accessed using the keyword 'this' in the body of the
             * callback.
-            * 
-            * @returns {undefined|String|Number} Returns an ID for the function. If not added, 
+            *
+            * @returns {undefined|String|Number} Returns an ID for the function. If not added,
             * the method will return undefined.
             */
             value: function (callback) {
@@ -829,7 +829,7 @@ function AJAXRequest(config = {
         removeCall: {
             /**
             * Removes a callback function from a specific pool given its ID.
-            * @param {String} pool_name The name of the pool. It should be one of the 
+            * @param {String} pool_name The name of the pool. It should be one of the
             * values in the array AJAXRequest.CALLBACK_POOLS.
             * @param {String} id The ID of the callback function.
             * @returns {undefined}
@@ -873,9 +873,9 @@ function AJAXRequest(config = {
         disableCallExcept: {
             /**
             * Disable all callback functions except the one that its ID is given.
-            * @param {String} pool_name The name of the pool. It should be a value from 
+            * @param {String} pool_name The name of the pool. It should be a value from
             * the array AJAXRequest.CALLBACK_POOLS.
-            * @param {String} id The ID of the function that was provided when the function 
+            * @param {String} id The ID of the function that was provided when the function
             * was added to the pool. If the ID does not exist, All callbacks will be disabled.
             * @returns {undefined}
             */
@@ -912,9 +912,9 @@ function AJAXRequest(config = {
         setCallsEnabled: {
             /**
              * Enable or disable a callbacks with same ID in all pools given the ID.
-             * 
+             *
              * @param {String|Number} id The ID that was set for all callbacks.
-             * 
+             *
              * @param {Boolean|Function} call This can be a boolean or can be a function that evaluate
              * to a boolean.
              */
@@ -929,21 +929,21 @@ function AJAXRequest(config = {
         setCallEnabled: {
             /**
             * Enable or disable a callback on specific pool.
-            * @param {String} pool_name The name of the pool. It must be one of the 
+            * @param {String} pool_name The name of the pool. It must be one of the
             * values in the aray AJAXRequest.CALLBACK_POOLS.
-            * 
-            * @param {String} id The ID of the callback. It is given when the callback 
+            *
+            * @param {String} id The ID of the callback. It is given when the callback
             * was added.
-            * 
-            * @param {Boolean} call If set to true, the function will be called. Else 
+            *
+            * @param {Boolean} call If set to true, the function will be called. Else
             * if it is set to false, it will be not called.
             */
             value: function (pool_name, id, call) {
-                id = id + ''
+                id = id + '';
                 if (pool_name !== undefined && pool_name !== null) {
                     if (typeof pool_name === 'string') {
                         pool_name = pool_name.toLowerCase();
-                        this.log('AJAXRequest.setCallEnabled: Checking if pool "' + pool_name + '" exist...', 'info')
+                        this.log('AJAXRequest.setCallEnabled: Checking if pool "' + pool_name + '" exist...', 'info');
                         if (AJAXRequest.CALLBACK_POOLS.indexOf(pool_name) !== -1) {
                             pool_name = 'on' + pool_name + 'pool';
                             for (var x = 0; x < this[pool_name].length; x++) {
@@ -969,12 +969,12 @@ function AJAXRequest(config = {
         },
         getCallBack: {
             /**
-            * Returns an object that contains the information of a callback function. 
-            * @param {type} pool_name The name of the pool. It must be in the array 
+            * Returns an object that contains the information of a callback function.
+            * @param {type} pool_name The name of the pool. It must be in the array
             * AJAXRequest.CALLBACK_POOLS.
             * @param {String} id The ID of the callback.
-            * @returns {Object|undefined} Returns an object that contains the 
-            * information of the callback. If it is not found, or the pool name is invalid, 
+            * @returns {Object|undefined} Returns an object that contains the
+            * information of the callback. If it is not found, or the pool name is invalid,
             * the method will show a warning in the console and returns undefined.
             */
             value: function (pool_name, id) {
@@ -1005,18 +1005,18 @@ function AJAXRequest(config = {
         },
         setOnClientError: {
             /**
-            * Append a function to the pool of functions that will be called in case of 
-            * client error (code 4xx). 
-            * 
+            * Append a function to the pool of functions that will be called in case of
+            * client error (code 4xx).
+            *
             * @param {Function|Object} callback A function to call. This also can be an object.
             * The object can have following properties, 'callback' The function that will be executed.
             * 'id': A unique itentifier for the callback.
-            * 'call': a boolean or function that evaluate to a boolean. Used to decide if the 
+            * 'call': a boolean or function that evaluate to a boolean. Used to decide if the
             * callback will be executed or not. 'props' Extra properties that the developer would like
             * to have passed in the callback. Accessed using the keyword 'this' in the body of the
             * callback.
-            * 
-            * @returns {undefined|String|Number} Returns an ID for the function. If not added, 
+            *
+            * @returns {undefined|String|Number} Returns an ID for the function. If not added,
             * the method will return undefined.
             */
             value: function (callback, call = true) {
@@ -1027,18 +1027,18 @@ function AJAXRequest(config = {
         },
         setBeforeAjax: {
             /**
-            * Append a function to the pool of functions that will be called before 
-            * ajax request is sent to the server.  
-            * 
+            * Append a function to the pool of functions that will be called before
+            * ajax request is sent to the server.
+            *
             * @param {Function|Object} callback A function to call. This also can be an object.
             * The object can have following properties, 'callback' The function that will be executed.
             * 'id': A unique itentifier for the callback.
-            * 'call': a boolean or function that evaluate to a boolean. Used to decide if the 
+            * 'call': a boolean or function that evaluate to a boolean. Used to decide if the
             * callback will be executed or not. 'props' Extra properties that the developer would like
             * to have passed in the callback. Accessed using the keyword 'this' in the body of the
             * callback.
-            * 
-            * @returns {undefined|String|Number} Returns an ID for the function. If not added, 
+            *
+            * @returns {undefined|String|Number} Returns an ID for the function. If not added,
             * the method will return undefined.
             */
             value: function (callback) {
@@ -1049,18 +1049,18 @@ function AJAXRequest(config = {
         },
         setAfterAjax: {
             /**
-            * Append a function to the pool of functions that will be called after 
-            * ajax request is finished regardless of the status. 
-            * 
+            * Append a function to the pool of functions that will be called after
+            * ajax request is finished regardless of the status.
+            *
             * @param {Function|Object} callback A function to call. This also can be an object.
             * The object can have following properties, 'callback' The function that will be executed.
             * 'id': A unique itentifier for the callback.
-            * 'call': a boolean or function that evaluate to a boolean. Used to decide if the 
+            * 'call': a boolean or function that evaluate to a boolean. Used to decide if the
             * callback will be executed or not. 'props' Extra properties that the developer would like
             * to have passed in the callback. Accessed using the keyword 'this' in the body of the
             * callback.
-            * 
-            * @returns {undefined|String|Number} Returns an ID for the function. If not added, 
+            *
+            * @returns {undefined|String|Number} Returns an ID for the function. If not added,
             * the method will return undefined.
             */
             value: function (callback) {
@@ -1071,20 +1071,20 @@ function AJAXRequest(config = {
         },
         setOnError: {
             /**
-            * Append a function to the pool of functions that will be called in case 
-            * one of the callbacks on the instance thrown an exception. 
-            * 
+            * Append a function to the pool of functions that will be called in case
+            * one of the callbacks on the instance thrown an exception.
+            *
             * @param {Function|Object} callback A function to call. This also can be an object.
             * The object can have following properties, 'callback' The function that will be executed.
             * 'id': A unique itentifier for the callback.
-            * 'call': a boolean or function that evaluate to a boolean. Used to decide if the 
+            * 'call': a boolean or function that evaluate to a boolean. Used to decide if the
             * callback will be executed or not. 'props' Extra properties that the developer would like
             * to have passed in the callback. Accessed using the keyword 'this' in the body of the
             * callback.
-            * 
-            * @returns {undefined|String|Number} Returns an ID for the function. If not added, 
+            *
+            * @returns {undefined|String|Number} Returns an ID for the function. If not added,
             * the method will return undefined.
-            * 
+            *
             */
             value: function (callback) {
                 return this.addCallback(callback, 'error');
@@ -1151,7 +1151,7 @@ function AJAXRequest(config = {
              * The custom header will be sent once the method 'AJAXRequest.send()' is called.
              * @param {String} name The name of the header. It must be non-empty string.
              * @param {String} value The value of the header.
-             * @return {Boolean} If the header is added, the method will return true. 
+             * @return {Boolean} If the header is added, the method will return true.
              * If not added, the method will return false.
              */
             value: function (name, value) {
@@ -1179,18 +1179,18 @@ function AJAXRequest(config = {
         },
         setOnSuccess: {
             /**
-            * Append a function to the pool of functions that will be called in case of 
-            * successfull request (code 2xx). 
-            * 
+            * Append a function to the pool of functions that will be called in case of
+            * successfull request (code 2xx).
+            *
             * @param {Function|Object} callback A function to call. This also can be an object.
             * The object can have following properties, 'callback' The function that will be executed.
             * 'id': A unique itentifier for the callback.
-            * 'call': a boolean or function that evaluate to a boolean. Used to decide if the 
+            * 'call': a boolean or function that evaluate to a boolean. Used to decide if the
             * callback will be executed or not. 'props' Extra properties that the developer would like
             * to have passed in the callback. Accessed using the keyword 'this' in the body of the
             * callback.
-            * 
-            * @returns {undefined|String|Number} Returns an ID for the function. If not added, 
+            *
+            * @returns {undefined|String|Number} Returns an ID for the function. If not added,
             * the method will return undefined.
             */
             value: function (callback) {
@@ -1201,18 +1201,18 @@ function AJAXRequest(config = {
         },
         setOnDisconnected: {
             /**
-            * Append a function to the pool of functions that will be called in case of 
-            * internec connection is lost (code 0). 
-            * 
+            * Append a function to the pool of functions that will be called in case of
+            * internec connection is lost (code 0).
+            *
             * @param {Function|Object} callback A function to call. This also can be an object.
             * The object can have following properties, 'callback' The function that will be executed.
             * 'id': A unique itentifier for the callback.
-            * 'call': a boolean or function that evaluate to a boolean. Used to decide if the 
+            * 'call': a boolean or function that evaluate to a boolean. Used to decide if the
             * callback will be executed or not. 'props' Extra properties that the developer would like
             * to have passed in the callback. Accessed using the keyword 'this' in the body of the
             * callback.
-            * 
-            * @returns {undefined|String|Number} Returns an ID for the function. If not added, 
+            *
+            * @returns {undefined|String|Number} Returns an ID for the function. If not added,
             * the method will return undefined.
             */
             value: function (callback) {
@@ -1224,8 +1224,8 @@ function AJAXRequest(config = {
         setMethod: {
             /**
             * Sets the request method.
-            * @param {String} method get, post or delete. If the request method is not 
-            * supported, A warning will be shown in the console and default (GET) will 
+            * @param {String} method get, post or delete. If the request method is not
+            * supported, A warning will be shown in the console and default (GET) will
             * be used.
             * @returns {undefined}
             */
@@ -1250,14 +1250,14 @@ function AJAXRequest(config = {
         setReqMethod: {
             /**
             * Sets the request method.
-            * @param {String} method get, post or delete. If the request method is not 
-            * supported, A warning will be shown in the console and default (GET) will 
+            * @param {String} method get, post or delete. If the request method is not
+            * supported, A warning will be shown in the console and default (GET) will
             * be used.
             * @returns {undefined}
             * @deprecated since version 2.0.0
             */
             value: function (method) {
-                this.setMethod(method)
+                this.setMethod(method);
             },
             writable: false,
             enumerable: true
@@ -1348,7 +1348,7 @@ function AJAXRequest(config = {
         getRequestURL: {
             /**
             * Returns a string that represents the URL at which AJAX request will be send to.
-            * 
+            *
             * @returns {String} A string such as 'https://example.com/apis/get-user'.
             */
             value: function () {
@@ -1376,18 +1376,18 @@ function AJAXRequest(config = {
             /**
              * Sets the callback that will be used on retry before executing
              * connection lost callbacks.
-             * 
+             *
              * @param {Number} times The number of times at which the callback
              * will retry.
-             * 
-             * @param {Number} timeBetweenEachTryInSeconds Number of seconds 
+             *
+             * @param {Number} timeBetweenEachTryInSeconds Number of seconds
              * between each run.
-             * 
+             *
              * @param {Function} func The callback that will be executed.
-             * 
+             *
              * @param {Object} props Any extra parameters to have access to within
              * the callback.
-             * 
+             *
              * @returns {boolean} If set, the method will return true.
              * False if not.
              */
@@ -1420,7 +1420,7 @@ function AJAXRequest(config = {
         send: {
             /**
             * Send AJAX request to the server.
-            * @returns {Boolean} True in case of the status of AJAX request is open. 
+            * @returns {Boolean} True in case of the status of AJAX request is open.
             * else, it will return false.
             */
             value: function () {
@@ -1428,9 +1428,9 @@ function AJAXRequest(config = {
                 for (var i = 0; i < this.onbeforeajaxpool.length; i++) {
                     try {
                         bindParams(this.onbeforeajaxpool[i], this);
-                        
+
                         if (canCall(this.onbeforeajaxpool[i])) {
-                            
+
                             this.onbeforeajaxpool[i].func();
                         }
                     } catch (e) {
@@ -1453,7 +1453,7 @@ function AJAXRequest(config = {
                     this.log('AJAXRequest.send: Base: ' + base, 'info');
                     this.log('AJAXRequest.send: URL: ' + url, 'info');
                     this.log('AJAXRequest.send: Request URL: ' + requestUrl, 'info');
-                    
+
                     var nonActiveXhr = this.getNonSendXhr();
                     nonActiveXhr.received = false;
                     nonActiveXhr.active = true;
@@ -1592,7 +1592,7 @@ function AJAXRequest(config = {
         setEnabled: {
             /**
             * Enable or disable AJAX.
-            * @param {Boolean} boolean True to enable AJAX. False to disable. If 
+            * @param {Boolean} boolean True to enable AJAX. False to disable. If
             * other value is given, AJAX will be enabled.
             * @returns {undefined}
             */
@@ -1649,7 +1649,7 @@ function AJAXRequest(config = {
             enumerable: true
         }
     });
-    
+
     var instance = this;
     this.verbose = config.verbose;
     if (this.verbose === true) {
