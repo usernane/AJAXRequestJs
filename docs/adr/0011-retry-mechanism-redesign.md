@@ -1,7 +1,7 @@
 # ADR-0011: Retry Mechanism Redesign
 
 **Date:** 2026-08-25
-**Status:** Proposed
+**Status:** Accepted
 
 ## Context
 

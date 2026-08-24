@@ -22,6 +22,25 @@
             value: ['servererror', 'clienterror', 'success', 'connectionlost', 'afterajax', 'beforeajax', 'error', 'retry', 'retryend'],
             writable: false
         },
+        BACKOFF: {
+            /**
+             * Enum of supported retry backoff strategies.
+             *
+             * Usage:
+             *   ajax.setRetry({ times: 3, baseWait: 2, backoff: AJAXRequest.BACKOFF.EXPONENTIAL });
+             *
+             * @type Object
+             * @property {String} FIXED       Wait a fixed number of seconds between every retry.
+             * @property {String} LINEAR      Wait grows linearly: baseWait * attemptNumber.
+             * @property {String} EXPONENTIAL Wait doubles each attempt: baseWait * 2^(attempt-1).
+             */
+            value: Object.freeze({
+                FIXED: 'fixed',
+                LINEAR: 'linear',
+                EXPONENTIAL: 'exponential'
+            }),
+            writable: false
+        },
         createXhr: {
             /**
             * A factory function used to create XHR object for diffrent browsers.
@@ -303,10 +322,14 @@
          */
         this.onretryendpool = [];
         this.retry = {
-            times:3,
-            passed:0,
-            wait:5,
-            pass_number:0,
+            times: 3,
+            passed: 0,
+            wait: 5,       // kept for backward compat; mirrors baseWait when backoff is 'fixed'
+            baseWait: 5,   // base wait in seconds
+            maxWait: 60,   // cap for exponential growth
+            backoff: AJAXRequest.BACKOFF.FIXED,
+            jitter: false, // add ±25% randomness
+            pass_number: 0,
             func: function () {
 
             }
@@ -325,14 +348,17 @@
                     this.log('AJAXRequest: Ready State = 4 (DONE)', 'info');
 
                     if (this.retry.times !== 0 && this.retry.pass_number < this.retry.times) {
-                        this.log('AJAXRequest: Retry after '+this.retry.wait+' seconds...', 'info');
+                        // Calculate wait for this specific attempt (1-indexed)
+                        var currentWait = calculateWait(this.retry.pass_number + 1, this.retry);
+                        this.log('AJAXRequest: Retry after ' + currentWait + ' seconds...', 'info');
                         var i = this;
+                        i.retry.currentWait = currentWait;
                         this.retry.id = setInterval(function () {
 
                             i.retry.passed++;
-                            i.retry.func(i.retry.wait - i.retry.passed, i.retry.pass_number);
+                            i.retry.func(i.retry.currentWait - i.retry.passed, i.retry.pass_number);
                             // Fire onRetry pool callbacks each tick
-                            var remainingSec = i.retry.wait - i.retry.passed;
+                            var remainingSec = i.retry.currentWait - i.retry.passed;
                             var attemptNumber = i.retry.pass_number + 1;
                             for (var r = 0; r < i.onretrypool.length; r++) {
                                 i.onretrypool[r].remainingSeconds = remainingSec;
@@ -348,7 +374,7 @@
                                     callOnErr(i.AJAXRequest, null, {}, e);
                                 }
                             }
-                            if (i.retry.passed === i.retry.wait) {
+                            if (i.retry.passed === i.retry.currentWait) {
                                 clearInterval(i.retry.id);
                                 i.retry.passed = 0;
                                 i.retry.pass_number++;
@@ -440,6 +466,40 @@
                     inst.log(e, 'error', true);
                 }
             }
+        }
+        /**
+         * Calculates the wait time in seconds for a given retry attempt using
+         * the configured backoff strategy.
+         *
+         * @param {Number} attempt The 1-indexed attempt number (1 = first retry)
+         * @param {Object} config  The retry config object
+         * @returns {Number} Wait time in whole seconds, minimum 1
+         */
+        function calculateWait(attempt, config) {
+            var wait;
+            switch (config.backoff) {
+                case 'linear':
+                    wait = config.baseWait * attempt;
+                    break;
+                case 'exponential':
+                    wait = config.baseWait * Math.pow(2, attempt - 1);
+                    break;
+                default: // 'fixed'
+                    wait = config.baseWait;
+            }
+
+            // Cap at maxWait
+            if (config.maxWait !== undefined && config.maxWait !== null) {
+                wait = Math.min(wait, config.maxWait);
+            }
+
+            // Apply ±25% jitter
+            if (config.jitter) {
+                var jitterRange = wait * 0.25;
+                wait = wait - jitterRange + (Math.random() * jitterRange * 2);
+            }
+
+            return Math.max(1, Math.round(wait));
         }
         /**
          * Fires onRetryEnd callbacks — called when retry process ends by either
@@ -1512,25 +1572,67 @@
             },
             setRetry:{
                 /**
-                 * Sets the callback that will be used on retry before executing
-                 * connection lost callbacks.
+                 * Configures the retry behaviour on connection lost.
                  *
-                 * @param {Number} times The number of times at which the callback
-                 * will retry.
+                 * Can be called in two ways:
                  *
-                 * @param {Number} timeBetweenEachTryInSeconds Number of seconds
-                 * between each run.
+                 * Legacy positional form (backward compatible):
+                 *   setRetry(times, timeBetweenEachTryInSeconds, func [, props])
                  *
-                 * @param {Function} func The callback that will be executed.
+                 * New object form:
+                 *   setRetry({
+                 *     times:   {Number}  How many times to retry. 0 disables retry.
+                 *     baseWait:{Number}  Base wait in seconds between retries (>= 1). Default 5.
+                 *     maxWait: {Number}  Maximum wait cap in seconds for exponential backoff. Default 60.
+                 *     backoff: {String}  Strategy: 'fixed' | 'linear' | 'exponential'. Default 'fixed'.
+                 *     jitter:  {Boolean} Add ±25% randomness to the wait. Default false.
+                 *     func:    {Function} Legacy callback (prefer setOnRetry pool instead).
+                 *     props:   {Object}  Extra properties passed to the legacy callback.
+                 *   })
                  *
-                 * @param {Object} props Any extra parameters to have access to within
-                 * the callback.
-                 *
-                 * @returns {boolean} If set, the method will return true.
-                 * False if not.
+                 * @returns {boolean} True if set successfully, false on invalid params.
                  */
-                value: function (times, timeBetweenEachTryInSeconds, func, props = {}) {
-                    var num = Number.parseInt(times);
+                value: function (timesOrConfig, timeBetweenEachTryInSeconds, func, props) {
+                    // --- Object config form ---
+                    if (timesOrConfig !== null && typeof timesOrConfig === 'object' && !Array.isArray(timesOrConfig)) {
+                        var cfg = timesOrConfig;
+                        var num = Number.parseInt(cfg.times);
+                        if (Number.isNaN(num) || num < 0) {
+                            return false;
+                        }
+                        // baseWait defaults to 5 if omitted
+                        var baseWait = cfg.baseWait !== undefined ? Number.parseInt(cfg.baseWait) : 5;
+                        if (Number.isNaN(baseWait) || baseWait < 1) {
+                            return false;
+                        }
+                        var maxWait = cfg.maxWait !== undefined ? Number.parseInt(cfg.maxWait) : 60;
+                        if (Number.isNaN(maxWait) || maxWait < 1) {
+                            return false;
+                        }
+                        var backoff = cfg.backoff || AJAXRequest.BACKOFF.FIXED;
+                        var validBackoffs = Object.values(AJAXRequest.BACKOFF);
+                        if (validBackoffs.indexOf(backoff) === -1) {
+                            return false;
+                        }
+                        var jitter = cfg.jitter === true;
+                        var cfgFunc = typeof cfg.func === 'function' ? cfg.func : function () {};
+                        var cfgProps = typeof cfg.props === 'object' && cfg.props !== null ? cfg.props : {};
+                        this.retry = {
+                            times: num,
+                            passed: 0,
+                            wait: baseWait,   // kept for backward compat
+                            baseWait: baseWait,
+                            maxWait: maxWait,
+                            backoff: backoff,
+                            jitter: jitter,
+                            pass_number: 0,
+                            func: cfgFunc,
+                            props: cfgProps
+                        };
+                        return true;
+                    }
+                    // --- Legacy positional form ---
+                    var num = Number.parseInt(timesOrConfig);
                     if (Number.isNaN(num) || num < 0) {
                         return false;
                     }
@@ -1541,14 +1643,18 @@
                     if (!(typeof func === 'function')) {
                         return false;
                     }
-                    var xprops = typeof props === 'object' ? props : {};
+                    var xprops = typeof props === 'object' && props !== null ? props : {};
                     this.retry = {
-                        times:num,
-                        passed:0,
-                        wait:time,
-                        pass_number:0,
+                        times: num,
+                        passed: 0,
+                        wait: time,      // kept for backward compat
+                        baseWait: time,
+                        maxWait: 60,
+                        backoff: AJAXRequest.BACKOFF.FIXED,
+                        jitter: false,
+                        pass_number: 0,
                         func: func,
-                        props:xprops
+                        props: xprops
                     };
                     return true;
                 },
@@ -1625,9 +1731,14 @@
                             times: this.retry.times,
                             passed: 0,
                             wait: this.retry.wait,
+                            baseWait: this.retry.baseWait,
+                            maxWait: this.retry.maxWait,
+                            backoff: this.retry.backoff,
+                            jitter: this.retry.jitter,
                             pass_number: isRetry ? this.retry.pass_number : 0,
                             func: this.retry.func,
-                            id: undefined
+                            id: undefined,
+                            currentWait: 0
                         };
                         // Store Promise handlers on XHR for settlement
                         nonActiveXhr._resolve = promiseResolve;
