@@ -1,0 +1,24 @@
+# The package.json "files" field is the primary whitelist.
+# This .npmignore provides a safety net for anything not caught by "files".
+
+# Build tooling
+rollup.config.js
+eslint.config.js
+
+# Tests
+tests/
+coverage/
+jest.config.js
+
+# Docs and examples
+docs/
+examples/
+
+# CI / GitHub config
+.github/
+release-please-config.json
+.release-please-manifest.json
+
+# IDE / OS
+.gitignore
+nbproject/
