@@ -14,9 +14,13 @@
     "contributors": [],
     "scripts": {
         "test": "jest",
-        "test:coverage": "jest --coverage"
+        "test:coverage": "jest --coverage",
+        "lint": "eslint .",
+        "lint:fix": "eslint . --fix"
     },
     "devDependencies": {
+        "@eslint/js": "^10.0.1",
+        "eslint": "^10.9.0",
         "jest": "^30.4.2",
         "jest-environment-jsdom": "^30.4.1"
     }
