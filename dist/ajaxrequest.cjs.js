@@ -16,7 +16,7 @@ Object.defineProperties(AJAXRequest, {
         * Names of pools of events.
         * @type Array
         */
-        value: ['servererror', 'clienterror', 'success', 'connectionlost', 'afterajax', 'beforeajax', 'error'],
+        value: ['servererror', 'clienterror', 'success', 'connectionlost', 'afterajax', 'beforeajax', 'error', 'retry', 'retryend'],
         writable: false
     },
     createXhr: {
@@ -288,6 +288,17 @@ function AJAXRequest(config = {
             }
         }
     ];
+    /**
+     * A pool of functions to call on each retry countdown tick.
+     * Context available: this.remainingSeconds, this.attemptNumber, this.AJAXRequest
+     */
+    this.onretrypool = [];
+    /**
+     * A pool of functions to call when the retry process ends, whether by
+     * success or exhaustion (fires before onSuccess / onDisconnected).
+     * Context available: this.succeeded, this.attempts, this.AJAXRequest
+     */
+    this.onretryendpool = [];
     this.retry = {
         times:3,
         passed:0,
@@ -317,6 +328,23 @@ function AJAXRequest(config = {
 
                         i.retry.passed++;
                         i.retry.func(i.retry.wait - i.retry.passed, i.retry.pass_number);
+                        // Fire onRetry pool callbacks each tick
+                        var remainingSec = i.retry.wait - i.retry.passed;
+                        var attemptNumber = i.retry.pass_number + 1;
+                        for (var r = 0; r < i.onretrypool.length; r++) {
+                            i.onretrypool[r].remainingSeconds = remainingSec;
+                            i.onretrypool[r].attemptNumber = attemptNumber;
+                            i.onretrypool[r].maxAttempts = i.retry.times;
+                            i.onretrypool[r].AJAXRequest = i.AJAXRequest;
+                            try {
+                                bindParams(i.onretrypool[r], i.AJAXRequest);
+                                if (canCall(i.onretrypool[r])) {
+                                    i.onretrypool[r].func();
+                                }
+                            } catch (e) {
+                                callOnErr(i.AJAXRequest, null, {}, e);
+                            }
+                        }
                         if (i.retry.passed === i.retry.wait) {
                             clearInterval(i.retry.id);
                             i.retry.passed = 0;
@@ -329,6 +357,11 @@ function AJAXRequest(config = {
                         }
                     }, 1000);
                 } else {
+                    // Fire onRetryEnd before resetting pass_number so callbacks
+                    // can read the correct attempt count
+                    if (this.retry.times > 0) {
+                        fireRetryEnd(this, false);
+                    }
                     this.retry.pass_number = 0;
                     // Reset on AJAXRequest instance too
                     this.AJAXRequest.retry.pass_number = 0;
@@ -405,6 +438,31 @@ function AJAXRequest(config = {
             }
         }
     }
+    /**
+     * Fires onRetryEnd callbacks — called when retry process ends by either
+     * success or exhaustion. Only fires when retry was actually attempted.
+     * @param {Object} xhr The XHR instance
+     * @param {Boolean} succeeded True if a retry ultimately succeeded
+     */
+    function fireRetryEnd(xhr, succeeded) {
+        var pool = xhr.onretryendpool;
+        if (!pool || pool.length === 0) {
+            return;
+        }
+        for (var i = 0; i < pool.length; i++) {
+            pool[i].succeeded = succeeded;
+            pool[i].attempts = xhr.retry.pass_number;
+            pool[i].AJAXRequest = xhr.AJAXRequest;
+            try {
+                bindParams(pool[i], xhr.AJAXRequest);
+                if (canCall(pool[i])) {
+                    pool[i].func();
+                }
+            } catch (e) {
+                callOnErr(xhr.AJAXRequest, null, {}, e);
+            }
+        }
+    }
     function setProbsAfterAjax(xhr, pool_name) {
         //xhr is of type XMLHTTPRequest
         xhr.received = true;
@@ -416,6 +474,10 @@ function AJAXRequest(config = {
             xhr.log('AJAXRequest: Unable to convert response into JSON object.', 'warning', true);
             xhr.log('AJAXRequest: "jsonResponse" is set to \'null\'.', 'warning', true);
             var jsonResponse = null;
+        }
+        // Fire onRetryEnd before success/error callbacks if retry was attempted
+        if (pool_name === 'success' && xhr.retry.pass_number > 0) {
+            fireRetryEnd(xhr, true);
         }
         for (var i = 0; i < xhr[p].length; i++) {
             xhr[p][i].url = xhr.url;
@@ -1248,6 +1310,52 @@ function AJAXRequest(config = {
             writable: false,
             enumerable: true
         },
+        setOnRetry: {
+            /**
+            * Append a function to the pool of functions that will be called on each
+            * second of the retry countdown.
+            *
+            * Context available inside the callback via 'this':
+            *   - this.remainingSeconds {Number} Seconds remaining before next attempt
+            *   - this.attemptNumber    {Number} Current retry attempt number (1-indexed)
+            *   - this.maxAttempts      {Number} Total configured retry attempts
+            *   - this.AJAXRequest      {AJAXRequest} The AJAXRequest instance
+            *
+            * @param {Function|Object} callback A function to call. Can also be an object
+            * with 'callback', 'id', 'call', and 'props' properties.
+            *
+            * @returns {undefined|String|Number} Returns an ID for the callback. If not
+            * added, returns undefined.
+            */
+            value: function (callback) {
+                return this.addCallback(callback, 'retry');
+            },
+            writable: false,
+            enumerable: true
+        },
+        setOnRetryEnd: {
+            /**
+            * Append a function to the pool of functions that will be called when the
+            * retry process ends — either because a retry succeeded (connection restored)
+            * or all retries were exhausted. Fires before onSuccess / onDisconnected.
+            *
+            * Context available inside the callback via 'this':
+            *   - this.succeeded   {Boolean} True if a retry eventually succeeded
+            *   - this.attempts    {Number}  How many retry attempts were made
+            *   - this.AJAXRequest {AJAXRequest} The AJAXRequest instance
+            *
+            * @param {Function|Object} callback A function to call. Can also be an object
+            * with 'callback', 'id', 'call', and 'props' properties.
+            *
+            * @returns {undefined|String|Number} Returns an ID for the callback. If not
+            * added, returns undefined.
+            */
+            value: function (callback) {
+                return this.addCallback(callback, 'retryend');
+            },
+            writable: false,
+            enumerable: true
+        },
         setMethod: {
             /**
             * Sets the request method.
@@ -1533,6 +1641,8 @@ function AJAXRequest(config = {
                     nonActiveXhr.onconnectionlostpool = this.onconnectionlostpool;
                     nonActiveXhr.onafterajaxpool = this.onafterajaxpool;
                     nonActiveXhr.onerrorpool = this.onerrorpool;
+                    nonActiveXhr.onretrypool = this.onretrypool;
+                    nonActiveXhr.onretryendpool = this.onretryendpool;
                     nonActiveXhr.verbose = this.verbose;
                     this.log('AJAXRequest.send: Checking parameters type...', 'info');
                     if (typeof this.params === 'object' && this.params.toString() !== '[object FormData]') {
@@ -1757,6 +1867,8 @@ function AJAXRequest(config = {
     addCalls(config.onDisconnected, 'setOnDisconnected', instance);
     addCalls(config.afterAjax, 'setAfterAjax', instance);
     addCalls(config.onErr, 'setOnError', instance);
+    addCalls(config.onRetry, 'setOnRetry', instance);
+    addCalls(config.onRetryEnd, 'setOnRetryEnd', instance);
 
 }
 //Global AJAXRequest Instance
