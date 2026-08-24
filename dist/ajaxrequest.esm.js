@@ -1,6 +1,9 @@
-
-'use strict';
-
+/**
+ * AJAXRequest.js
+ * A lightweight JavaScript library for making AJAX requests.
+ * @version 2.1.8
+ * @license MIT
+ */
 Object.defineProperties(AJAXRequest, {
     META: {
         writable: false,
@@ -618,9 +621,7 @@ function AJAXRequest(config = {
 
                 if (callbackId === null || callbackId === undefined) {
                     this.log('AJAXRequest.bind: The binding will be for all callbacks.', 'warning');
-                    var cId = 'ALL';
                 } else {
-                    var cId = callbackId + '';
                     this.log('AJAXRequest.bind: The binding will be for callbacks with given ID.', 'info');
                 }
 
@@ -1450,7 +1451,6 @@ function AJAXRequest(config = {
             * or rejects with error data on failure (4xx/5xx/connection lost).
             */
             value: function (_internalResolve, _internalReject) {
-                var self = this;
                 var isRetry = typeof _internalResolve === 'function';
                 var promiseResolve, promiseReject;
                 var promise;
@@ -1758,4 +1758,5 @@ function AJAXRequest(config = {
 
 }
 //Global AJAXRequest Instance
-const ajax = new AJAXRequest();
+new AJAXRequest();
+//# sourceMappingURL=ajaxrequest.esm.js.map

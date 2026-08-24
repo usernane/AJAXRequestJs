@@ -105,7 +105,7 @@ describe('AJAXRequest retry mechanism', () => {
             });
             ajax.setRetry(2, 3, retryCallback);
 
-            ajax.send();
+            ajax.send().catch(function() {});
 
             // Simulate connection lost (status 0, readyState 4)
             const xhr = xhrInstances[xhrInstances.length - 1];
@@ -128,7 +128,7 @@ describe('AJAXRequest retry mechanism', () => {
             });
             ajax.setRetry(2, 3, retryCallback);
 
-            ajax.send();
+            ajax.send().catch(function() {});
 
             const xhr = xhrInstances[xhrInstances.length - 1];
             xhr.status = 0;
@@ -161,7 +161,7 @@ describe('AJAXRequest retry mechanism', () => {
             });
             ajax.setRetry(2, 2, retryCallback); // 2 retries, 2 seconds each
 
-            ajax.send();
+            ajax.send().catch(function() {});
 
             // First connection lost
             let xhr = xhrInstances[xhrInstances.length - 1];
@@ -202,7 +202,7 @@ describe('AJAXRequest retry mechanism', () => {
             });
             ajax.setRetry(1, 2, retryCallback);
 
-            ajax.send();
+            ajax.send().catch(function() {});
 
             const xhr = xhrInstances[xhrInstances.length - 1];
             xhr.status = 0;
@@ -222,7 +222,7 @@ describe('AJAXRequest retry mechanism', () => {
             });
             ajax.setRetry(1, 2, retryCallback);
 
-            ajax.send();
+            ajax.send().catch(function() {});
 
             const xhr = xhrInstances[xhrInstances.length - 1];
             xhr.status = 0;
@@ -256,7 +256,7 @@ describe('AJAXRequest retry mechanism', () => {
             });
             ajax.setRetry(2, 2, retryCallback);
 
-            ajax.send();
+            ajax.send().catch(function() {});
 
             const xhr = xhrInstances[xhrInstances.length - 1];
             xhr.status = 200;
@@ -280,7 +280,7 @@ describe('AJAXRequest retry mechanism', () => {
             });
             ajax.setRetry(2, 2, retryCallback);
 
-            ajax.send();
+            ajax.send().catch(() => {});
 
             const xhr = xhrInstances[xhrInstances.length - 1];
             xhr.status = 500;
@@ -302,7 +302,7 @@ describe('AJAXRequest retry mechanism', () => {
             });
             ajax.setRetry(2, 2, retryCallback);
 
-            ajax.send();
+            ajax.send().catch(() => {});
 
             const xhr = xhrInstances[xhrInstances.length - 1];
             xhr.status = 404;
@@ -327,7 +327,7 @@ describe('AJAXRequest retry mechanism', () => {
             });
             ajax.setRetry(0, 2, jest.fn()); // 0 retries
 
-            ajax.send();
+            ajax.send().catch(() => {});
 
             const xhr = xhrInstances[xhrInstances.length - 1];
             xhr.status = 0;
