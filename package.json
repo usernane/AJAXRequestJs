@@ -1,6 +1,6 @@
 {
     "name": "ajaxrequest-helper",
-    "version": "2.1.8",
+    "version": "3.0.0-alpha",
     "homepage": "https://github.com/usernane/AJAXRequestJS#readme",
     "description": "A JavaScript class library that can help in managing AJAX requests.",
     "keywords": [
