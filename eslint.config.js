@@ -59,9 +59,12 @@ export default [
         }
     },
     {
-        files: ['eslint.config.js'],
+        files: ['eslint.config.js', 'rollup.config.js'],
         languageOptions: {
-            sourceType: 'module'
+            sourceType: 'module',
+            globals: {
+                process: 'readonly'
+            }
         }
     },
     {

@@ -288,6 +288,7 @@ describe('AJAXRequest.send()', () => {
         });
 
         test('can use try/catch for errors', async () => {
+            expect.assertions(2);
             const ajax = new AJAXRequest({
                 method: 'GET',
                 url: 'https://example.com/api'
@@ -299,7 +300,6 @@ describe('AJAXRequest.send()', () => {
 
             try {
                 await promise;
-                fail('Should have thrown');
             } catch (error) {
                 expect(error.type).toBe('servererror');
                 expect(error.status).toBe(500);
