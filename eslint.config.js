@@ -51,14 +51,20 @@ export default [
                 jest: 'readonly',
                 require: 'readonly',
                 module: 'readonly',
-                __dirname: 'readonly'
+                __dirname: 'readonly',
+                // Runtime globals used by tests
+                global: 'readonly',
+                AbortController: 'readonly'
             }
         }
     },
     {
-        files: ['eslint.config.js'],
+        files: ['eslint.config.js', 'rollup.config.js'],
         languageOptions: {
-            sourceType: 'module'
+            sourceType: 'module',
+            globals: {
+                process: 'readonly'
+            }
         }
     },
     {

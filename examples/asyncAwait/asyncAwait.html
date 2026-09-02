@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>AJAXRequest.js — async/await example</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- Load the v3 build from the CDN. -->
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/usernane/AJAXRequestJs@3.x.x/dist/ajaxrequest.umd.js"></script>
+        <!-- Example logic. -->
+        <script type="text/javascript" src="asyncAwait.js"></script>
+    </head>
+    <body>
+        <p>
+            This example awaits <code>ajax.send()</code> inside an
+            <code>async</code> function and handles both success and the typed
+            rejections (including <code>timeout</code> and <code>abort</code>)
+            with <code>try/catch</code>.
+        </p>
+        <form onsubmit="return false">
+            <button type="submit" onclick="loadRepo()">Load repo</button>
+            <button type="button" onclick="cancelRepo()">Cancel</button>
+        </form>
+        <p id="output">Idle.</p>
+    </body>
+</html>

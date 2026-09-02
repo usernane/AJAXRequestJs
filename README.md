@@ -26,6 +26,7 @@ A light weight JavaScript class library that can help in making AJAX requests mu
   * <a href="#enabling-or-disabling">Enabling or Disabling</a>
   * <a href="#binding-properties">Binding Properties</a>
 * <a href="#retry">Retry</a>
+* <a href="#promises-and-asyncawait">Promises and Async/Await</a>
 * <a href="#verbose-mode">Verbose Mode</a>
 * <a href="#api-reference">API Docs</a>
 * <a href="#usage-examples">Usage Examples</a>
@@ -656,6 +657,41 @@ ajax.setRetry(4, 14, function (remainingSec, passNum) {
 });
 
 ```
+
+## Promises and Async/Await
+Since v3, `AJAXRequest.send()` returns a `Promise`, so requests can be used with `async`/`await` in addition to the callback pools. The Promise **resolves** with the response on a 2xx/3xx status and **rejects** with an object that carries a `type` field describing the failure.
+
+``` javascript
+const req = new AJAXRequest({
+    method: 'GET',
+    url: 'https://api.github.com/repos/usernane/AJAXRequestJs',
+    timeout: 8000 // reject with { type: 'timeout' } after 8s
+});
+
+async function loadRepo() {
+    try {
+        const res = await req.send();
+        // Resolved on 2xx/3xx.
+        console.log(res.status, res.jsonResponse);
+    } catch (err) {
+        // Rejected — branch on err.type.
+        switch (err.type) {
+            case 'timeout':        console.error('Timed out'); break;
+            case 'abort':          console.error('Cancelled'); break;
+            case 'connectionlost': console.error('Offline'); break;
+            case 'clienterror':    console.error('Client error ' + err.status); break;
+            case 'servererror':    console.error('Server error ' + err.status); break;
+            default:               console.error('Failed: ' + err.type);
+        }
+    }
+}
+```
+
+The rejection `type` can be one of: `clienterror` (4xx), `servererror` (5xx), `connectionlost` (no connection), `timeout` (exceeded the configured timeout), `abort` (cancelled via `abort()` or an `AbortController`), `disabled` (AJAX disabled before sending), or `beforeajax_error` (a `beforeAjax` callback threw).
+
+The callback pools still fire as usual, so the two styles can be mixed. Cancellation integrates with async/await too — calling `req.abort()` (or aborting a configured `AbortController` signal) settles the awaited Promise with `{ type: 'abort' }`.
+
+A full, runnable example is available in [examples/asyncAwait](https://github.com/usernane/AJAXRequestJs/tree/master/examples/asyncAwait).
 
 ## Verbose Mode
 Verbose mode is used in development. It shows more informative messages in the console regarding the execution. To enable or disable verbose mode, the developer must change the value of the property `verbose` of the instance as follows:

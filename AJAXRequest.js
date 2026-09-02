@@ -11,7 +11,7 @@ Object.defineProperties(AJAXRequest, {
         * Names of pools of events.
         * @type Array
         */
-        value: ['servererror', 'clienterror', 'success', 'connectionlost', 'afterajax', 'beforeajax', 'error', 'retry', 'retryend'],
+        value: ['servererror', 'clienterror', 'success', 'connectionlost', 'afterajax', 'beforeajax', 'error', 'retry', 'retryend', 'timeout', 'abort'],
         writable: false
     },
     BACKOFF: {
@@ -191,6 +191,20 @@ function AJAXRequest(config = {
      */
     this.enabled = true;
     /**
+     * Request timeout in milliseconds. 0 means no timeout (default browser behaviour).
+     */
+    this.timeout = 0;
+    /**
+     * An optional AbortSignal (from an AbortController) used to cancel the
+     * request from outside. Null when not configured.
+     */
+    this.signal = null;
+    /**
+     * Internal reference to the listener attached to the abort signal, kept so
+     * it can be detached once the request settles.
+     */
+    this._signalAbortListener = null;
+    /**
      * Server response after processing the request.
      */
     this.serverResponse = null;
@@ -303,6 +317,36 @@ function AJAXRequest(config = {
         }
     ];
     /**
+     * A pool of functions to call in case the request times out.
+     * Fired when the request exceeds the configured timeout (distinct from
+     * a lost connection). Context available: this.status, this.AJAXRequest.
+     */
+    this.ontimeoutpool = [
+        {
+            id: '0',
+            call: true,
+            pool:'timeout',
+            func: function () {
+                console.info('AJAXRequest: Request timed out.');
+            }
+        }
+    ];
+    /**
+     * A pool of functions to call when a request is aborted via abort().
+     * Fired on explicit cancellation (distinct from a timeout or a lost
+     * connection). Context available: this.AJAXRequest.
+     */
+    this.onabortpool = [
+        {
+            id: '0',
+            call: true,
+            pool:'abort',
+            func: function () {
+                console.info('AJAXRequest: Request aborted.');
+            }
+        }
+    ];
+    /**
      * A pool of functions to call on each retry countdown tick.
      * Context available: this.remainingSeconds, this.attemptNumber, this.AJAXRequest
      */
@@ -338,6 +382,13 @@ function AJAXRequest(config = {
                 this.log('AJAXRequest: Ready State = 3 (LOADING)', 'info');
             } else if (this.readyState === 4 && this.status === 0) {
                 this.log('AJAXRequest: Ready State = 4 (DONE)', 'info');
+
+                if (this._aborted === true) {
+                    // Request was explicitly aborted; abort handling already ran
+                    // in abort(). Do not retry or fire the disconnected pool.
+                    this.log('AJAXRequest: Ready state change ignored (request aborted).', 'info');
+                    return;
+                }
 
                 if (this.retry.times !== 0 && this.retry.pass_number < this.retry.times) {
                     // Calculate wait for this specific attempt (1-indexed)
@@ -494,6 +545,105 @@ function AJAXRequest(config = {
         return Math.max(1, Math.round(wait));
     }
     /**
+     * Fires onTimeout callbacks followed by afterAjax callbacks — called when a
+     * request exceeds its configured timeout. Distinct from connection lost.
+     * @param {Object} xhr The XHR instance
+     */
+    function fireTimeout(xhr) {
+        var pool = xhr.ontimeoutpool;
+        if (pool) {
+            for (var i = 0; i < pool.length; i++) {
+                pool[i].status = xhr.status;
+                pool[i].AJAXRequest = xhr.AJAXRequest;
+                try {
+                    bindParams(pool[i], xhr.AJAXRequest);
+                    if (canCall(pool[i])) {
+                        pool[i].func();
+                    }
+                } catch (e) {
+                    callOnErr(xhr.AJAXRequest, null, {}, e);
+                }
+            }
+        }
+        var afterPool = xhr.onafterajaxpool;
+        if (afterPool) {
+            for (var j = 0; j < afterPool.length; j++) {
+                afterPool[j].status = xhr.status;
+                afterPool[j].response = xhr.responseText;
+                afterPool[j].xmlResponse = xhr.responseXML;
+                afterPool[j].jsonResponse = null;
+                afterPool[j].responseHeaders = {};
+                try {
+                    bindParams(afterPool[j], xhr.AJAXRequest);
+                    if (canCall(afterPool[j])) {
+                        afterPool[j].func();
+                    }
+                } catch (e) {
+                    callOnErr(xhr.AJAXRequest, null, {}, e);
+                }
+            }
+        }
+        detachSignalListener(xhr);
+    }
+    /**
+     * Fires onAbort callbacks followed by afterAjax callbacks — called when a
+     * request is explicitly aborted via abort(). Distinct from timeout and
+     * connection lost.
+     * @param {Object} xhr The XHR instance
+     */
+    function fireAbort(xhr) {
+        var pool = xhr.onabortpool;
+        if (pool) {
+            for (var i = 0; i < pool.length; i++) {
+                pool[i].status = xhr.status;
+                pool[i].AJAXRequest = xhr.AJAXRequest;
+                try {
+                    bindParams(pool[i], xhr.AJAXRequest);
+                    if (canCall(pool[i])) {
+                        pool[i].func();
+                    }
+                } catch (e) {
+                    callOnErr(xhr.AJAXRequest, null, {}, e);
+                }
+            }
+        }
+        var afterPool = xhr.onafterajaxpool;
+        if (afterPool) {
+            for (var j = 0; j < afterPool.length; j++) {
+                afterPool[j].status = xhr.status;
+                afterPool[j].response = xhr.responseText;
+                afterPool[j].xmlResponse = xhr.responseXML;
+                afterPool[j].jsonResponse = null;
+                afterPool[j].responseHeaders = {};
+                try {
+                    bindParams(afterPool[j], xhr.AJAXRequest);
+                    if (canCall(afterPool[j])) {
+                        afterPool[j].func();
+                    }
+                } catch (e) {
+                    callOnErr(xhr.AJAXRequest, null, {}, e);
+                }
+            }
+        }
+        detachSignalListener(xhr);
+    }
+    /**
+     * Detaches the abort-signal listener associated with a settled request so a
+     * later controller.abort() becomes a no-op and no listener leaks.
+     * @param {Object} xhr The XHR instance
+     */
+    function detachSignalListener(xhr) {
+        var owner = xhr._signalOwner;
+        var signal = xhr._signal;
+        if (owner && signal && owner._signalAbortListener
+            && typeof signal.removeEventListener === 'function') {
+            signal.removeEventListener('abort', owner._signalAbortListener);
+            owner._signalAbortListener = null;
+        }
+        xhr._signal = undefined;
+        xhr._signalOwner = undefined;
+    }
+    /**
      * Fires onRetryEnd callbacks — called when retry process ends by either
      * success or exhaustion. Only fires when retry was actually attempted.
      * @param {Object} xhr The XHR instance
@@ -581,6 +731,9 @@ function AJAXRequest(config = {
         xhr.active = false;
         xhr.log('AJAXRequest: Finished AJAX Request.', 'info');
         
+        // Detach any abort-signal listener now that the request has settled.
+        detachSignalListener(xhr);
+
         // Settle the Promise after all callbacks complete
         if (typeof xhr._resolve === 'function') {
             var responseData = {
@@ -1367,6 +1520,59 @@ function AJAXRequest(config = {
             writable: false,
             enumerable: true
         },
+        setOnTimeout: {
+            /**
+            * Append a function to the pool of functions that will be called in case the
+            * request times out (exceeds the configured timeout). This is distinct from
+            * a lost connection — it fires only when a timeout was configured and reached.
+            *
+            * Context available inside the callback via 'this':
+            *   - this.status      {Number} The status code (0 for a timed-out request)
+            *   - this.AJAXRequest {AJAXRequest} The AJAXRequest instance
+            *
+            * @param {Function|Object} callback A function to call. This also can be an object.
+            * The object can have following properties, 'callback' The function that will be executed.
+            * 'id': A unique itentifier for the callback.
+            * 'call': a boolean or function that evaluate to a boolean. Used to decide if the
+            * callback will be executed or not. 'props' Extra properties that the developer would like
+            * to have passed in the callback. Accessed using the keyword 'this' in the body of the
+            * callback.
+            *
+            * @returns {undefined|String|Number} Returns an ID for the function. If not added,
+            * the method will return undefined.
+            */
+            value: function (callback) {
+                return this.addCallback(callback, 'timeout');
+            },
+            writable: false,
+            enumerable: true
+        },
+        setOnAbort: {
+            /**
+            * Append a function to the pool of functions that will be called when the
+            * request is explicitly aborted via abort(). This is distinct from a
+            * timeout or a lost connection.
+            *
+            * Context available inside the callback via 'this':
+            *   - this.AJAXRequest {AJAXRequest} The AJAXRequest instance
+            *
+            * @param {Function|Object} callback A function to call. This also can be an object.
+            * The object can have following properties, 'callback' The function that will be executed.
+            * 'id': A unique itentifier for the callback.
+            * 'call': a boolean or function that evaluate to a boolean. Used to decide if the
+            * callback will be executed or not. 'props' Extra properties that the developer would like
+            * to have passed in the callback. Accessed using the keyword 'this' in the body of the
+            * callback.
+            *
+            * @returns {undefined|String|Number} Returns an ID for the function. If not added,
+            * the method will return undefined.
+            */
+            value: function (callback) {
+                return this.addCallback(callback, 'abort');
+            },
+            writable: false,
+            enumerable: true
+        },
         setOnRetry: {
             /**
             * Append a function to the pool of functions that will be called on each
@@ -1752,7 +1958,54 @@ function AJAXRequest(config = {
                     nonActiveXhr.onerrorpool = this.onerrorpool;
                     nonActiveXhr.onretrypool = this.onretrypool;
                     nonActiveXhr.onretryendpool = this.onretryendpool;
+                    nonActiveXhr.ontimeoutpool = this.ontimeoutpool;
+                    nonActiveXhr.onabortpool = this.onabortpool;
+                    nonActiveXhr._aborted = false;
                     nonActiveXhr.verbose = this.verbose;
+                    // Configure request timeout (0 = no timeout / browser default).
+                    var timeoutMs = Number.parseInt(this.timeout);
+                    if (!Number.isNaN(timeoutMs) && timeoutMs > 0) {
+                        nonActiveXhr.timeout = timeoutMs;
+                        this.log('AJAXRequest.send: Timeout set to ' + timeoutMs + 'ms.', 'info');
+                        nonActiveXhr.ontimeout = function () {
+                            this.log('AJAXRequest: Request timed out after ' + this.timeout + 'ms.', 'warning', true);
+                            this.active = false;
+                            this.received = true;
+                            fireTimeout(this);
+                            if (typeof this._resolve === 'function') {
+                                this._reject({ type: 'timeout', status: this.status });
+                            }
+                        };
+                    }
+                    // AbortController / AbortSignal support (fetch-aligned).
+                    if (this.signal !== null && this.signal !== undefined) {
+                        if (this.signal.aborted === true) {
+                            // Sending with an already-aborted signal fails fast:
+                            // do not open the request, reject immediately.
+                            this.log('AJAXRequest.send: Signal already aborted. Aborting before send.', 'warning', true);
+                            nonActiveXhr._aborted = true;
+                            nonActiveXhr.active = false;
+                            nonActiveXhr.received = true;
+                            fireAbort(nonActiveXhr);
+                            if (promiseReject) {
+                                promiseReject({ type: 'abort', status: 0 });
+                            }
+                            return promise;
+                        }
+                        // Detach any previous listener before attaching a new one.
+                        if (this._signalAbortListener !== null && typeof this.signal.removeEventListener === 'function') {
+                            this.signal.removeEventListener('abort', this._signalAbortListener);
+                        }
+                        var self2 = this;
+                        this._signalAbortListener = function () {
+                            self2.log('AJAXRequest: Abort signal received.', 'info');
+                            self2.abort();
+                        };
+                        this.signal.addEventListener('abort', this._signalAbortListener);
+                        // Remember the signal on the XHR so abort() can clean up the listener.
+                        nonActiveXhr._signal = this.signal;
+                        nonActiveXhr._signalOwner = this;
+                    }
                     this.log('AJAXRequest.send: Checking parameters type...', 'info');
                     if (typeof this.params === 'object' && this.params.toString() !== '[object FormData]') {
                         this.log('AJAXRequest.send: An object is given. Extracting values...', 'info');
@@ -1873,6 +2126,74 @@ function AJAXRequest(config = {
             writable: false,
             enumerable: true
         },
+        abort: {
+            /**
+            * Aborts any in-progress request(s) sent by this instance.
+            *
+            * For every active request, this method:
+            *   - clears any pending retry interval so no further retries occur,
+            *   - calls XMLHttpRequest.abort() on the underlying XHR,
+            *   - fires the onAbort callback pool followed by afterAjax callbacks,
+            *   - rejects the associated Promise with { type: 'abort' }.
+            *
+            * An aborted request will not be retried, and its ready-state change
+            * (status 0) will not be treated as a lost connection.
+            *
+            * @returns {Boolean} True if at least one active request was aborted,
+            * false if there was nothing in progress.
+            */
+            value: function () {
+                var abortedAny = false;
+                for (var x = 0; x < this.xhr_pool.length; x++) {
+                    var xhr = this.xhr_pool[x];
+                    var hasPendingRetry = xhr.retry && xhr.retry.id !== undefined && xhr.retry.id !== null;
+
+                    if (!xhr.active && !hasPendingRetry) {
+                        continue;
+                    }
+
+                    // Flag before abort() so the resulting readystatechange
+                    // (status 0) is not treated as a disconnect / does not retry.
+                    xhr._aborted = true;
+
+                    // Clear any pending retry countdown.
+                    if (hasPendingRetry) {
+                        clearInterval(xhr.retry.id);
+                        xhr.retry.id = undefined;
+                        xhr.retry.passed = 0;
+                        xhr.retry.pass_number = 0;
+                        this.retry.pass_number = 0;
+                        this.log('AJAXRequest.abort: Cleared pending retry interval.', 'info');
+                    }
+
+                    if (typeof xhr.abort === 'function') {
+                        try {
+                            xhr.abort();
+                        } catch (e) {
+                            callOnErr(this, null, {}, e);
+                        }
+                    }
+
+                    xhr.active = false;
+                    xhr.received = true;
+                    this.log('AJAXRequest.abort: Request aborted.', 'info', true);
+
+                    fireAbort(xhr);
+
+                    if (typeof xhr._reject === 'function') {
+                        xhr._reject({ type: 'abort', status: xhr.status });
+                    }
+
+                    abortedAny = true;
+                }
+                if (!abortedAny) {
+                    this.log('AJAXRequest.abort: No active request to abort.', 'info');
+                }
+                return abortedAny;
+            },
+            writable: false,
+            enumerable: true
+        },
         setEnabled: {
             /**
             * Enable or disable AJAX.
@@ -1891,6 +2212,89 @@ function AJAXRequest(config = {
                     this.enabled = true;
                     this.log('AJAXRequest.setEnabled: AJAX is enabled.', 'info');
                 }
+            },
+            writable: false,
+            enumerable: true
+        },
+        setTimeout: {
+            /**
+            * Sets the request timeout, in milliseconds.
+            *
+            * The value is parsed as an integer. A value of 0 disables the timeout
+            * (the browser default). If the given value is not a number or is
+            * negative, the current timeout is left unchanged.
+            *
+            * @param {Number|String} timeout Timeout in milliseconds (>= 0).
+            *
+            * @returns {Boolean} True if the timeout was updated, false if the
+            * provided value was invalid.
+            */
+            value: function (timeout) {
+                var parsed = Number.parseInt(timeout);
+                if (Number.isNaN(parsed) || parsed < 0) {
+                    this.log('AJAXRequest.setTimeout: Invalid timeout value. No change made.', 'warning');
+                    return false;
+                }
+                this.timeout = parsed;
+                this.log('AJAXRequest.setTimeout: Timeout set to ' + parsed + 'ms.', 'info');
+                return true;
+            },
+            writable: false,
+            enumerable: true
+        },
+        getTimeout: {
+            /**
+            * Returns the currently configured request timeout, in milliseconds.
+            *
+            * @returns {Number} The timeout in milliseconds. 0 means no timeout.
+            */
+            value: function () {
+                return this.timeout;
+            },
+            writable: false,
+            enumerable: true
+        },
+        setSignal: {
+            /**
+            * Sets an AbortSignal (from an AbortController) used to cancel the
+            * request from outside, aligning with the fetch API pattern.
+            *
+            * When set, aborting the associated controller will abort any
+            * in-progress request via abort(). Passing null clears the signal.
+            *
+            * @param {AbortSignal|null} signal An AbortSignal instance, or null to clear.
+            *
+            * @returns {Boolean} True if the signal was set or cleared, false if the
+            * provided value was not a valid AbortSignal.
+            */
+            value: function (signal) {
+                if (signal === null || signal === undefined) {
+                    this.signal = null;
+                    this.log('AJAXRequest.setSignal: Signal cleared.', 'info');
+                    return true;
+                }
+                // Duck-type check for an AbortSignal-like object.
+                if (typeof signal === 'object'
+                    && typeof signal.aborted === 'boolean'
+                    && typeof signal.addEventListener === 'function') {
+                    this.signal = signal;
+                    this.log('AJAXRequest.setSignal: Signal set.', 'info');
+                    return true;
+                }
+                this.log('AJAXRequest.setSignal: Invalid signal. No change made.', 'warning');
+                return false;
+            },
+            writable: false,
+            enumerable: true
+        },
+        getSignal: {
+            /**
+            * Returns the currently configured AbortSignal, or null if none is set.
+            *
+            * @returns {AbortSignal|null} The configured signal, or null.
+            */
+            value: function () {
+                return this.signal;
             },
             writable: false,
             enumerable: true
@@ -1943,6 +2347,14 @@ function AJAXRequest(config = {
     this.setURL(config.url);
     this.setEnabled(config.enabled);
 
+    if (config.timeout !== undefined && config.timeout !== null) {
+        this.setTimeout(config.timeout);
+    }
+
+    if (config.signal !== undefined && config.signal !== null) {
+        this.setSignal(config.signal);
+    }
+
     if (config.base) {
         this.setBase(config.base);
     } else {
@@ -1974,6 +2386,8 @@ function AJAXRequest(config = {
     addCalls(config.onClientErr, 'setOnClientError', instance);
     addCalls(config.onServerErr, 'setOnServerError', instance);
     addCalls(config.onDisconnected, 'setOnDisconnected', instance);
+    addCalls(config.onTimeout, 'setOnTimeout', instance);
+    addCalls(config.onAbort, 'setOnAbort', instance);
     addCalls(config.afterAjax, 'setAfterAjax', instance);
     addCalls(config.onErr, 'setOnError', instance);
     addCalls(config.onRetry, 'setOnRetry', instance);
