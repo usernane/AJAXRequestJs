@@ -170,4 +170,61 @@ describe('AJAXRequest timeout', () => {
             expect(ids).toContain(id);
         });
     });
+
+    describe('setTimeout() / getTimeout()', () => {
+        test('getTimeout returns 0 by default', () => {
+            const ajax = new AJAXRequest({ url: 'https://example.com/api' });
+            expect(ajax.getTimeout()).toBe(0);
+        });
+
+        test('getTimeout reflects the value set via config', () => {
+            const ajax = new AJAXRequest({ url: 'https://example.com/api', timeout: 4000 });
+            expect(ajax.getTimeout()).toBe(4000);
+        });
+
+        test('setTimeout updates the timeout and returns true', () => {
+            const ajax = new AJAXRequest({ url: 'https://example.com/api' });
+            expect(ajax.setTimeout(7000)).toBe(true);
+            expect(ajax.getTimeout()).toBe(7000);
+        });
+
+        test('setTimeout parses a numeric string', () => {
+            const ajax = new AJAXRequest({ url: 'https://example.com/api' });
+            expect(ajax.setTimeout('3500')).toBe(true);
+            expect(ajax.getTimeout()).toBe(3500);
+        });
+
+        test('setTimeout parses (truncates) a fractional value via parseInt', () => {
+            const ajax = new AJAXRequest({ url: 'https://example.com/api' });
+            expect(ajax.setTimeout(1500.9)).toBe(true);
+            expect(ajax.getTimeout()).toBe(1500);
+        });
+
+        test('setTimeout accepts 0 to disable the timeout', () => {
+            const ajax = new AJAXRequest({ url: 'https://example.com/api', timeout: 5000 });
+            expect(ajax.setTimeout(0)).toBe(true);
+            expect(ajax.getTimeout()).toBe(0);
+        });
+
+        test('setTimeout rejects a negative value, returns false and leaves value unchanged', () => {
+            const ajax = new AJAXRequest({ url: 'https://example.com/api', timeout: 5000 });
+            expect(ajax.setTimeout(-1)).toBe(false);
+            expect(ajax.getTimeout()).toBe(5000);
+        });
+
+        test('setTimeout rejects a non-numeric value, returns false and leaves value unchanged', () => {
+            const ajax = new AJAXRequest({ url: 'https://example.com/api', timeout: 5000 });
+            expect(ajax.setTimeout('not-a-number')).toBe(false);
+            expect(ajax.getTimeout()).toBe(5000);
+        });
+
+        test('a timeout set via setTimeout() is applied to the XHR on send()', () => {
+            const ajax = new AJAXRequest({ method: 'GET', url: 'https://example.com/api' });
+            ajax.setTimeout(2000);
+            const p = ajax.send();
+            expect(lastXhr().timeout).toBe(2000);
+            simulateTimeout(lastXhr());
+            return p.catch(() => {});
+        });
+    });
 });

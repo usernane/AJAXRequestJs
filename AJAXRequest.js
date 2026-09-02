@@ -1997,6 +1997,44 @@ function AJAXRequest(config = {
             writable: false,
             enumerable: true
         },
+        setTimeout: {
+            /**
+            * Sets the request timeout, in milliseconds.
+            *
+            * The value is parsed as an integer. A value of 0 disables the timeout
+            * (the browser default). If the given value is not a number or is
+            * negative, the current timeout is left unchanged.
+            *
+            * @param {Number|String} timeout Timeout in milliseconds (>= 0).
+            *
+            * @returns {Boolean} True if the timeout was updated, false if the
+            * provided value was invalid.
+            */
+            value: function (timeout) {
+                var parsed = Number.parseInt(timeout);
+                if (Number.isNaN(parsed) || parsed < 0) {
+                    this.log('AJAXRequest.setTimeout: Invalid timeout value. No change made.', 'warning');
+                    return false;
+                }
+                this.timeout = parsed;
+                this.log('AJAXRequest.setTimeout: Timeout set to ' + parsed + 'ms.', 'info');
+                return true;
+            },
+            writable: false,
+            enumerable: true
+        },
+        getTimeout: {
+            /**
+            * Returns the currently configured request timeout, in milliseconds.
+            *
+            * @returns {Number} The timeout in milliseconds. 0 means no timeout.
+            */
+            value: function () {
+                return this.timeout;
+            },
+            writable: false,
+            enumerable: true
+        },
         xhr_pool:{
             value:[
                 AJAXRequest.createXhr(),
@@ -2046,13 +2084,7 @@ function AJAXRequest(config = {
     this.setEnabled(config.enabled);
 
     if (config.timeout !== undefined && config.timeout !== null) {
-        var configTimeout = Number.parseInt(config.timeout);
-        if (!Number.isNaN(configTimeout) && configTimeout >= 0) {
-            this.timeout = configTimeout;
-            this.log('AJAXRequest: Timeout set to ' + configTimeout + 'ms.', 'info');
-        } else {
-            this.log('AJAXRequest: Invalid timeout value ignored.', 'warning');
-        }
+        this.setTimeout(config.timeout);
     }
 
     if (config.base) {
