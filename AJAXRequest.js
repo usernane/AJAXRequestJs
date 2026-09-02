@@ -11,7 +11,7 @@ Object.defineProperties(AJAXRequest, {
         * Names of pools of events.
         * @type Array
         */
-        value: ['servererror', 'clienterror', 'success', 'connectionlost', 'afterajax', 'beforeajax', 'error', 'retry', 'retryend'],
+        value: ['servererror', 'clienterror', 'success', 'connectionlost', 'afterajax', 'beforeajax', 'error', 'retry', 'retryend', 'timeout'],
         writable: false
     },
     BACKOFF: {
@@ -191,6 +191,10 @@ function AJAXRequest(config = {
      */
     this.enabled = true;
     /**
+     * Request timeout in milliseconds. 0 means no timeout (default browser behaviour).
+     */
+    this.timeout = 0;
+    /**
      * Server response after processing the request.
      */
     this.serverResponse = null;
@@ -299,6 +303,21 @@ function AJAXRequest(config = {
             pool:'clienterror',
             func: function () {
                 console.info('AJAXRequest: Client Error ' + this.status);
+            }
+        }
+    ];
+    /**
+     * A pool of functions to call in case the request times out.
+     * Fired when the request exceeds the configured timeout (distinct from
+     * a lost connection). Context available: this.status, this.AJAXRequest.
+     */
+    this.ontimeoutpool = [
+        {
+            id: '0',
+            call: true,
+            pool:'timeout',
+            func: function () {
+                console.info('AJAXRequest: Request timed out.');
             }
         }
     ];
@@ -492,6 +511,46 @@ function AJAXRequest(config = {
         }
 
         return Math.max(1, Math.round(wait));
+    }
+    /**
+     * Fires onTimeout callbacks followed by afterAjax callbacks — called when a
+     * request exceeds its configured timeout. Distinct from connection lost.
+     * @param {Object} xhr The XHR instance
+     */
+    function fireTimeout(xhr) {
+        var pool = xhr.ontimeoutpool;
+        if (pool) {
+            for (var i = 0; i < pool.length; i++) {
+                pool[i].status = xhr.status;
+                pool[i].AJAXRequest = xhr.AJAXRequest;
+                try {
+                    bindParams(pool[i], xhr.AJAXRequest);
+                    if (canCall(pool[i])) {
+                        pool[i].func();
+                    }
+                } catch (e) {
+                    callOnErr(xhr.AJAXRequest, null, {}, e);
+                }
+            }
+        }
+        var afterPool = xhr.onafterajaxpool;
+        if (afterPool) {
+            for (var j = 0; j < afterPool.length; j++) {
+                afterPool[j].status = xhr.status;
+                afterPool[j].response = xhr.responseText;
+                afterPool[j].xmlResponse = xhr.responseXML;
+                afterPool[j].jsonResponse = null;
+                afterPool[j].responseHeaders = {};
+                try {
+                    bindParams(afterPool[j], xhr.AJAXRequest);
+                    if (canCall(afterPool[j])) {
+                        afterPool[j].func();
+                    }
+                } catch (e) {
+                    callOnErr(xhr.AJAXRequest, null, {}, e);
+                }
+            }
+        }
     }
     /**
      * Fires onRetryEnd callbacks — called when retry process ends by either
@@ -1367,6 +1426,33 @@ function AJAXRequest(config = {
             writable: false,
             enumerable: true
         },
+        setOnTimeout: {
+            /**
+            * Append a function to the pool of functions that will be called in case the
+            * request times out (exceeds the configured timeout). This is distinct from
+            * a lost connection — it fires only when a timeout was configured and reached.
+            *
+            * Context available inside the callback via 'this':
+            *   - this.status      {Number} The status code (0 for a timed-out request)
+            *   - this.AJAXRequest {AJAXRequest} The AJAXRequest instance
+            *
+            * @param {Function|Object} callback A function to call. This also can be an object.
+            * The object can have following properties, 'callback' The function that will be executed.
+            * 'id': A unique itentifier for the callback.
+            * 'call': a boolean or function that evaluate to a boolean. Used to decide if the
+            * callback will be executed or not. 'props' Extra properties that the developer would like
+            * to have passed in the callback. Accessed using the keyword 'this' in the body of the
+            * callback.
+            *
+            * @returns {undefined|String|Number} Returns an ID for the function. If not added,
+            * the method will return undefined.
+            */
+            value: function (callback) {
+                return this.addCallback(callback, 'timeout');
+            },
+            writable: false,
+            enumerable: true
+        },
         setOnRetry: {
             /**
             * Append a function to the pool of functions that will be called on each
@@ -1752,7 +1838,23 @@ function AJAXRequest(config = {
                     nonActiveXhr.onerrorpool = this.onerrorpool;
                     nonActiveXhr.onretrypool = this.onretrypool;
                     nonActiveXhr.onretryendpool = this.onretryendpool;
+                    nonActiveXhr.ontimeoutpool = this.ontimeoutpool;
                     nonActiveXhr.verbose = this.verbose;
+                    // Configure request timeout (0 = no timeout / browser default).
+                    var timeoutMs = Number.parseInt(this.timeout);
+                    if (!Number.isNaN(timeoutMs) && timeoutMs > 0) {
+                        nonActiveXhr.timeout = timeoutMs;
+                        this.log('AJAXRequest.send: Timeout set to ' + timeoutMs + 'ms.', 'info');
+                        nonActiveXhr.ontimeout = function () {
+                            this.log('AJAXRequest: Request timed out after ' + this.timeout + 'ms.', 'warning', true);
+                            this.active = false;
+                            this.received = true;
+                            fireTimeout(this);
+                            if (typeof this._resolve === 'function') {
+                                this._reject({ type: 'timeout', status: this.status });
+                            }
+                        };
+                    }
                     this.log('AJAXRequest.send: Checking parameters type...', 'info');
                     if (typeof this.params === 'object' && this.params.toString() !== '[object FormData]') {
                         this.log('AJAXRequest.send: An object is given. Extracting values...', 'info');
@@ -1943,6 +2045,16 @@ function AJAXRequest(config = {
     this.setURL(config.url);
     this.setEnabled(config.enabled);
 
+    if (config.timeout !== undefined && config.timeout !== null) {
+        var configTimeout = Number.parseInt(config.timeout);
+        if (!Number.isNaN(configTimeout) && configTimeout >= 0) {
+            this.timeout = configTimeout;
+            this.log('AJAXRequest: Timeout set to ' + configTimeout + 'ms.', 'info');
+        } else {
+            this.log('AJAXRequest: Invalid timeout value ignored.', 'warning');
+        }
+    }
+
     if (config.base) {
         this.setBase(config.base);
     } else {
@@ -1974,6 +2086,7 @@ function AJAXRequest(config = {
     addCalls(config.onClientErr, 'setOnClientError', instance);
     addCalls(config.onServerErr, 'setOnServerError', instance);
     addCalls(config.onDisconnected, 'setOnDisconnected', instance);
+    addCalls(config.onTimeout, 'setOnTimeout', instance);
     addCalls(config.afterAjax, 'setAfterAjax', instance);
     addCalls(config.onErr, 'setOnError', instance);
     addCalls(config.onRetry, 'setOnRetry', instance);
