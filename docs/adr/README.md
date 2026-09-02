@@ -29,7 +29,7 @@ AJAXRequest.js v3 aims to become enterprise-ready while maintaining backward com
 | 0003 | [ESM/CJS/UMD Module Distribution](0003-module-formats.md) | Accepted | 2026-08-19 |
 | 0004 | [TypeScript Definitions](0004-typescript-definitions.md) | Accepted | 2026-08-19 |
 | 0005 | [Security Hardening](0005-security-hardening.md) | Accepted | 2026-08-19 |
-| 0006 | [Request Timeout and Cancellation](0006-timeout-cancellation.md) | Accepted | 2026-08-19 |
+| 0006 | [Request Timeout and Cancellation](0006-timeout-cancellation.md) | Accepted | 2026-09-02 |
 | 0007 | [Global Interceptors](0007-global-interceptors.md) | Accepted | 2026-08-19 |
 | 0008 | [Test Infrastructure](0008-test-infrastructure.md) | Accepted | 2026-08-19 |
 | 0009 | [Source Code Modularization](0009-source-modularization.md) | Accepted | 2026-08-19 |
