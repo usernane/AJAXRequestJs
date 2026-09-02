@@ -1,6 +1,6 @@
 {
     "name": "ajaxrequest.js",
-    "version": "3.0.0-beta",
+    "version": "3.0.1-beta",
     "description": "A lightweight JavaScript library for making AJAX requests simpler.",
     "homepage": "https://github.com/usernane/AJAXRequestJs#readme",
     "repository": {

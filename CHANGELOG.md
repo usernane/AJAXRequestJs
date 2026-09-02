@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.1-beta](https://github.com/usernane/AJAXRequestJs/compare/v3.0.0-beta...v3.0.1-beta) (2026-09-02)
+
+
+### Bug Fixes
+
+* correct 'wriable' to 'writable' typo in AJAXRequest.js line 28 ([#109](https://github.com/usernane/AJAXRequestJs/issues/109)) ([#122](https://github.com/usernane/AJAXRequestJs/issues/122)) ([ff39fd2](https://github.com/usernane/AJAXRequestJs/commit/ff39fd2048fe2f3ec4aaf427f99f071a8d224838)), closes [#78](https://github.com/usernane/AJAXRequestJs/issues/78)
+
 ## [3.0.0-beta](https://github.com/usernane/AJAXRequestJs/compare/v3.0.0-alpha...v3.0.0-beta) (2026-09-02)
 
 
