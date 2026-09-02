@@ -51,7 +51,8 @@
         "test:coverage": "jest --coverage",
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
-        "build": "rollup -c"
+        "build": "rollup -c && npm run build:types",
+        "build:types": "node -e \"require('fs').copyFileSync('ajaxrequest.d.ts','dist/ajaxrequest.d.ts')\""
     },
     "devDependencies": {
         "@eslint/js": "^10.0.1",
