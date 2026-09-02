@@ -195,6 +195,16 @@ function AJAXRequest(config = {
      */
     this.timeout = 0;
     /**
+     * An optional AbortSignal (from an AbortController) used to cancel the
+     * request from outside. Null when not configured.
+     */
+    this.signal = null;
+    /**
+     * Internal reference to the listener attached to the abort signal, kept so
+     * it can be detached once the request settles.
+     */
+    this._signalAbortListener = null;
+    /**
      * Server response after processing the request.
      */
     this.serverResponse = null;
@@ -573,6 +583,7 @@ function AJAXRequest(config = {
                 }
             }
         }
+        detachSignalListener(xhr);
     }
     /**
      * Fires onAbort callbacks followed by afterAjax callbacks — called when a
@@ -614,6 +625,23 @@ function AJAXRequest(config = {
                 }
             }
         }
+        detachSignalListener(xhr);
+    }
+    /**
+     * Detaches the abort-signal listener associated with a settled request so a
+     * later controller.abort() becomes a no-op and no listener leaks.
+     * @param {Object} xhr The XHR instance
+     */
+    function detachSignalListener(xhr) {
+        var owner = xhr._signalOwner;
+        var signal = xhr._signal;
+        if (owner && signal && owner._signalAbortListener
+            && typeof signal.removeEventListener === 'function') {
+            signal.removeEventListener('abort', owner._signalAbortListener);
+            owner._signalAbortListener = null;
+        }
+        xhr._signal = undefined;
+        xhr._signalOwner = undefined;
     }
     /**
      * Fires onRetryEnd callbacks — called when retry process ends by either
@@ -703,6 +731,9 @@ function AJAXRequest(config = {
         xhr.active = false;
         xhr.log('AJAXRequest: Finished AJAX Request.', 'info');
         
+        // Detach any abort-signal listener now that the request has settled.
+        detachSignalListener(xhr);
+
         // Settle the Promise after all callbacks complete
         if (typeof xhr._resolve === 'function') {
             var responseData = {
@@ -1946,6 +1977,35 @@ function AJAXRequest(config = {
                             }
                         };
                     }
+                    // AbortController / AbortSignal support (fetch-aligned).
+                    if (this.signal !== null && this.signal !== undefined) {
+                        if (this.signal.aborted === true) {
+                            // Sending with an already-aborted signal fails fast:
+                            // do not open the request, reject immediately.
+                            this.log('AJAXRequest.send: Signal already aborted. Aborting before send.', 'warning', true);
+                            nonActiveXhr._aborted = true;
+                            nonActiveXhr.active = false;
+                            nonActiveXhr.received = true;
+                            fireAbort(nonActiveXhr);
+                            if (promiseReject) {
+                                promiseReject({ type: 'abort', status: 0 });
+                            }
+                            return promise;
+                        }
+                        // Detach any previous listener before attaching a new one.
+                        if (this._signalAbortListener !== null && typeof this.signal.removeEventListener === 'function') {
+                            this.signal.removeEventListener('abort', this._signalAbortListener);
+                        }
+                        var self2 = this;
+                        this._signalAbortListener = function () {
+                            self2.log('AJAXRequest: Abort signal received.', 'info');
+                            self2.abort();
+                        };
+                        this.signal.addEventListener('abort', this._signalAbortListener);
+                        // Remember the signal on the XHR so abort() can clean up the listener.
+                        nonActiveXhr._signal = this.signal;
+                        nonActiveXhr._signalOwner = this;
+                    }
                     this.log('AJAXRequest.send: Checking parameters type...', 'info');
                     if (typeof this.params === 'object' && this.params.toString() !== '[object FormData]') {
                         this.log('AJAXRequest.send: An object is given. Extracting values...', 'info');
@@ -2194,6 +2254,51 @@ function AJAXRequest(config = {
             writable: false,
             enumerable: true
         },
+        setSignal: {
+            /**
+            * Sets an AbortSignal (from an AbortController) used to cancel the
+            * request from outside, aligning with the fetch API pattern.
+            *
+            * When set, aborting the associated controller will abort any
+            * in-progress request via abort(). Passing null clears the signal.
+            *
+            * @param {AbortSignal|null} signal An AbortSignal instance, or null to clear.
+            *
+            * @returns {Boolean} True if the signal was set or cleared, false if the
+            * provided value was not a valid AbortSignal.
+            */
+            value: function (signal) {
+                if (signal === null || signal === undefined) {
+                    this.signal = null;
+                    this.log('AJAXRequest.setSignal: Signal cleared.', 'info');
+                    return true;
+                }
+                // Duck-type check for an AbortSignal-like object.
+                if (typeof signal === 'object'
+                    && typeof signal.aborted === 'boolean'
+                    && typeof signal.addEventListener === 'function') {
+                    this.signal = signal;
+                    this.log('AJAXRequest.setSignal: Signal set.', 'info');
+                    return true;
+                }
+                this.log('AJAXRequest.setSignal: Invalid signal. No change made.', 'warning');
+                return false;
+            },
+            writable: false,
+            enumerable: true
+        },
+        getSignal: {
+            /**
+            * Returns the currently configured AbortSignal, or null if none is set.
+            *
+            * @returns {AbortSignal|null} The configured signal, or null.
+            */
+            value: function () {
+                return this.signal;
+            },
+            writable: false,
+            enumerable: true
+        },
         xhr_pool:{
             value:[
                 AJAXRequest.createXhr(),
@@ -2244,6 +2349,10 @@ function AJAXRequest(config = {
 
     if (config.timeout !== undefined && config.timeout !== null) {
         this.setTimeout(config.timeout);
+    }
+
+    if (config.signal !== undefined && config.signal !== null) {
+        this.setSignal(config.signal);
     }
 
     if (config.base) {

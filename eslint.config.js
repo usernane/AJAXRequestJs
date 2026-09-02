@@ -51,7 +51,10 @@ export default [
                 jest: 'readonly',
                 require: 'readonly',
                 module: 'readonly',
-                __dirname: 'readonly'
+                __dirname: 'readonly',
+                // Runtime globals used by tests
+                global: 'readonly',
+                AbortController: 'readonly'
             }
         }
     },
