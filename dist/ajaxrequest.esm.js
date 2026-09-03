@@ -47,7 +47,7 @@ Object.defineProperties(AJAXRequest, {
             instance.active = false;
             return instance;
         },
-        wriable: false
+        writable: false
     },
     extractBase: {
         /**
