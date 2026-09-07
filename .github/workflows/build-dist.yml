@@ -1,0 +1,61 @@
+name: Build dist
+
+# Rebuilds the committed dist/ bundles from source (AJAXRequest.js) on every
+# push to main and commits the result back. This keeps the checked-in bundles —
+# which are served directly over the jsDelivr gh/ CDN — in sync with source, so
+# they can never drift stale (e.g. the 'wriable' typo that lingered in dist/
+# after the source was fixed).
+#
+# The commit uses [skip ci] to avoid retriggering workflows in a loop.
+
+on:
+  push:
+    branches: [main]
+
+# Allow the job to push the rebuilt dist/ back to the repository.
+permissions:
+  contents: write
+
+# Never run more than one dist build for main at a time.
+concurrency:
+  group: build-dist-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-dist:
+    runs-on: ubuntu-latest
+    # Guard against acting on the bot's own [skip ci] commit.
+    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Use the default token; persist credentials so we can push back.
+          persist-credentials: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build dist
+        run: npm run build
+
+      - name: Commit rebuilt dist/ if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet -- dist/; then
+            echo "dist/ is already up to date; nothing to commit."
+            exit 0
+          fi
+
+          git add dist/
+          git commit -m "chore(dist): rebuild bundles from source [skip ci]"
+          git push

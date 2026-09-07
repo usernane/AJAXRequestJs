@@ -1,7 +1,7 @@
 /**
  * AJAXRequest.js
  * A lightweight JavaScript library for making AJAX requests.
- * @version 3.0.0
+ * @version 3.0.0-beta
  * @license MIT
  */
 'use strict';
@@ -49,7 +49,7 @@ Object.defineProperties(AJAXRequest, {
             instance.active = false;
             return instance;
         },
-        wriable: false
+        writable: false
     },
     extractBase: {
         /**
