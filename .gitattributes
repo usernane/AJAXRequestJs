@@ -1,0 +1,22 @@
+# Normalize line endings to LF for all text files on commit, regardless of the
+# contributor's OS. Prevents CRLF <-> LF churn (e.g. examples/ and docs/ being
+# rewritten wholesale by editors with different EOL settings).
+* text=auto eol=lf
+
+# Explicit text types (defensive; covered by text=auto but stated for clarity).
+*.js    text eol=lf
+*.ts    text eol=lf
+*.json  text eol=lf
+*.map   text eol=lf
+*.html  text eol=lf
+*.css   text eol=lf
+*.md    text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+
+# Binary assets — never touch line endings.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
