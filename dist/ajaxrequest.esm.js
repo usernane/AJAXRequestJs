@@ -1144,7 +1144,7 @@ function AJAXRequest(config = {
                             pool_name = 'on' + pool_name + 'pool';
                             for (var x = 0; x < this[pool_name].length; x++) {
                                 if (this[pool_name][x]['id'] === id) {
-                                    return this[pool_name].pop(this[pool_name][x]);
+                                    return this[pool_name].splice(x, 1)[0];
                                 }
                             }
                             this.log('AJAXRequest.removeCall: No callback was found with ID = "' + id + '" in the pool \'' + pool_name + '\'', 'error');
