@@ -75,6 +75,17 @@ export default [
         }
     },
     {
+        // .mjs files are always ES modules
+        files: ['**/*.mjs'],
+        languageOptions: {
+            sourceType: 'module',
+            ecmaVersion: 2022,
+            globals: {
+                process: 'readonly'
+            }
+        }
+    },
+    {
         ignores: ['dist/', 'node_modules/', 'coverage/', 'examples/']
     }
 ];

@@ -49,6 +49,7 @@
     "scripts": {
         "test": "jest",
         "test:coverage": "jest --coverage",
+        "test:esm": "node tests/verify-esm.mjs",
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
         "build": "rollup -c && npm run build:types",
