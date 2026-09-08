@@ -1,5 +1,20 @@
 # Changelog
 
+## [3.0.0](https://github.com/usernane/AJAXRequestJs/compare/v3.0.0-beta...v3.0.0) (2026-09-08)
+
+
+### Bug Fixes
+
+* **build:** Node/SSR import safety and bundle runtime verification ([#139](https://github.com/usernane/AJAXRequestJs/issues/139)) ([38254e9](https://github.com/usernane/AJAXRequestJs/commit/38254e9c67b3557090e03fc4b67cb1fe771832d5))
+* correct 'wriable' to 'writable' typo in AJAXRequest.js line 28 ([#109](https://github.com/usernane/AJAXRequestJs/issues/109)) ([#122](https://github.com/usernane/AJAXRequestJs/issues/122)) ([ff39fd2](https://github.com/usernane/AJAXRequestJs/commit/ff39fd2048fe2f3ec4aaf427f99f071a8d224838)), closes [#78](https://github.com/usernane/AJAXRequestJs/issues/78)
+* **dist:** rebuild bundles to drop stale 'wriable' typo ([1982583](https://github.com/usernane/AJAXRequestJs/commit/19825837a32bc0dd0c56ebca6c0ffd22e987498e)), closes [#124](https://github.com/usernane/AJAXRequestJs/issues/124)
+* v3.0.0 bug fixes, security hardening, and meta reconciliation ([#138](https://github.com/usernane/AJAXRequestJs/issues/138)) ([2c76964](https://github.com/usernane/AJAXRequestJs/commit/2c76964e69ca653ebe822db0cda853c430d8e805))
+
+
+### Miscellaneous Chores
+
+* Release ([d2d3e08](https://github.com/usernane/AJAXRequestJs/commit/d2d3e0834a4556918b43585cfb7a57915d73dd07))
+
 ## [3.0.0-beta](https://github.com/usernane/AJAXRequestJs/compare/v3.0.0-alpha...v3.0.0-beta) (2026-09-02)
 
 
