@@ -92,7 +92,7 @@ Object.defineProperties(AJAXRequest, {
 
 Object.defineProperties(AJAXRequest.META, {
     VERSION: {
-        value: '3.0.0-beta',
+        value: '3.0.0-beta', // x-release-please-version
         writable: false
     },
     RELEASE_DATE: {
