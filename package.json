@@ -27,13 +27,13 @@
         "util"
     ],
     "main": "dist/ajaxrequest.cjs.js",
-    "module": "dist/ajaxrequest.esm.js",
+    "module": "dist/ajaxrequest.esm.mjs",
     "browser": "dist/ajaxrequest.umd.js",
     "types": "dist/ajaxrequest.d.ts",
     "exports": {
         ".": {
             "types": "./dist/ajaxrequest.d.ts",
-            "import": "./dist/ajaxrequest.esm.js",
+            "import": "./dist/ajaxrequest.esm.mjs",
             "require": "./dist/ajaxrequest.cjs.js",
             "browser": "./dist/ajaxrequest.umd.js",
             "default": "./dist/ajaxrequest.cjs.js"

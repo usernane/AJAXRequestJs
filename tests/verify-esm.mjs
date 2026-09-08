@@ -17,7 +17,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const esmBundle = path.resolve(__dirname, '../dist/ajaxrequest.esm.js');
+const esmBundle = path.resolve(__dirname, '../dist/ajaxrequest.esm.mjs');
 
 let passed = 0;
 let failed = 0;
@@ -97,7 +97,7 @@ check('BACKOFF enum is defined with correct values', () => {
 });
 
 // ── ESM minified bundle ──────────────────────────────────────────────────────
-const esmMinBundle = path.resolve(__dirname, '../dist/ajaxrequest.esm.min.js');
+const esmMinBundle = path.resolve(__dirname, '../dist/ajaxrequest.esm.min.mjs');
 console.log('\nESM minified bundle verification (dist/ajaxrequest.esm.min.js)');
 console.log('─'.repeat(52));
 

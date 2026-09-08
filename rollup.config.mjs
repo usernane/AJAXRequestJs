@@ -12,7 +12,7 @@ export default [
     {
         input: 'AJAXRequest.js',
         output: {
-            file: 'dist/ajaxrequest.esm.js',
+            file: 'dist/ajaxrequest.esm.mjs',
             format: 'esm',
             banner,
             sourcemap: true
@@ -22,7 +22,7 @@ export default [
     {
         input: 'AJAXRequest.js',
         output: {
-            file: 'dist/ajaxrequest.esm.min.js',
+            file: 'dist/ajaxrequest.esm.min.mjs',
             format: 'esm',
             banner,
             sourcemap: true

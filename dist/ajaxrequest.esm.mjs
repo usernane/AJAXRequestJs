@@ -2424,4 +2424,4 @@ function AJAXRequest(config = {
 }
 
 export { AJAXRequest as default };
-//# sourceMappingURL=ajaxrequest.esm.js.map
+//# sourceMappingURL=ajaxrequest.esm.mjs.map
