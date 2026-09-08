@@ -1886,6 +1886,18 @@ function AJAXRequest(config = {
                         promiseResolve = resolve;
                         promiseReject = reject;
                     });
+                    // Clear any pending retry intervals from a previous send() so
+                    // orphaned timers cannot fire duplicate requests alongside this
+                    // fresh one. Mirrors the same cleanup done in abort().
+                    for (var p = 0; p < self.xhr_pool.length; p++) {
+                        var pendingXhr = self.xhr_pool[p];
+                        if (pendingXhr.retry && pendingXhr.retry.id !== undefined && pendingXhr.retry.id !== null) {
+                            clearInterval(pendingXhr.retry.id);
+                            pendingXhr.retry.id = undefined;
+                            pendingXhr.retry.passed = 0;
+                            self.log('AJAXRequest.send: Cleared pending retry interval before re-send.', 'info');
+                        }
+                    }
                 }
                 
                 this.log('AJAXRequest.send: Executing before AJAX callbacks...', 'info');

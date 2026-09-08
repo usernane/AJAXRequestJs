@@ -338,4 +338,44 @@ describe('AJAXRequest retry mechanism', () => {
             // No need to advance timers
         });
     });
+
+    describe('re-send during active retry interval (regression: #72)', () => {
+        test('calling send() mid-countdown clears the old interval and does not fire a duplicate request', () => {
+            const retryCallback = jest.fn();
+
+            const ajax = new AJAXRequest({
+                method: 'GET',
+                url: 'https://example.com/api'
+            });
+            // 1 retry, 5-second wait
+            ajax.setRetry(1, 5, retryCallback);
+
+            // 1st send() — starts the initial request
+            ajax.send().catch(() => {});
+
+            // Simulate connection lost → starts the 5-second retry countdown
+            const xhr1 = xhrInstances[xhrInstances.length - 1];
+            xhr1.status = 0;
+            xhr1.readyState = 4;
+            xhr1.onreadystatechange.call(xhr1);
+
+            // Advance 2 seconds into the 5-second countdown — interval is live
+            jest.advanceTimersByTime(2000);
+            const callsAtTwoSeconds = retryCallback.mock.calls.length;
+
+            // 2nd send() — user manually re-sends mid-countdown.
+            // A correct implementation clears the old interval so it never fires.
+            // A buggy implementation leaves it running.
+            ajax.send().catch(() => {});
+
+            // Advance past the original retry deadline (3 more seconds = 5 total).
+            // If the old interval was NOT cleared, it keeps ticking and fires
+            // the retry callback more times after our manual re-send.
+            jest.advanceTimersByTime(3000);
+
+            // The retry callback should not have been called any more times
+            // after the manual re-send — the old interval must be cleared.
+            expect(retryCallback.mock.calls.length).toBe(callsAtTwoSeconds);
+        });
+    });
 });
