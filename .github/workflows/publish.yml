@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Git tag to publish (e.g. v3.0.0)'
+        description: 'Git tag to publish (e.g. v3.0.0) — used as ref label only'
         required: true
         default: 'v3.0.0'
 
@@ -16,10 +16,22 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout tag
+      # Check out main — package.json has the correct name (ajaxrequest-helper)
+      # and the version is already set to the release version by release-please.
+      - name: Checkout main
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag }}
+          ref: main
+
+      - name: Verify version matches requested tag
+        run: |
+          PKG_VERSION="v$(node -e "process.stdout.write(require('./package.json').version)")"
+          echo "package.json version: $PKG_VERSION"
+          echo "requested tag:        ${{ inputs.tag }}"
+          if [ "$PKG_VERSION" != "${{ inputs.tag }}" ]; then
+            echo "::error::Version mismatch — package.json is $PKG_VERSION but tag is ${{ inputs.tag }}"
+            exit 1
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
