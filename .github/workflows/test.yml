@@ -12,7 +12,15 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
+        node-version: [18.x, 20.x, 22.x, 24.x]
+
+    outputs:
+      test-passed:   ${{ steps.jest.outputs.passed }}
+      test-failed:   ${{ steps.jest.outputs.failed }}
+      test-total:    ${{ steps.jest.outputs.total }}
+      test-suites:   ${{ steps.jest.outputs.suites }}
+      esm-passed:    ${{ steps.esm.outputs.passed }}
+      esm-total:     ${{ steps.esm.outputs.total }}
 
     steps:
       - name: Checkout repository
@@ -28,10 +36,93 @@ jobs:
         run: npm ci
 
       - name: Run tests
-        run: npm test
+        id: jest
+        run: |
+          # Run Jest and capture its JSON output for structured reporting
+          npm test -- --json --outputFile=jest-results.json 2>&1 || true
+
+          # Parse results with Node
+          node - <<'JS'
+          const fs   = require('fs');
+          const path = require('path');
+          const out  = process.env.GITHUB_OUTPUT;
+          const sum  = process.env.GITHUB_STEP_SUMMARY;
+
+          let results;
+          try {
+            results = JSON.parse(fs.readFileSync('jest-results.json', 'utf8'));
+          } catch (e) {
+            console.error('Could not parse jest-results.json:', e.message);
+            process.exit(1);
+          }
+
+          const passed  = results.numPassedTests  || 0;
+          const failed  = results.numFailedTests  || 0;
+          const total   = results.numTotalTests   || 0;
+          const suites  = results.numTotalTestSuites || 0;
+          const ok      = results.success;
+
+          // Write to GITHUB_OUTPUT for downstream steps / job outputs
+          const pairs = [
+            `passed=${passed}`,
+            `failed=${failed}`,
+            `total=${total}`,
+            `suites=${suites}`,
+            `success=${ok}`,
+          ];
+          if (out) fs.appendFileSync(out, pairs.join('\n') + '\n');
+
+          // Write a human-readable summary to the Actions job summary
+          const icon   = ok ? '✅' : '❌';
+          const status = ok ? 'passed' : 'FAILED';
+          const lines  = [
+            `## ${icon} Jest — ${status}`,
+            '',
+            `| Metric | Value |`,
+            `|--------|-------|`,
+            `| Test suites | ${suites} |`,
+            `| Tests passed | ${passed} |`,
+            `| Tests failed | ${failed} |`,
+            `| Total tests | ${total} |`,
+            `| Node version | ${process.version} |`,
+          ];
+          if (sum) fs.appendFileSync(sum, lines.join('\n') + '\n\n');
+
+          console.log(`Jest: ${passed}/${total} passed (${suites} suites) — ${status}`);
+          if (!ok) process.exit(1);
+          JS
 
       - name: Verify ESM bundle in Node
-        run: npm run test:esm
+        id: esm
+        run: |
+          # Run the ESM verify script and capture its output
+          npm run test:esm 2>&1 | tee esm-output.txt
+          ESM_EXIT=${PIPESTATUS[0]}
+
+          # Parse pass/fail counts from the script's summary line
+          PASSED=$(grep -oP '\d+(?= passed)' esm-output.txt | tail -1 || echo 0)
+          TOTAL=$(grep -oP '\d+(?= checks)' esm-output.txt | tail -1 || echo 0)
+          STATUS=$( [ "$ESM_EXIT" -eq 0 ] && echo "passed" || echo "FAILED" )
+          ICON=$(   [ "$ESM_EXIT" -eq 0 ] && echo "✅"     || echo "❌" )
+
+          # Write to GITHUB_OUTPUT
+          echo "passed=${PASSED}"  >> "$GITHUB_OUTPUT"
+          echo "total=${TOTAL}"    >> "$GITHUB_OUTPUT"
+          echo "success=$([ "$ESM_EXIT" -eq 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+          # Write to Actions job summary
+          cat >> "$GITHUB_STEP_SUMMARY" <<SUMMARY
+          ## ${ICON} ESM bundle verification — ${STATUS}
+
+          | Metric | Value |
+          |--------|-------|
+          | Checks passed | ${PASSED} |
+          | Total checks | ${TOTAL} |
+          | Node version | $(node --version) |
+
+          SUMMARY
+
+          exit $ESM_EXIT
 
       - name: Run tests with coverage
         run: npm run test:coverage
