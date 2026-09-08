@@ -1078,7 +1078,13 @@ function AJAXRequest(config = {
                 if (typeof name === 'string') {
                     name = name.trim();
                     if (name.length > 0) {
+                        if (!/^[a-zA-Z0-9!#$%&'*+\-.^_`|~]+$/.test(name)) {
+                            return false;
+                        }
                         if (typeof value === 'string') {
+                            if (/[\r\n\0]/.test(value)) {
+                                return false;
+                            }
                             this.customHeaders[name] = value;
                             return true;
                         }

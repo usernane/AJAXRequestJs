@@ -1459,7 +1459,22 @@ function AJAXRequest(config = {
                 if (typeof name === 'string') {
                     name = name.trim();
                     if (name.length > 0) {
+                        // RFC 7230 §3.2.6 — header name must consist solely of token
+                        // characters: ALPHA, DIGIT, and the symbols ! # $ % & ' * + - . ^ _ ` | ~
+                        // Anything else (including CR, LF, colon, space) is illegal and
+                        // could enable HTTP header injection attacks (#74).
+                        if (!/^[a-zA-Z0-9!#$%&'*+\-.^_`|~]+$/.test(name)) {
+                            this.log('AJAXRequest.addHeader: Invalid header name is given.', 'warning');
+                            return false;
+                        }
                         if (typeof value === 'string') {
+                            // RFC 7230 §3.2 — header values must not contain CR or LF.
+                            // Allowing them enables CRLF injection / HTTP response splitting
+                            // attacks (#75).
+                            if (/[\r\n\0]/.test(value)) {
+                                this.log('AJAXRequest.addHeader: Invalid header value is given.', 'warning');
+                                return false;
+                            }
                             this.customHeaders[name] = value;
                             this.log('AJAXRequest.addHeader: Header added.', 'info');
                             return true;
