@@ -1,5 +1,5 @@
 {
-    "name": "ajaxrequest.js",
+    "name": "ajaxrequest-helper",
     "version": "3.0.0",
     "description": "A lightweight JavaScript library for making AJAX requests simpler.",
     "homepage": "https://github.com/usernane/AJAXRequestJs#readme",
