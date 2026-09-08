@@ -1,7 +1,7 @@
 /**
  * AJAXRequest.js
  * A lightweight JavaScript library for making AJAX requests.
- * @version 3.0.0-beta
+ * @version 3.0.0
  * @license MIT
  */
 (function (global, factory) {
