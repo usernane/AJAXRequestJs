@@ -12,7 +12,7 @@
  * Exit code 0 = all checks passed. Non-zero = failure (fails CI).
  */
 
-import { createRequire } from 'module';
+
 import { fileURLToPath } from 'url';
 import path from 'path';
 
@@ -83,7 +83,7 @@ check('CALLBACK_POOLS is an array', () => {
 
 check('CALLBACK_POOLS contains expected pools', () => {
     const required = ['success', 'servererror', 'clienterror', 'connectionlost',
-                      'beforeajax', 'afterajax', 'error', 'timeout', 'abort'];
+        'beforeajax', 'afterajax', 'error', 'timeout', 'abort'];
     for (const pool of required) {
         assert(AJAXRequest.CALLBACK_POOLS.includes(pool), `missing pool: ${pool}`);
     }

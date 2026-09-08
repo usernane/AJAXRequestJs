@@ -683,12 +683,13 @@
             xhr.received = true;
             var headers = getResponseHeadersObj(xhr);
             var p = 'on' + pool_name + 'pool';
+            var jsonResponse;
             try {
-                var jsonResponse = JSON.parse(xhr.responseText);
-            } catch (e) {
+                jsonResponse = JSON.parse(xhr.responseText);
+            } catch (_e) {
                 xhr.log('AJAXRequest: Unable to convert response into JSON object.', 'warning', true);
                 xhr.log('AJAXRequest: "jsonResponse" is set to \'null\'.', 'warning', true);
-                var jsonResponse = null;
+                jsonResponse = null;
             }
             // Fire onRetryEnd before success/error callbacks if retry was attempted
             if (pool_name === 'success' && xhr.retry.pass_number > 0) {
@@ -740,7 +741,7 @@
             }
             xhr.active = false;
             xhr.log('AJAXRequest: Finished AJAX Request.', 'info');
-            
+
             // Detach any abort-signal listener now that the request has settled.
             detachSignalListener(xhr);
 
@@ -753,7 +754,7 @@
                     xmlResponse: xhr.responseXML,
                     responseHeaders: headers
                 };
-                
+
                 if (pool_name === 'success') {
                     xhr._resolve(responseData);
                 } else {
@@ -1017,7 +1018,7 @@
                 value: function () {
                     try {
                         return JSON.parse(this.getServerResponse());
-                    } catch (e) {
+                    } catch (_e) {
                         this.log('AJAXRequest.responseAsJSON: Unable to convert server response to JSON object!', 'warning', true);
                     }
                     return undefined;
@@ -1082,7 +1083,7 @@
                                         this.log('AJAXRequest.addCallback: Can\'t Add callback. A callback with ID "' + toAdd.id + '" was already added to the pool "' + poolName + '".', 'warning', true);
                                         return;
                                     }
-                                    id = toAdd.id;
+                                    // id already captured in toAdd.id
                                 }
 
 
@@ -1169,7 +1170,7 @@
                 enumerable: true
             },
             disableCallsExcept: {
-                value: function (id, call) {
+                value: function (id, _call) {
                     for (var x = 0; x < AJAXRequest.CALLBACK_POOLS.length; x++) {
                         this.disableCallExcept(AJAXRequest.CALLBACK_POOLS[x], id);
                     }
@@ -1326,7 +1327,7 @@
                 * @returns {undefined|String|Number} Returns an ID for the function. If not added,
                 * the method will return undefined.
                 */
-                value: function (callback, call = true) {
+                value: function (callback, _call = true) {
                     return this.addCallback(callback, 'clienterror');
                 },
                 writable: false,
@@ -1414,7 +1415,6 @@
                             if (csrfEl === null) {
                                 this.log('AJAXRequest.getCsrfToken: Element not found.', 'warning');
                                 this.log('AJAXRequest.getCsrfToken: CSRF token not found.', 'warning');
-                                var csrfEl = document.querySelector('input[name="csrf-token"]');
                             } else {
                                 this.log('AJAXRequest.getCsrfToken: Checking the value of the attribute "value"...', 'info');
                                 window.csrfToken = csrfEl.getAttribute('value');
@@ -1434,7 +1434,6 @@
                                 if (csrfEl === null) {
                                     this.log('AJAXRequest.getCsrfToken: Element not found.', 'warning');
                                     this.log('AJAXRequest.getCsrfToken: CSRF token not found.', 'warning');
-                                    var csrfEl = document.querySelector('input[name="csrf-token"]');
                                 } else {
                                     this.log('AJAXRequest.getCsrfToken: Checking the value of the attribute "value"...', 'info');
                                     window.csrfToken = csrfEl.getAttribute('value');
@@ -1897,7 +1896,7 @@
                     var isRetry = typeof _internalResolve === 'function';
                     var promiseResolve, promiseReject;
                     var promise;
-                    
+
                     if (isRetry) {
                         // Retry case: reuse original Promise's resolve/reject
                         promiseResolve = _internalResolve;
@@ -1922,7 +1921,7 @@
                             }
                         }
                     }
-                    
+
                     this.log('AJAXRequest.send: Executing before AJAX callbacks...', 'info');
                     for (var i = 0; i < this.onbeforeajaxpool.length; i++) {
                         try {

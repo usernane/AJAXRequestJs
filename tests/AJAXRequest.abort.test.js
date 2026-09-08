@@ -136,7 +136,7 @@ describe('AJAXRequest.abort()', () => {
             expect(onDisconnected).not.toHaveBeenCalled();
         });
 
-        test("setOnAbort returns an id and registers the callback", () => {
+        test('setOnAbort returns an id and registers the callback', () => {
             const ajax = new AJAXRequest({ url: 'https://example.com/api' });
             const id = ajax.setOnAbort(function () {});
             expect(id).toBeDefined();

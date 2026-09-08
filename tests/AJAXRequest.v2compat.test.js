@@ -404,7 +404,7 @@ describe('v2 backward-compatibility (#129)', () => {
 
         test('AJAXRequest.CALLBACK_POOLS contains all v2 pool names', () => {
             const v2pools = ['servererror', 'clienterror', 'success',
-                             'connectionlost', 'afterajax', 'beforeajax', 'error'];
+                'connectionlost', 'afterajax', 'beforeajax', 'error'];
             for (const pool of v2pools) {
                 expect(AJAXRequest.CALLBACK_POOLS).toContain(pool);
             }
