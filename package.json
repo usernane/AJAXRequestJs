@@ -13,7 +13,6 @@
     "license": "MIT",
     "author": "Ibrahim BinAlshikh <ibrahim@webfiori.com>",
     "contributors": [],
-    "type": "commonjs",
     "sideEffects": false,
     "keywords": [
         "ajax",
