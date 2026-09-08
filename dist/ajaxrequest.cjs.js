@@ -97,11 +97,11 @@ Object.defineProperties(AJAXRequest, {
 
 Object.defineProperties(AJAXRequest.META, {
     VERSION: {
-        value: '2.1.9',
+        value: '3.0.0-beta', // x-release-please-version
         writable: false
     },
     RELEASE_DATE: {
-        value: '2023-07-19',
+        value: '2026-09-02',
         writable: false
     },
     CONTRIBUTORS: {
@@ -1146,7 +1146,7 @@ function AJAXRequest(config = {
                             pool_name = 'on' + pool_name + 'pool';
                             for (var x = 0; x < this[pool_name].length; x++) {
                                 if (this[pool_name][x]['id'] === id) {
-                                    return this[pool_name].pop(this[pool_name][x]);
+                                    return this[pool_name].splice(x, 1)[0];
                                 }
                             }
                             this.log('AJAXRequest.removeCall: No callback was found with ID = "' + id + '" in the pool \'' + pool_name + '\'', 'error');
@@ -1461,7 +1461,22 @@ function AJAXRequest(config = {
                 if (typeof name === 'string') {
                     name = name.trim();
                     if (name.length > 0) {
+                        // RFC 7230 §3.2.6 — header name must consist solely of token
+                        // characters: ALPHA, DIGIT, and the symbols ! # $ % & ' * + - . ^ _ ` | ~
+                        // Anything else (including CR, LF, colon, space) is illegal and
+                        // could enable HTTP header injection attacks (#74).
+                        if (!/^[a-zA-Z0-9!#$%&'*+\-.^_`|~]+$/.test(name)) {
+                            this.log('AJAXRequest.addHeader: Invalid header name is given.', 'warning');
+                            return false;
+                        }
                         if (typeof value === 'string') {
+                            // RFC 7230 §3.2 — header values must not contain CR or LF.
+                            // Allowing them enables CRLF injection / HTTP response splitting
+                            // attacks (#75).
+                            if (/[\r\n\0]/.test(value)) {
+                                this.log('AJAXRequest.addHeader: Invalid header value is given.', 'warning');
+                                return false;
+                            }
                             this.customHeaders[name] = value;
                             this.log('AJAXRequest.addHeader: Header added.', 'info');
                             return true;
@@ -1873,6 +1888,7 @@ function AJAXRequest(config = {
             * or rejects with error data on failure (4xx/5xx/connection lost).
             */
             value: function (_internalResolve, _internalReject) {
+                var self = this;
                 var isRetry = typeof _internalResolve === 'function';
                 var promiseResolve, promiseReject;
                 var promise;
@@ -1888,6 +1904,18 @@ function AJAXRequest(config = {
                         promiseResolve = resolve;
                         promiseReject = reject;
                     });
+                    // Clear any pending retry intervals from a previous send() so
+                    // orphaned timers cannot fire duplicate requests alongside this
+                    // fresh one. Mirrors the same cleanup done in abort().
+                    for (var p = 0; p < self.xhr_pool.length; p++) {
+                        var pendingXhr = self.xhr_pool[p];
+                        if (pendingXhr.retry && pendingXhr.retry.id !== undefined && pendingXhr.retry.id !== null) {
+                            clearInterval(pendingXhr.retry.id);
+                            pendingXhr.retry.id = undefined;
+                            pendingXhr.retry.passed = 0;
+                            self.log('AJAXRequest.send: Cleared pending retry interval before re-send.', 'info');
+                        }
+                    }
                 }
                 
                 this.log('AJAXRequest.send: Executing before AJAX callbacks...', 'info');

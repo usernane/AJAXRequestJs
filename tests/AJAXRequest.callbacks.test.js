@@ -142,9 +142,35 @@ describe('AJAXRequest callback pool management', () => {
 
             ajax.removeCall('success', 'callback-to-remove');
 
-            // Note: Due to a bug in the library (uses pop() instead of splice()),
-            // this test documents current behavior - the removal may not work correctly
-            // for callbacks that aren't the last in the pool
+            expect(ajax.getCallbacksIDs('success')).not.toContain('callback-to-remove');
+        });
+
+        test('removes the matched callback, not the last one (regression: #71)', () => {
+            const ajax = new AJAXRequest();
+
+            // Add three callbacks with explicit, distinct IDs. The target ('b')
+            // is deliberately NOT the last one, so a pop()-based implementation
+            // would incorrectly remove 'c' and leave 'b' behind.
+            ajax.setOnSuccess({ id: 'a', callback: jest.fn() });
+            ajax.setOnSuccess({ id: 'b', callback: jest.fn() });
+            ajax.setOnSuccess({ id: 'c', callback: jest.fn() });
+
+            const idsBefore = ajax.getCallbacksIDs('success');
+            expect(idsBefore).toContain('a');
+            expect(idsBefore).toContain('b');
+            expect(idsBefore).toContain('c');
+
+            const removed = ajax.removeCall('success', 'b');
+
+            // The matched callback is returned...
+            expect(removed).toBeDefined();
+            expect(removed.id).toBe('b');
+
+            // ...and only 'b' is gone; 'a' and 'c' remain.
+            const idsAfter = ajax.getCallbacksIDs('success');
+            expect(idsAfter).not.toContain('b');
+            expect(idsAfter).toContain('a');
+            expect(idsAfter).toContain('c');
         });
 
         test('does not throw when removing non-existent callback', () => {

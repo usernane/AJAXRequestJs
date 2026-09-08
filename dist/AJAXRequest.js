@@ -93,11 +93,11 @@ Object.defineProperties(AJAXRequest, {
 
 Object.defineProperties(AJAXRequest.META, {
     VERSION: {
-        value: '2.1.8',
+        value: '3.0.0-beta',
         writable: false
     },
-    REALSE_DATE: {
-        value: '2023-07-09',
+    RELEASE_DATE: {
+        value: '2026-09-02',
         writable: false
     },
     CONTRIBUTORS: {
@@ -802,7 +802,7 @@ function AJAXRequest(config = {
                             pool_name = 'on' + pool_name + 'pool';
                             for (var x = 0; x < this[pool_name].length; x++) {
                                 if (this[pool_name][x]['id'] === id) {
-                                    return this[pool_name].pop(this[pool_name][x]);
+                                    return this[pool_name].splice(x, 1)[0];
                                 }
                             }
                         } else {
@@ -1078,7 +1078,13 @@ function AJAXRequest(config = {
                 if (typeof name === 'string') {
                     name = name.trim();
                     if (name.length > 0) {
+                        if (!/^[a-zA-Z0-9!#$%&'*+\-.^_`|~]+$/.test(name)) {
+                            return false;
+                        }
                         if (typeof value === 'string') {
+                            if (/[\r\n\0]/.test(value)) {
+                                return false;
+                            }
                             this.customHeaders[name] = value;
                             return true;
                         }
@@ -1337,6 +1343,16 @@ function AJAXRequest(config = {
                     } catch (e) {
                         callOnErr(this, null, {}, e);
                         return false;
+                    }
+                }
+                // Clear any pending retry intervals so orphaned timers cannot
+                // fire duplicate requests alongside this fresh send().
+                for (var p = 0; p < this.xhr_pool.length; p++) {
+                    var pendingXhr = this.xhr_pool[p];
+                    if (pendingXhr.retry && pendingXhr.retry.id !== undefined && pendingXhr.retry.id !== null) {
+                        clearInterval(pendingXhr.retry.id);
+                        pendingXhr.retry.id = undefined;
+                        pendingXhr.retry.passed = 0;
                     }
                 }
                 if (this.isEnabled()) {
