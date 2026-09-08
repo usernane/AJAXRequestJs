@@ -22,6 +22,12 @@ function loadAJAXRequest(options = {}) {
         'utf8'
     );
 
+    // The source now contains `export default AJAXRequest` for module builds.
+    // vm.runInContext() uses CJS-style execution and cannot parse ES module
+    // export syntax. Strip the export statement — the VM context already
+    // exposes AJAXRequest as a script-scope variable (no export needed there).
+    const vmCode = sourceCode.replace(/^export\s+default\s+\w+\s*;?\s*$/m, '');
+
     const context = vm.createContext({
         ...global,
         window: global,
@@ -32,7 +38,7 @@ function loadAJAXRequest(options = {}) {
         ...mocks
     });
 
-    vm.runInContext(sourceCode, context);
+    vm.runInContext(vmCode, context);
     cachedContext = context;
 
     return context.AJAXRequest;

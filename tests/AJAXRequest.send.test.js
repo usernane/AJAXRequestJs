@@ -200,7 +200,7 @@ describe('AJAXRequest.send()', () => {
             const promise = ajax.send().then(() => {
                 callOrder.push('promise');
             });
-            
+
             const xhr = xhrInstances[xhrInstances.length - 1];
             simulateResponse(xhr, 200, '{}');
 
@@ -224,7 +224,7 @@ describe('AJAXRequest.send()', () => {
             const promise = ajax.send().then(() => {
                 callOrder.push('promise');
             });
-            
+
             const xhr = xhrInstances[xhrInstances.length - 1];
             simulateResponse(xhr, 200, '{}');
 
@@ -245,7 +245,7 @@ describe('AJAXRequest.send()', () => {
             const promise = ajax.send().catch(() => {
                 callOrder.push('promise');
             });
-            
+
             const xhr = xhrInstances[xhrInstances.length - 1];
             simulateResponse(xhr, 400, '{}');
 
@@ -509,7 +509,7 @@ describe('AJAXRequest.send()', () => {
 
             try {
                 await ajax.send();
-            } catch (e) {
+            } catch (_e) {
                 // Expected rejection
             }
 
@@ -525,7 +525,7 @@ describe('AJAXRequest.send()', () => {
             });
 
             ajax.setEnabled(false);
-            
+
             await expect(ajax.send()).rejects.toMatchObject({
                 type: 'disabled'
             });

@@ -718,5 +718,11 @@ declare class AJAXRequest {
     hasNonReceivedRequest(): boolean;
 }
 
-/** Global AJAXRequest instance available when using UMD/script tag. */
+export default AJAXRequest;
+
+/**
+ * Global AJAXRequest instance available only when using the legacy CDN
+ * script-tag builds (dist/AJAXRequest.js, dist/AJAXRequest.min.js).
+ * Not available in CJS/ESM/UMD module builds. See ADR-0012.
+ */
 declare const ajax: AJAXRequest;

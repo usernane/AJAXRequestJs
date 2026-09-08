@@ -78,7 +78,7 @@ describe('Retry backoff strategies (#113)', () => {
 
         test('BACKOFF is frozen (immutable)', () => {
             const before = AJAXRequest.BACKOFF.FIXED;
-            try { AJAXRequest.BACKOFF.FIXED = 'hacked'; } catch (e) { /* strict mode throws */ }
+            try { AJAXRequest.BACKOFF.FIXED = 'hacked'; } catch (_e) { /* strict mode throws */ }
             expect(AJAXRequest.BACKOFF.FIXED).toBe(before);
         });
 

@@ -30,6 +30,9 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Verify ESM bundle in Node
+        run: npm run test:esm
+
       - name: Run tests with coverage
         run: npm run test:coverage
 
