@@ -68,6 +68,13 @@ export default [
         }
     },
     {
+        // AJAXRequest.js uses `export default` for module builds (ADR-0012)
+        files: ['AJAXRequest.js'],
+        languageOptions: {
+            sourceType: 'module'
+        }
+    },
+    {
         ignores: ['dist/', 'node_modules/', 'coverage/', 'examples/']
     }
 ];

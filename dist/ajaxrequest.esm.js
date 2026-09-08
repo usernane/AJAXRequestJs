@@ -2422,6 +2422,6 @@ function AJAXRequest(config = {
     addCalls(config.onRetryEnd, 'setOnRetryEnd', instance);
 
 }
-//Global AJAXRequest Instance
-new AJAXRequest();
+
+export { AJAXRequest as default };
 //# sourceMappingURL=ajaxrequest.esm.js.map

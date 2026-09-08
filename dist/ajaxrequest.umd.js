@@ -4,10 +4,11 @@
  * @version 3.0.0-beta
  * @license MIT
  */
-(function (factory) {
+(function (global, factory) {
+    typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
     typeof define === 'function' && define.amd ? define(factory) :
-    factory();
-})((function () { 'use strict';
+    (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.AJAXRequest = factory());
+})(this, (function () { 'use strict';
 
     Object.defineProperties(AJAXRequest, {
         META: {
@@ -2427,8 +2428,8 @@
         addCalls(config.onRetryEnd, 'setOnRetryEnd', instance);
 
     }
-    //Global AJAXRequest Instance
-    new AJAXRequest();
+
+    return AJAXRequest;
 
 }));
 //# sourceMappingURL=ajaxrequest.umd.js.map

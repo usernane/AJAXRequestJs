@@ -2421,5 +2421,10 @@ function AJAXRequest(config = {
     addCalls(config.onRetryEnd, 'setOnRetryEnd', instance);
 
 }
-//Global AJAXRequest Instance
-const ajax = new AJAXRequest();
+// The top-level `ajax` global has been intentionally removed from this file.
+// See ADR-0012: module builds (CJS/ESM/UMD) must not instantiate AJAXRequest
+// at load time because XMLHttpRequest is undefined in Node/SSR environments.
+// The global is retained only in the legacy CDN files:
+//   dist/AJAXRequest.js and dist/AJAXRequest.min.js
+
+export default AJAXRequest;

@@ -37,7 +37,7 @@ export default [
             format: 'cjs',
             banner,
             sourcemap: true,
-            exports: 'named'
+            exports: 'default'
         }
     },
     // CommonJS minified
@@ -48,7 +48,7 @@ export default [
             format: 'cjs',
             banner,
             sourcemap: true,
-            exports: 'named'
+            exports: 'default'
         },
         plugins: [terser()]
     },

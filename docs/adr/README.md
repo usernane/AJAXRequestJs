@@ -35,3 +35,4 @@ AJAXRequest.js v3 aims to become enterprise-ready while maintaining backward com
 | 0009 | [Source Code Modularization](0009-source-modularization.md) | Accepted | 2026-08-19 |
 | 0010 | [Bug Fixes (removeCall, retry cleanup)](0010-bug-fixes.md) | Accepted | 2026-08-19 |
 | 0011 | [Retry Mechanism Redesign](0011-retry-mechanism-redesign.md) | Proposed | 2026-08-25 |
+| 0012 | [Remove Top-Level `ajax` Global from Module Builds](0012-remove-ajax-global-from-module-builds.md) | Accepted | 2026-09-08 |

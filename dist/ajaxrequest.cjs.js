@@ -2424,6 +2424,6 @@ function AJAXRequest(config = {
     addCalls(config.onRetryEnd, 'setOnRetryEnd', instance);
 
 }
-//Global AJAXRequest Instance
-new AJAXRequest();
+
+module.exports = AJAXRequest;
 //# sourceMappingURL=ajaxrequest.cjs.js.map
