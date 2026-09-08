@@ -5,7 +5,7 @@
     "homepage": "https://github.com/usernane/AJAXRequestJs#readme",
     "repository": {
         "type": "git",
-        "url": "https://github.com/usernane/AJAXRequestJs.git"
+        "url": "git+https://github.com/usernane/AJAXRequestJs.git"
     },
     "bugs": {
         "url": "https://github.com/usernane/AJAXRequestJs/issues"
@@ -13,6 +13,8 @@
     "license": "MIT",
     "author": "Ibrahim BinAlshikh <ibrahim@webfiori.com>",
     "contributors": [],
+    "type": "commonjs",
+    "sideEffects": false,
     "keywords": [
         "ajax",
         "xhr",
@@ -31,6 +33,7 @@
     "types": "dist/ajaxrequest.d.ts",
     "exports": {
         ".": {
+            "types": "./dist/ajaxrequest.d.ts",
             "import": "./dist/ajaxrequest.esm.js",
             "require": "./dist/ajaxrequest.cjs.js",
             "browser": "./dist/ajaxrequest.umd.js",
