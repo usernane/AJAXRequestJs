@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.1](https://github.com/usernane/AJAXRequestJs/compare/v3.0.0...v3.0.1) (2026-09-08)
+
+
+### Bug Fixes
+
+* **packaging:** align package name to npm package 'ajaxrequest-helper' ([6928fef](https://github.com/usernane/AJAXRequestJs/commit/6928fef21bfe3f567f6c58952e442df20fa4e292))
+
 ## [3.0.0](https://github.com/usernane/AJAXRequestJs/compare/v3.0.0-beta...v3.0.0) (2026-09-08)
 
 
