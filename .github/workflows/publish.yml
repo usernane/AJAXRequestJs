@@ -49,5 +49,5 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Publish to npm
-        run: npm publish --provenance
+      - name: Stage publish to npm
+        run: npm stage publish --provenance

@@ -44,6 +44,6 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
         run: npm run build
 
-      - name: Publish to npm
+      - name: Stage publish to npm
         if: ${{ steps.release.outputs.release_created }}
-        run: npm publish --provenance --access public
+        run: npm stage publish --provenance --access public
