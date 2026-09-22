@@ -45,25 +45,15 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Diagnose npm + OIDC environment
-        run: |
-          echo "which npm: $(which npm)"
-          echo "npm version: $(npm --version)"
-          echo "node version: $(node --version)"
-          echo "ACTIONS_ID_TOKEN_REQUEST_URL set: ${ACTIONS_ID_TOKEN_REQUEST_URL:+yes}"
-          echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN set: ${ACTIONS_ID_TOKEN_REQUEST_TOKEN:+yes}"
-
-      # setup-node writes an .npmrc containing an (empty) _authToken line and a legacy
-      # always-auth key. npm then attempts (empty) token auth and skips the OIDC trusted-
-      # publishing exchange. Remove both lines so npm 12 performs the OIDC exchange.
+      # setup-node writes an .npmrc with an (empty) _authToken line and a legacy
+      # always-auth key. Left in place, npm attempts empty-token auth and skips the
+      # OIDC trusted-publishing exchange. Remove both so npm performs the OIDC exchange.
       - name: Scrub token/legacy auth config so OIDC is used
         run: |
           NPMRC="${NPM_CONFIG_USERCONFIG:-$HOME/.npmrc}"
           if [ -f "$NPMRC" ]; then
             sed -i -e '/_authToken=/d' -e '/always-auth/d' "$NPMRC"
-            echo "Scrubbed auth lines from $NPMRC:"
-            cat "$NPMRC"
           fi
 
-      - name: Publish to npm
-        run: npm publish --provenance
+      - name: Stage publish to npm
+        run: npm stage publish --provenance
