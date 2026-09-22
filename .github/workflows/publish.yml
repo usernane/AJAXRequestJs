@@ -55,5 +55,17 @@ jobs:
           echo "--- effective .npmrc (userconfig) ---"
           cat "${NPM_CONFIG_USERCONFIG:-$HOME/.npmrc}" 2>/dev/null | sed 's/_authToken=.*/_authToken=<redacted>/' || echo "(none)"
 
+      # setup-node writes an .npmrc with '//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}'.
+      # With no NODE_AUTH_TOKEN secret this becomes an empty/placeholder token that npm uses
+      # for token auth, bypassing the OIDC trusted-publishing exchange (=> E401). Remove only
+      # the _authToken line so the 'registry=' line remains and npm performs the OIDC exchange.
+      - name: Remove token auth line so OIDC is used
+        run: |
+          NPMRC="${NPM_CONFIG_USERCONFIG:-$HOME/.npmrc}"
+          if [ -f "$NPMRC" ]; then
+            sed -i '/_authToken=/d' "$NPMRC"
+            echo "Scrubbed _authToken from $NPMRC"
+          fi
+
       - name: Stage publish to npm
         run: npm stage publish --provenance
