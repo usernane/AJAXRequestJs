@@ -45,5 +45,15 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Diagnose npm + OIDC environment
+        run: |
+          echo "which npm: $(which npm)"
+          echo "npm version: $(npm --version)"
+          echo "node version: $(node --version)"
+          echo "ACTIONS_ID_TOKEN_REQUEST_URL set: ${ACTIONS_ID_TOKEN_REQUEST_URL:+yes}"
+          echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN set: ${ACTIONS_ID_TOKEN_REQUEST_TOKEN:+yes}"
+          echo "--- effective .npmrc (userconfig) ---"
+          cat "${NPM_CONFIG_USERCONFIG:-$HOME/.npmrc}" 2>/dev/null | sed 's/_authToken=.*/_authToken=<redacted>/' || echo "(none)"
+
       - name: Stage publish to npm
         run: npm stage publish --provenance
