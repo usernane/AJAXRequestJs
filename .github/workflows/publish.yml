@@ -65,5 +65,5 @@ jobs:
             cat "$NPMRC"
           fi
 
-      - name: Stage publish to npm
-        run: npm stage publish --provenance
+      - name: Publish to npm
+        run: npm publish --provenance
