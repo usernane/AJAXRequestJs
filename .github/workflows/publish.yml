@@ -1,12 +1,9 @@
 name: Publish to npm
 
 on:
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Git tag to publish (e.g. v3.0.0) — used as ref label only'
-        required: true
-        default: 'v3.0.0'
+  push:
+    tags:
+      - 'v*'
 
 permissions:
   contents: read
@@ -16,20 +13,19 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      # Check out main — package.json has the correct name (ajaxrequest-helper)
-      # and the version is already set to the release version by release-please.
-      - name: Checkout main
+      # Check out the pushed tag. package.json's version is set to the release
+      # version by release-please and must match the tag being published.
+      - name: Checkout tag
         uses: actions/checkout@v4
-        with:
-          ref: main
 
-      - name: Verify version matches requested tag
+      - name: Verify version matches pushed tag
         run: |
           PKG_VERSION="v$(node -e "process.stdout.write(require('./package.json').version)")"
+          TAG="${GITHUB_REF_NAME}"
           echo "package.json version: $PKG_VERSION"
-          echo "requested tag:        ${{ inputs.tag }}"
-          if [ "$PKG_VERSION" != "${{ inputs.tag }}" ]; then
-            echo "::error::Version mismatch — package.json is $PKG_VERSION but tag is ${{ inputs.tag }}"
+          echo "pushed tag:           $TAG"
+          if [ "$PKG_VERSION" != "$TAG" ]; then
+            echo "::error::Version mismatch — package.json is $PKG_VERSION but tag is $TAG"
             exit 1
           fi
 
@@ -37,6 +33,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22.x'
+          registry-url: 'https://registry.npmjs.org'
           cache: 'npm'
 
       - name: Upgrade npm to a trusted-publishing-capable version
