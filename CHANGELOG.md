@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.0.1](https://github.com/usernane/AJAXRequestJs/compare/v3.0.0...v3.0.1) (2026-09-22)
+
+
+### Bug Fixes
+
+* **deps:** override transitive js-yaml to &gt;=3.15.2 (GHSA-2883-xcg3-v3hh) ([2960a22](https://github.com/usernane/AJAXRequestJs/commit/2960a22c12c39b306b9bb36833b9be6a2a7bedcf))
+* **packaging:** align package name to npm package 'ajaxrequest-helper' ([6928fef](https://github.com/usernane/AJAXRequestJs/commit/6928fef21bfe3f567f6c58952e442df20fa4e292))
+
 ## [3.0.0](https://github.com/usernane/AJAXRequestJs/compare/v3.0.0-beta...v3.0.0) (2026-09-08)
 
 
