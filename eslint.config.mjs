@@ -12,6 +12,7 @@ export default [
                 document: 'readonly',
                 console: 'readonly',
                 XMLHttpRequest: 'readonly',
+                URL: 'readonly',
                 FormData: 'readonly',
                 File: 'readonly',
                 Blob: 'readonly',

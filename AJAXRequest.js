@@ -82,11 +82,24 @@ Object.defineProperties(AJAXRequest, {
             var pattern = new RegExp('^(https?:\\/\\/)?' + // protocol
                 '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
                 'localhost|' + // localhost (#76)
-                '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
+                '((\\d{1,3}\\.){3}\\d{1,3})|' + // OR ip (v4) address
+                '\\[[a-f\\d:.]+\\])' + // OR bracketed IPv6 address
                 '(\\:\\d+)?(\\/[-a-z\\d%_.=~+!]*)*' + // port and path
                 '(\\?[;&a-z\\d%_.~+=/-]*)?' + // query string
                 '(\\#[-a-z\\d_]*)?$', 'i'); // fragment locator
-            return !!pattern.test(url);
+            if (!pattern.test(url)) {
+                return false;
+            }
+            var ipv6 = /\[[a-f\d:.]+\]/i.exec(url);
+            if (ipv6) {
+                // Validate only the IPv6 host; keep the existing URL rules above.
+                try {
+                    return new URL('http://' + ipv6[0]).hostname[0] === '[';
+                } catch (_error) {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 });
